@@ -531,7 +531,7 @@ mod test_legal_arithmetic {
     use crate::lexer;
     use std::fs;
 
-    const TEST_DIR: &str = "tests/fixtures/din/legal/arithmetic";
+    const TEST_DIR: &str = "tests/fixtures/legal/arithmetic";
 
     #[test]
     fn lit() {
@@ -686,7 +686,7 @@ mod test_legal_arithmetic_precedence {
     use crate::lexer;
     use std::fs;
 
-    const TEST_DIR: &str = "tests/fixtures/din/legal/arithmetic_precedence";
+    const TEST_DIR: &str = "tests/fixtures/legal/arithmetic_precedence";
 
     #[test]
     fn add_associative() {
@@ -815,7 +815,7 @@ mod test_legal_control_flow {
     use crate::lexer;
     use std::fs;
 
-    const TEST_DIR: &str = "tests/fixtures/din/legal/control_flow";
+    const TEST_DIR: &str = "tests/fixtures/legal/control_flow";
 
     #[test]
     fn eq() {
@@ -1054,7 +1054,7 @@ mod test_legal_data_flow {
     use crate::lexer;
     use std::fs;
 
-    const TEST_DIR: &str = "tests/fixtures/din/legal/data_flow";
+    const TEST_DIR: &str = "tests/fixtures/legal/data_flow";
 
     #[test]
     fn asnmt() {

@@ -313,7 +313,7 @@ fn skip_whitespace(input: &[char]) -> &[char] {
 mod test_legal_arithmetic {
     use std::fs;
 
-    const TEST_DIR: &str = "tests/fixtures/din/legal/arithmetic";
+    const TEST_DIR: &str = "tests/fixtures/legal/arithmetic";
 
     #[test]
     fn lit() {
@@ -542,7 +542,7 @@ mod test_legal_arithmetic {
 mod test_legal_control_flow {
     use std::fs;
 
-    const TEST_DIR: &str = "tests/fixtures/din/legal/control_flow";
+    const TEST_DIR: &str = "tests/fixtures/legal/control_flow";
 
     #[test]
     fn for_loop() {
@@ -646,7 +646,7 @@ mod test_legal_control_flow {
 mod test_legal_data_flow {
     use std::fs;
 
-    const TEST_DIR: &str = "tests/fixtures/din/legal/data_flow";
+    const TEST_DIR: &str = "tests/fixtures/legal/data_flow";
 
     #[test]
     fn asnmt() {
