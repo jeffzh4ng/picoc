@@ -79,7 +79,7 @@ pub enum Expr {
     // introductions (operands)
     // Char
     // - sign: Signed/Unsighed
-    Int(i128),
+    Int(i32),
     // - sign: Signed/Unsighed
     // - length: Short/Long
     // Float

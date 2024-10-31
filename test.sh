@@ -75,7 +75,7 @@ assert "./tests/fixtures/legal/control_flow/ifels_then.c"
 assert "./tests/fixtures/legal/control_flow/ifels_els.c"
 
 # -- loops
-# assert "./tests/fixtures/legal/control_flow/for.c"
+assert "./tests/fixtures/legal/control_flow/for.c"
 
 # -- functions
 

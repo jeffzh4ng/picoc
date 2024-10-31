@@ -1,10 +1,9 @@
-# tinyc
+# picoc089
 
-**a software 1.0 compiler: C89/90 -> RV32G**
+**a software 1.0 intepreter/compiler**
 
 ```
-tinyc snapshots the happy paths, and smoked against gcc with egos2, xv6, git, sqlite.
-tinyc is optimized 20/80-wise to beat gcc -O1 on dhrystone and embench.
+picoc089 implements two languages: C0 and C89
 ```
 
 <!-- Future reading:
