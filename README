@@ -1,4 +1,4 @@
-picoc089 is a C0 interpreter and C89 compiler
+picoc089 is a C0 interpreter and C89->RV32I compiler
 
 Usage:
 cargo run interpretc0 ./path/to/file.c0

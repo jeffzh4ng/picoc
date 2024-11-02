@@ -1,11 +1,11 @@
 [package]
-name = "din"
+name = "picoc089"
 version = "0.1.0"
 edition = "2021"
 authors = ["Jeff Zhang"]
-description = "a software 1.0 compiler: C89/90 -> RV32G"
+description = "C0 interpreter and C89->RV32I compiler"
 readme = "README.md"
-repository = "https://github.com/jeffzh4ng/din"
+repository = "https://github.com/jeffzh4ng/picoc089"
 license = "MIT OR Apache-2.0"
 keywords = ["compiler", "riscv"]
 categories = ["compilers"]
@@ -14,8 +14,6 @@ categories = ["compilers"]
 insta.opt-level = 3
 
 [dependencies]
-anyhow = "1.0.82"
-proptest = "1.4.0"
 serde = { version = "1.0.196", features = ["derive"] }
 thiserror = "1.0.58"
 
