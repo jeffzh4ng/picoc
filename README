@@ -9,5 +9,5 @@ snapshots sub langs (arith, bindings, control, heap)
 smokes with egos2000, xv6, git, and sqlite
 
 Speed:
-20% optimizations for 80% of the Speed
+20% optimizations for 80% of the speed
 inline, unroll, cse, dce, motion, fold, peephole

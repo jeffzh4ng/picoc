@@ -1,28 +1,26 @@
 use crate::{
-    lexer::{Token, TokenType},
-    Lambda,
+    lexer::{Token, TT},
+    BinOp, Expr, FuncDef, Nv, RelOp, Stmt, VarDecl,
 };
-use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, io};
+use std::io;
 
-// Program: HashMap<Id, Function>
-pub fn parse_program(tokens: Vec<Token>) -> Result<HashMap<String, Lambda>, io::Error> {
-    let mut env = HashMap::new();
-    let mut r0 = tokens.as_slice();
-    while let Ok((f, r1)) = parse_function(r0) {
-        env.insert(f.name.clone(), f); // need the clone to avoid partial move
-        r0 = r1;
+pub fn parse_prg(tokens: &[Token]) -> Result<Nv, io::Error> {
+    let mut functions = vec![];
+    let mut r = tokens;
+    while let Ok((s, _r)) = parse_funcdef(r) {
+        functions.push(s);
+        r = _r;
     }
 
-    Ok(env)
+    todo!()
 }
 
-fn parse_function(tokens: &[Token]) -> Result<(Function, &[Token]), io::Error> {
-    let (_, r) = mtch(&tokens, TokenType::KeywordInt)?;
-    let (_, r) = mtch(r, TokenType::KeywordMain)?;
-    let (_, r) = mtch(r, TokenType::PuncLeftParen)?;
-    let (_, r) = mtch(r, TokenType::PuncRightParen)?;
-    let (_, r) = mtch(r, TokenType::PuncLeftBrace)?;
+fn parse_funcdef(tokens: &[Token]) -> Result<(FuncDef, &[Token]), io::Error> {
+    let (_, r) = mtch(&tokens, TT::KeywordInt)?;
+    let (_, r) = mtch(r, TT::KeywordMain)?;
+    let (_, r) = mtch(r, TT::PuncLeftParen)?;
+    let (_, r) = mtch(r, TT::PuncRightParen)?;
+    let (_, r) = mtch(r, TT::PuncLeftBrace)?;
 
     let mut stmts = vec![];
     let mut r0 = r;
@@ -30,7 +28,7 @@ fn parse_function(tokens: &[Token]) -> Result<(Function, &[Token]), io::Error> {
         stmts.push(s);
         r0 = r1;
     }
-    let (_, r) = mtch(r0, TokenType::PuncRightBrace)?;
+    let (_, r) = mtch(r0, TT::PuncRightBrace)?;
 
     if !r.is_empty() {
         // panic?
@@ -46,83 +44,83 @@ fn parse_function(tokens: &[Token]) -> Result<(Function, &[Token]), io::Error> {
     ))
 }
 
-fn parse_asmt(tokens: &[Token]) -> Result<(Asnmt, &[Token]), io::Error> {
+fn parse_asmt(tokens: &[Token]) -> Result<(VarDecl, &[Token]), io::Error> {
     match tokens {
         [] => todo!(),
         [f, r @ ..] => match f.typ {
-            TokenType::KeywordInt => {
-                let (idt, r) = mtch(r, TokenType::Identifier)?;
-                let (_, r) = mtch(r, TokenType::Equals)?;
+            TT::KeywordInt => {
+                let (idt, r) = mtch(r, TT::Identifier)?;
+                let (_, r) = mtch(r, TT::Equals)?;
                 let (expr, r) = parse_rel_expr(r)?;
 
                 Ok((
-                    Asnmt::CreateBind {
-                        id: Id(idt.lexeme.to_owned()),
+                    VarDecl::CreateBind {
+                        alias: idt.lexeme.to_owned(),
                         expr: Box::new(expr),
                     },
                     r,
                 ))
             }
-            TokenType::Identifier => match r {
+            TT::Identifier => match r {
                 [] => todo!(),
                 [s, t, r @ ..] => match (s.typ, t.typ) {
-                    (TokenType::Plus, TokenType::Equals) => {
+                    (TT::Plus, TT::Equals) => {
                         let (expr, r) = parse_rel_expr(r)?;
                         Ok((
-                            Asnmt::UpdateBind {
-                                id: Id(f.lexeme.parse().unwrap()),
+                            VarDecl::UpdateBind {
+                                alias: f.lexeme.parse().unwrap(),
                                 op: BinOp::Add,
                                 expr: Box::new(expr),
                             },
                             r,
                         ))
                     }
-                    (TokenType::Plus, TokenType::Plus) => Ok((
-                        Asnmt::UpdateBind {
-                            id: Id(f.lexeme.parse().unwrap()),
+                    (TT::Plus, TT::Plus) => Ok((
+                        VarDecl::UpdateBind {
+                            alias: f.lexeme.parse().unwrap(),
                             op: BinOp::Add,
                             expr: Box::new(Expr::Int(1)),
                         },
                         r,
                     )),
-                    (TokenType::Minus, TokenType::Equals) => {
+                    (TT::Minus, TT::Equals) => {
                         let (expr, r) = parse_rel_expr(r)?;
 
                         Ok((
-                            Asnmt::UpdateBind {
-                                id: Id(f.lexeme.parse().unwrap()),
+                            VarDecl::UpdateBind {
+                                alias: f.lexeme.parse().unwrap(),
                                 op: BinOp::Sub,
                                 expr: Box::new(expr),
                             },
                             r,
                         ))
                     }
-                    (TokenType::Minus, TokenType::Minus) => Ok((
-                        Asnmt::UpdateBind {
-                            id: Id(f.lexeme.parse().unwrap()),
+                    (TT::Minus, TT::Minus) => Ok((
+                        VarDecl::UpdateBind {
+                            alias: f.lexeme.parse().unwrap(),
                             op: BinOp::Sub,
                             expr: Box::new(Expr::Int(1)),
                         },
                         r,
                     )),
-                    (TokenType::Star, TokenType::Equals) => {
+                    (TT::Star, TT::Equals) => {
                         let (expr, r) = parse_rel_expr(r)?;
 
                         Ok((
-                            Asnmt::UpdateBind {
-                                id: Id(f.lexeme.parse().unwrap()),
+                            VarDecl::UpdateBind {
+                                alias: f.lexeme.parse().unwrap(),
                                 op: BinOp::Mult,
                                 expr: Box::new(expr),
                             },
                             r,
                         ))
                     }
-                    (TokenType::Slash, TokenType::Equals) => {
+                    (TT::Slash, TT::Equals) => {
                         let (expr, r) = parse_rel_expr(r)?;
 
                         Ok((
-                            Asnmt::UpdateBind {
-                                id: Id(f.lexeme.parse().unwrap()),
+                            VarDecl::UpdateBind {
+                                alias: f.lexeme.parse().unwrap(),
                                 op: BinOp::Div,
                                 expr: Box::new(expr),
                             },
@@ -143,35 +141,35 @@ fn parse_asmt(tokens: &[Token]) -> Result<(Asnmt, &[Token]), io::Error> {
     }
 }
 
-fn parse_stmt(tokens: &[Token]) -> Result<(Cmd, &[Token]), io::Error> {
+fn parse_stmt(tokens: &[Token]) -> Result<(Stmt, &[Token]), io::Error> {
     match tokens {
         [] => todo!(),
         [f, r @ ..] => match f.typ {
-            TokenType::KeywordInt | TokenType::Identifier => {
+            TT::KeywordInt | TT::Identifier => {
                 let (a, r) = parse_asmt(tokens)?;
-                let (_, r) = mtch(r, TokenType::PuncSemiColon)?;
+                let (_, r) = mtch(r, TT::PuncSemiColon)?;
 
-                Ok((Cmd::Asnmt(a), r))
+                Ok((Stmt::Asnmt(a), r))
             }
-            TokenType::KeywordRet => {
+            TT::KeywordRet => {
                 let (expr, r) = parse_rel_expr(r)?;
-                let (_, r) = mtch(r, TokenType::PuncSemiColon)?;
-                Ok((Cmd::Return(expr), r))
+                let (_, r) = mtch(r, TT::PuncSemiColon)?;
+                Ok((Stmt::Return(expr), r))
             }
-            TokenType::KeywordIf => {
-                let (_, r) = mtch(r, TokenType::PuncLeftParen)?;
+            TT::KeywordIf => {
+                let (_, r) = mtch(r, TT::PuncLeftParen)?;
                 let (cond, r) = parse_rel_expr(r)?;
-                let (_, r) = mtch(r, TokenType::PuncRightParen)?;
-                let (_, r) = mtch(r, TokenType::PuncLeftBrace)?;
+                let (_, r) = mtch(r, TT::PuncRightParen)?;
+                let (_, r) = mtch(r, TT::PuncLeftBrace)?;
                 let (then, r) = parse_stmt(r)?;
-                let (_, r) = mtch(r, TokenType::PuncRightBrace)?;
-                let (_, r) = mtch(r, TokenType::KeywordEls)?;
-                let (_, r) = mtch(r, TokenType::PuncLeftBrace)?;
+                let (_, r) = mtch(r, TT::PuncRightBrace)?;
+                let (_, r) = mtch(r, TT::KeywordEls)?;
+                let (_, r) = mtch(r, TT::PuncLeftBrace)?;
                 let (els, r) = parse_stmt(r)?;
-                let (_, r) = mtch(r, TokenType::PuncRightBrace)?;
+                let (_, r) = mtch(r, TT::PuncRightBrace)?;
 
                 Ok((
-                    Cmd::IfEls {
+                    Stmt::IfEls {
                         cond: Box::new(cond),
                         then: Box::new(then),
                         els: Box::new(els),
@@ -179,15 +177,15 @@ fn parse_stmt(tokens: &[Token]) -> Result<(Cmd, &[Token]), io::Error> {
                     r,
                 ))
             }
-            TokenType::KeywordFor => {
-                let (_, r) = mtch(r, TokenType::PuncLeftParen)?;
+            TT::KeywordFor => {
+                let (_, r) = mtch(r, TT::PuncLeftParen)?;
                 let (asnmt, r) = parse_asmt(r)?;
-                let (_, r) = mtch(r, TokenType::PuncSemiColon)?;
+                let (_, r) = mtch(r, TT::PuncSemiColon)?;
                 let (cond, r) = parse_rel_expr(r)?;
-                let (_, r) = mtch(r, TokenType::PuncSemiColon)?;
+                let (_, r) = mtch(r, TT::PuncSemiColon)?;
                 let (update, r) = parse_asmt(r)?;
-                let (_, r) = mtch(r, TokenType::PuncRightParen)?;
-                let (_, r) = mtch(r, TokenType::PuncLeftBrace)?;
+                let (_, r) = mtch(r, TT::PuncRightParen)?;
+                let (_, r) = mtch(r, TT::PuncLeftBrace)?;
 
                 let mut body = vec![];
                 let mut r0 = r;
@@ -195,10 +193,10 @@ fn parse_stmt(tokens: &[Token]) -> Result<(Cmd, &[Token]), io::Error> {
                     body.push(s);
                     r0 = r1;
                 }
-                let (_, r) = mtch(r0, TokenType::PuncRightBrace)?;
+                let (_, r) = mtch(r0, TT::PuncRightBrace)?;
 
                 Ok((
-                    Cmd::For {
+                    Stmt::For {
                         asnmt: Box::new(asnmt),
                         cond: Box::new(cond),
                         update: Box::new(update),
@@ -297,8 +295,8 @@ fn parse_atom(tokens: &[Token]) -> Result<(Expr, &[Token]), io::Error> {
     match tokens {
         [] => todo!(),
         [f, r @ ..] => match f.typ {
-            TokenType::Identifier => Ok((Expr::Var(Id(f.lexeme.to_owned())), r)),
-            TokenType::LiteralInt => Ok((Expr::Int(f.lexeme.parse().unwrap()), r)),
+            TT::Identifier => Ok((Expr::Var(Id(f.lexeme.to_owned())), r)),
+            TT::LiteralInt => Ok((Expr::Int(f.lexeme.parse().unwrap()), r)),
             t => Err(io::Error::new(
                 io::ErrorKind::Other,
                 format!("token not recognizable {:?}", t),
@@ -311,54 +309,54 @@ fn parse_rel_op(tokens: &[Token]) -> Result<(RelOp, &[Token]), io::Error> {
     match tokens {
         [] => todo!(),
         [f, r @ ..] => match f.typ {
-            TokenType::LeftAngleBracket => match r {
+            TT::LeftAngleBracket => match r {
                 [] => todo!(),
                 [s, r @ ..] => match s.typ {
-                    TokenType::Equals => Ok((RelOp::LtEq, r)),
+                    TT::Equals => Ok((RelOp::LtEq, r)),
                     _ => Ok((RelOp::Lt, &tokens[1..])), // include s
                 },
             },
-            TokenType::RightAngleBracket => match r {
+            TT::RightAngleBracket => match r {
                 [] => todo!(),
                 [s, r @ ..] => match s.typ {
-                    TokenType::Equals => Ok((RelOp::GtEq, r)),
+                    TT::Equals => Ok((RelOp::GtEq, r)),
                     _ => Ok((RelOp::Gt, &tokens[1..])), // include s
                 },
             },
-            TokenType::Equals => match r {
+            TT::Equals => match r {
                 [] => todo!(),
                 [s, r @ ..] => match s.typ {
-                    TokenType::Equals => Ok((RelOp::Eq, r)),
+                    TT::Equals => Ok((RelOp::Eq, r)),
                     t => Err(io::Error::new(
                         io::ErrorKind::Other,
                         format!("token not recognizable {:?}", t),
                     )),
                 },
             },
-            TokenType::Bang => match r {
+            TT::Bang => match r {
                 [] => todo!(),
                 [s, r @ ..] => match s.typ {
-                    TokenType::Equals => Ok((RelOp::Neq, r)),
+                    TT::Equals => Ok((RelOp::Neq, r)),
                     t => Err(io::Error::new(
                         io::ErrorKind::Other,
                         format!("token not recognizable {:?}", t),
                     )),
                 },
             },
-            TokenType::Amp => match r {
+            TT::Amp => match r {
                 [] => todo!(),
                 [s, r @ ..] => match s.typ {
-                    TokenType::Amp => Ok((RelOp::And, r)),
+                    TT::Amp => Ok((RelOp::And, r)),
                     t => Err(io::Error::new(
                         io::ErrorKind::Other,
                         format!("token not recognizable {:?}", t),
                     )),
                 },
             },
-            TokenType::Bar => match r {
+            TT::Bar => match r {
                 [] => todo!(),
                 [s, r @ ..] => match s.typ {
-                    TokenType::Bar => Ok((RelOp::Or, r)),
+                    TT::Bar => Ok((RelOp::Or, r)),
                     t => Err(io::Error::new(
                         io::ErrorKind::Other,
                         format!("token not recognizable {:?}", t),
@@ -377,8 +375,8 @@ fn parse_term_op(tokens: &[Token]) -> Result<(BinOp, &[Token]), io::Error> {
     match tokens {
         [] => todo!(),
         [f, r @ ..] => match f.typ {
-            TokenType::Plus => Ok((BinOp::Add, r)),
-            TokenType::Minus => Ok((BinOp::Sub, r)),
+            TT::Plus => Ok((BinOp::Add, r)),
+            TT::Minus => Ok((BinOp::Sub, r)),
             t => Err(io::Error::new(
                 io::ErrorKind::Other,
                 format!("token not recognizable {:?}", t),
@@ -391,8 +389,8 @@ fn parse_factor_op(tokens: &[Token]) -> Result<(BinOp, &[Token]), io::Error> {
     match tokens {
         [] => todo!(),
         [f, r @ ..] => match f.typ {
-            TokenType::Star => Ok((BinOp::Mult, r)),
-            TokenType::Slash => Ok((BinOp::Div, r)),
+            TT::Star => Ok((BinOp::Mult, r)),
+            TT::Slash => Ok((BinOp::Div, r)),
             t => Err(io::Error::new(
                 io::ErrorKind::Other,
                 format!("token not recognizable {:?}", t),
@@ -401,7 +399,7 @@ fn parse_factor_op(tokens: &[Token]) -> Result<(BinOp, &[Token]), io::Error> {
     }
 }
 
-fn mtch(tokens: &[Token], tt: TokenType) -> Result<(&Token, &[Token]), io::Error> {
+fn mtch(tokens: &[Token], tt: TT) -> Result<(&Token, &[Token]), io::Error> {
     match tokens {
         [] => todo!(),
         [f, r @ ..] => {
@@ -419,7 +417,7 @@ fn mtch(tokens: &[Token], tt: TokenType) -> Result<(&Token, &[Token]), io::Error
 }
 
 #[cfg(test)]
-mod test_legal_arithmetic {
+mod test_arith {
     use crate::lexer;
     use std::fs;
 
@@ -434,7 +432,7 @@ mod test_legal_arithmetic {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse_program(tokens).unwrap();
+        let tree = super::parse_prg(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -453,7 +451,7 @@ mod test_legal_arithmetic {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse_program(tokens).unwrap();
+        let tree = super::parse_prg(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -477,7 +475,7 @@ mod test_legal_arithmetic {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse_program(tokens).unwrap();
+        let tree = super::parse_prg(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -507,7 +505,7 @@ mod test_legal_arithmetic {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse_program(tokens).unwrap();
+        let tree = super::parse_prg(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -532,7 +530,7 @@ mod test_legal_arithmetic {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse_program(tokens).unwrap();
+        let tree = super::parse_prg(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -557,7 +555,7 @@ mod test_legal_arithmetic {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse_program(tokens).unwrap();
+        let tree = super::parse_prg(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -571,14 +569,6 @@ mod test_legal_arithmetic {
                     Int: 9
         "###);
     }
-}
-
-#[cfg(test)]
-mod test_legal_arithmetic_precedence {
-    use crate::lexer;
-    use std::fs;
-
-    const TEST_DIR: &str = "tests/fixtures/legal/arithmetic_precedence";
 
     #[test]
     fn add_associative() {
@@ -589,7 +579,7 @@ mod test_legal_arithmetic_precedence {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse_program(tokens).unwrap();
+        let tree = super::parse_prg(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -618,7 +608,7 @@ mod test_legal_arithmetic_precedence {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse_program(tokens).unwrap();
+        let tree = super::parse_prg(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -647,7 +637,7 @@ mod test_legal_arithmetic_precedence {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse_program(tokens).unwrap();
+        let tree = super::parse_prg(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -676,7 +666,7 @@ mod test_legal_arithmetic_precedence {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse_program(tokens).unwrap();
+        let tree = super::parse_prg(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -703,7 +693,69 @@ mod test_legal_arithmetic_precedence {
 }
 
 #[cfg(test)]
-mod test_legal_control_flow {
+mod test_bindings {
+    use crate::lexer;
+    use std::fs;
+
+    const TEST_DIR: &str = "tests/fixtures/legal/data_flow";
+
+    #[test]
+    fn asnmt() {
+        let chars = fs::read(format!("{TEST_DIR}/asnmt.c"))
+            .expect("Should have been able to read the file")
+            .iter()
+            .map(|b| *b as char)
+            .collect::<Vec<_>>();
+
+        let tokens = lexer::lex(&chars);
+        let tree = super::parse_prg(tokens).unwrap();
+        insta::assert_yaml_snapshot!(tree, @r###"
+        ---
+        main_function:
+          stmts:
+            - Asnmt:
+                CreateBind:
+                  id: x
+                  expr:
+                    Int: 8
+            - Return:
+                Var: x
+        "###);
+    }
+
+    #[test]
+    fn asnmt_update() {
+        let chars = fs::read(format!("{TEST_DIR}/asnmt_update.c"))
+            .expect("Should have been able to read the file")
+            .iter()
+            .map(|b| *b as char)
+            .collect::<Vec<_>>();
+
+        let tokens = lexer::lex(&chars);
+        let tree = super::parse_prg(tokens).unwrap();
+        insta::assert_yaml_snapshot!(tree, @r###"
+        ---
+        main_function:
+          stmts:
+            - Asnmt:
+                CreateBind:
+                  id: n
+                  expr:
+                    Int: 0
+            - Asnmt:
+                UpdateBind:
+                  id: n
+                  op: Add
+                  expr:
+                    Int: 10
+            - Return:
+                Var: n
+        "###);
+    }
+}
+
+#[cfg(test)]
+mod test_control {
     use crate::lexer;
     use std::fs;
 
@@ -718,7 +770,7 @@ mod test_legal_control_flow {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse_program(tokens).unwrap();
+        let tree = super::parse_prg(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -742,7 +794,7 @@ mod test_legal_control_flow {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse_program(tokens).unwrap();
+        let tree = super::parse_prg(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -766,7 +818,7 @@ mod test_legal_control_flow {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse_program(tokens).unwrap();
+        let tree = super::parse_prg(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -790,7 +842,7 @@ mod test_legal_control_flow {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse_program(tokens).unwrap();
+        let tree = super::parse_prg(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -814,7 +866,7 @@ mod test_legal_control_flow {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse_program(tokens).unwrap();
+        let tree = super::parse_prg(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -838,7 +890,7 @@ mod test_legal_control_flow {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse_program(tokens).unwrap();
+        let tree = super::parse_prg(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -862,7 +914,7 @@ mod test_legal_control_flow {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse_program(tokens).unwrap();
+        let tree = super::parse_prg(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -893,7 +945,7 @@ mod test_legal_control_flow {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse_program(tokens).unwrap();
+        let tree = super::parse_prg(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -940,75 +992,3 @@ mod test_legal_control_flow {
         "###);
     }
 }
-
-#[cfg(test)]
-mod test_legal_data_flow {
-    use crate::lexer;
-    use std::fs;
-
-    const TEST_DIR: &str = "tests/fixtures/legal/data_flow";
-
-    #[test]
-    fn asnmt() {
-        let chars = fs::read(format!("{TEST_DIR}/asnmt.c"))
-            .expect("Should have been able to read the file")
-            .iter()
-            .map(|b| *b as char)
-            .collect::<Vec<_>>();
-
-        let tokens = lexer::lex(&chars);
-        let tree = super::parse_program(tokens).unwrap();
-        insta::assert_yaml_snapshot!(tree, @r###"
-        ---
-        main_function:
-          stmts:
-            - Asnmt:
-                CreateBind:
-                  id: x
-                  expr:
-                    Int: 8
-            - Return:
-                Var: x
-        "###);
-    }
-
-    #[test]
-    fn asnmt_update() {
-        let chars = fs::read(format!("{TEST_DIR}/asnmt_update.c"))
-            .expect("Should have been able to read the file")
-            .iter()
-            .map(|b| *b as char)
-            .collect::<Vec<_>>();
-
-        let tokens = lexer::lex(&chars);
-        let tree = super::parse_program(tokens).unwrap();
-        insta::assert_yaml_snapshot!(tree, @r###"
-        ---
-        main_function:
-          stmts:
-            - Asnmt:
-                CreateBind:
-                  id: n
-                  expr:
-                    Int: 0
-            - Asnmt:
-                UpdateBind:
-                  id: n
-                  op: Add
-                  expr:
-                    Int: 10
-            - Return:
-                Var: n
-        "###);
-    }
-}
-
-// proptest! {
-//     #[test]
-//     fn doesnt_crash(s in "\\PC*") {
-//         let t = Token{ lexeme: s, typ: TokenType::Identifier };
-//         let tokens = vec![t];
-
-//         let _ = parse_program(tokens);
-//     }
-// }

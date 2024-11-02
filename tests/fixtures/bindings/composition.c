@@ -3,9 +3,13 @@ int main() {
 }
 
 int f(int x) {
-    return g(x) + 10;
+    return x + g(10);
 }
 
 int g(int y) {
-    return y + 11;
+    return y + 11 + h();
+}
+
+int h(void) {
+    return 12;
 }

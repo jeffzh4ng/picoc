@@ -3,9 +3,9 @@ use std::iter;
 
 #[rustfmt::skip]
 #[derive(Copy, Clone, PartialEq, Serialize, Deserialize, Debug)]
-pub enum TokenType {
+pub enum TT {
     LiteralInt, Identifier, // introductions (values) RE: [0-9]+ and [a-zA-Z][a-zA-Z0-9]*
-    KeywordInt, KeywordMain, KeywordVoid, KeywordRet, KeywordIf, KeywordEls, KeywordFor, // keywords ⊂ identifiers
+    KeywordInt, KeywordChar, KeywordMain, KeywordVoid, KeywordRet, KeywordIf, KeywordEls, KeywordFor, // keywords ⊂ identifiers
     Plus, Minus, Star, Slash, LeftAngleBracket, RightAngleBracket, Equals, Bang, Amp, Bar, // eliminations (ops)
     PuncLeftParen, PuncRightParen, PuncLeftBrace, PuncRightBrace, PuncSemiColon, // punctuation
 }
@@ -17,7 +17,7 @@ pub enum TokenType {
 
 #[rustfmt::skip]
 #[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]
-pub struct Token { pub lexeme: String, pub typ: TokenType }
+pub struct Token { pub lexeme: String, pub typ: TT }
 
 // TODO: keep track of file and (col, row) for error reporting
 // TODO: just filter out whitespace instead of having a helper function
@@ -33,82 +33,82 @@ pub fn lex(input: &[char]) -> Vec<Token> {
             'a'..='z' | 'A'..='Z' => scan_id(cs),
             '+' => {
                 #[rustfmt::skip]
-                let t = Token { lexeme: String::from("+"), typ: TokenType::Plus };
+                let t = Token { lexeme: String::from("+"), typ: TT::Plus };
                 iter::once(t).chain(lex(r)).collect()
             }
             '-' => {
                 #[rustfmt::skip]
-                let t = Token { lexeme: String::from("-"), typ: TokenType::Minus };
+                let t = Token { lexeme: String::from("-"), typ: TT::Minus };
                 iter::once(t).chain(lex(r)).collect()
             }
             '*' => {
                 #[rustfmt::skip]
-                let t = Token { lexeme: String::from("*"), typ: TokenType::Star };
+                let t = Token { lexeme: String::from("*"), typ: TT::Star };
                 iter::once(t).chain(lex(r)).collect()
             }
             '/' => {
                 #[rustfmt::skip]
-                let t = Token { lexeme: String::from("/"), typ: TokenType::Slash };
+                let t = Token { lexeme: String::from("/"), typ: TT::Slash };
                 iter::once(t).chain(lex(r)).collect()
             }
             '<' => {
                 #[rustfmt::skip]
-                let t = Token { lexeme: String::from("<"), typ: TokenType::LeftAngleBracket };
+                let t = Token { lexeme: String::from("<"), typ: TT::LeftAngleBracket };
                 iter::once(t).chain(lex(r)).collect()
             }
             '>' => {
                 #[rustfmt::skip]
-                let t = Token { lexeme: String::from(">"), typ: TokenType::RightAngleBracket };
+                let t = Token { lexeme: String::from(">"), typ: TT::RightAngleBracket };
                 iter::once(t).chain(lex(r)).collect()
             }
             '=' => {
                 #[rustfmt::skip]
-                let t = Token { lexeme: String::from("="), typ: TokenType::Equals };
+                let t = Token { lexeme: String::from("="), typ: TT::Equals };
                 iter::once(t).chain(lex(r)).collect()
             }
             '!' => {
                 #[rustfmt::skip]
-                let t = Token { lexeme: String::from("!"), typ: TokenType::Bang };
+                let t = Token { lexeme: String::from("!"), typ: TT::Bang };
                 iter::once(t).chain(lex(r)).collect()
             }
             '&' => {
                 #[rustfmt::skip]
-                let t = Token { lexeme: String::from("&"), typ: TokenType::Amp };
+                let t = Token { lexeme: String::from("&"), typ: TT::Amp };
                 iter::once(t).chain(lex(r)).collect()
             }
             '|' => {
                 #[rustfmt::skip]
-                let t = Token { lexeme: String::from("|"), typ: TokenType::Bar };
+                let t = Token { lexeme: String::from("|"), typ: TT::Bar };
                 iter::once(t).chain(lex(r)).collect()
             }
             '(' => {
                 #[rustfmt::skip]
-                let t = Token { lexeme: String::from("("), typ: TokenType::PuncLeftParen };
+                let t = Token { lexeme: String::from("("), typ: TT::PuncLeftParen };
                 iter::once(t).chain(lex(r)).collect()
             }
             ')' => {
                 #[rustfmt::skip]
-                let t = Token { lexeme: String::from(")"), typ: TokenType::PuncRightParen };
+                let t = Token { lexeme: String::from(")"), typ: TT::PuncRightParen };
                 iter::once(t).chain(lex(r)).collect()
             }
             '{' => {
                 #[rustfmt::skip]
-                let t = Token { lexeme: String::from("{"), typ: TokenType::PuncLeftBrace };
+                let t = Token { lexeme: String::from("{"), typ: TT::PuncLeftBrace };
                 iter::once(t).chain(lex(r)).collect()
             }
             '}' => {
                 #[rustfmt::skip]
-                let t = Token { lexeme: String::from("}"), typ: TokenType::PuncRightBrace };
+                let t = Token { lexeme: String::from("}"), typ: TT::PuncRightBrace };
                 iter::once(t).chain(lex(r)).collect()
             }
             ';' => {
                 #[rustfmt::skip]
-                let t = Token { lexeme: String::from(";"), typ: TokenType::PuncSemiColon };
+                let t = Token { lexeme: String::from(";"), typ: TT::PuncSemiColon };
                 iter::once(t).chain(lex(r)).collect()
             }
             _ => {
                 #[rustfmt::skip]
-                let t = Token { lexeme: String::from("PANIC?"), typ: TokenType::Plus };
+                let t = Token { lexeme: String::from("PANIC?"), typ: TT::Plus };
                 iter::once(t).chain(lex(r)).collect()
             }
         },
@@ -137,7 +137,7 @@ fn scan_int(input: &[char]) -> Vec<Token> {
 
                 let t = Token {
                     lexeme: f,
-                    typ: TokenType::LiteralInt,
+                    typ: TT::LiteralInt,
                 };
 
                 iter::once(t).chain(lex(new_r)).collect()
@@ -172,27 +172,27 @@ fn scan_id(input: &[char]) -> Vec<Token> {
                 let keyword = match f.as_str() {
                     "int" => Some(Token {
                         lexeme: f.to_string(),
-                        typ: TokenType::KeywordInt,
+                        typ: TT::KeywordInt,
                     }),
                     "main" => Some(Token {
                         lexeme: f.to_string(),
-                        typ: TokenType::KeywordMain,
+                        typ: TT::KeywordMain,
                     }),
                     "if" => Some(Token {
                         lexeme: f.to_string(),
-                        typ: TokenType::KeywordIf,
+                        typ: TT::KeywordIf,
                     }),
                     "else" => Some(Token {
                         lexeme: f.to_string(),
-                        typ: TokenType::KeywordEls,
+                        typ: TT::KeywordEls,
                     }),
                     "for" => Some(Token {
                         lexeme: f.to_string(),
-                        typ: TokenType::KeywordFor,
+                        typ: TT::KeywordFor,
                     }),
                     "return" => Some(Token {
                         lexeme: f.to_string(),
-                        typ: TokenType::KeywordRet,
+                        typ: TT::KeywordRet,
                     }),
                     _ => None,
                 };
@@ -201,7 +201,7 @@ fn scan_id(input: &[char]) -> Vec<Token> {
                     Some(k) => k,
                     None => Token {
                         lexeme: f,
-                        typ: TokenType::Identifier,
+                        typ: TT::Identifier,
                     },
                 };
 
