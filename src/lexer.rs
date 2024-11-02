@@ -5,7 +5,7 @@ use std::iter;
 #[derive(Copy, Clone, PartialEq, Serialize, Deserialize, Debug)]
 pub enum TT {
     LiteralInt, Identifier, // introductions (values) RE: [0-9]+ and [a-zA-Z][a-zA-Z0-9]*
-    KeywordInt, KeywordChar, KeywordMain, KeywordVoid, KeywordRet, KeywordIf, KeywordEls, KeywordFor, // keywords ⊂ identifiers
+    KeywordInt, KeywordChar, KeywordVoid, KeywordRet, KeywordIf, KeywordEls, KeywordFor, // keywords ⊂ identifiers
     Plus, Minus, Star, Slash, LeftAngleBracket, RightAngleBracket, Equals, Bang, Amp, Bar, // eliminations (ops)
     PuncLeftParen, PuncRightParen, PuncLeftBrace, PuncRightBrace, PuncSemiColon, // punctuation
 }
@@ -174,10 +174,6 @@ fn scan_id(input: &[char]) -> Vec<Token> {
                         lexeme: f.to_string(),
                         typ: TT::KeywordInt,
                     }),
-                    "main" => Some(Token {
-                        lexeme: f.to_string(),
-                        typ: TT::KeywordMain,
-                    }),
                     "if" => Some(Token {
                         lexeme: f.to_string(),
                         typ: TT::KeywordIf,
@@ -249,7 +245,7 @@ mod test_arith {
         - lexeme: int
           typ: KeywordInt
         - lexeme: main
-          typ: KeywordMain
+          typ: Identifier
         - lexeme: (
           typ: PuncLeftParen
         - lexeme: )
@@ -282,7 +278,7 @@ mod test_arith {
         - lexeme: int
           typ: KeywordInt
         - lexeme: main
-          typ: KeywordMain
+          typ: Identifier
         - lexeme: (
           typ: PuncLeftParen
         - lexeme: )
@@ -319,7 +315,7 @@ mod test_arith {
         - lexeme: int
           typ: KeywordInt
         - lexeme: main
-          typ: KeywordMain
+          typ: Identifier
         - lexeme: (
           typ: PuncLeftParen
         - lexeme: )
@@ -360,7 +356,7 @@ mod test_arith {
         - lexeme: int
           typ: KeywordInt
         - lexeme: main
-          typ: KeywordMain
+          typ: Identifier
         - lexeme: (
           typ: PuncLeftParen
         - lexeme: )
@@ -397,7 +393,7 @@ mod test_arith {
         - lexeme: int
           typ: KeywordInt
         - lexeme: main
-          typ: KeywordMain
+          typ: Identifier
         - lexeme: (
           typ: PuncLeftParen
         - lexeme: )
@@ -434,7 +430,7 @@ mod test_arith {
         - lexeme: int
           typ: KeywordInt
         - lexeme: main
-          typ: KeywordMain
+          typ: Identifier
         - lexeme: (
           typ: PuncLeftParen
         - lexeme: )
