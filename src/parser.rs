@@ -1,138 +1,23 @@
-use crate::lexer::{Token, TokenType};
+use crate::{
+    lexer::{Token, TokenType},
+    Lambda,
+};
 use serde::{Deserialize, Serialize};
-use std::io;
+use std::{collections::HashMap, io};
 
-#[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]
-pub struct Program {
-    pub main_function: MainFunction,
+// Program: HashMap<Id, Function>
+pub fn parse_program(tokens: Vec<Token>) -> Result<HashMap<String, Lambda>, io::Error> {
+    let mut env = HashMap::new();
+    let mut r0 = tokens.as_slice();
+    while let Ok((f, r1)) = parse_function(r0) {
+        env.insert(f.name.clone(), f); // need the clone to avoid partial move
+        r0 = r1;
+    }
+
+    Ok(env)
 }
 
-#[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]
-pub struct MainFunction {
-    pub stmts: Vec<Stmt>,
-}
-
-#[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]
-pub struct Id(pub String);
-
-#[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]
-pub enum Stmt {
-    // Continue,
-    // Break,
-    While,
-    // Dowhile,
-    // Switch
-    If,
-    IfEls {
-        cond: Box<Expr>,
-        then: Box<Stmt>,
-        els: Box<Stmt>,
-    },
-    For {
-        asnmt: Box<Asnmt>,
-        cond: Box<Expr>,
-        update: Box<Asnmt>,
-        body: Vec<Stmt>,
-    },
-    Return(Expr),
-    Asnmt(Asnmt),
-}
-
-#[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]
-pub enum Asnmt {
-    // intro
-    CreateBind { id: Id, expr: Box<Expr> },
-
-    // update
-    UpdateBind { id: Id, op: BinOp, expr: Box<Expr> },
-}
-
-#[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]
-pub enum Expr {
-    // eliminations (operations)
-    Var(Id), // eliminates assignment
-    LogE {
-        op: LogOp,
-        l: Box<Expr>,
-        r: Box<Expr>,
-    },
-    BitE {
-        op: BitOp,
-        l: Box<Expr>,
-        r: Box<Expr>,
-    },
-    RelE {
-        op: RelOp,
-        l: Box<Expr>,
-        r: Box<Expr>,
-    },
-    BinE {
-        op: BinOp,
-        l: Box<Expr>,
-        r: Box<Expr>,
-    },
-    UnaryE {
-        op: UnaryOp,
-        l: Box<Expr>,
-    },
-
-    // introductions (operands)
-    // Char
-    // - sign: Signed/Unsighed
-    Int(i32),
-    // - sign: Signed/Unsighed
-    // - length: Short/Long
-    // Float
-    // Double
-    Str(String),
-}
-
-#[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]
-pub enum LogOp {
-    And,
-    Or,
-}
-
-#[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]
-pub enum BitOp {
-    And,
-    Or,
-    Xor,
-}
-
-#[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]
-pub enum RelOp {
-    Eq,
-    Neq,
-    And,
-    Or,
-    LtEq,
-    Lt,
-    GtEq,
-    Gt,
-}
-
-#[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]
-pub enum BinOp {
-    Add,
-    Sub,
-    Mult,
-    Div,
-    Mod,
-}
-
-#[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]
-pub enum UnaryOp {
-    Add,
-    Sub,
-}
-
-pub fn parse(tokens: Vec<Token>) -> Result<Program, io::Error> {
-    let main_function = parse_function(tokens)?;
-    Ok(Program { main_function })
-}
-
-fn parse_function(tokens: Vec<Token>) -> Result<MainFunction, io::Error> {
+fn parse_function(tokens: &[Token]) -> Result<(Function, &[Token]), io::Error> {
     let (_, r) = mtch(&tokens, TokenType::KeywordInt)?;
     let (_, r) = mtch(r, TokenType::KeywordMain)?;
     let (_, r) = mtch(r, TokenType::PuncLeftParen)?;
@@ -151,7 +36,14 @@ fn parse_function(tokens: Vec<Token>) -> Result<MainFunction, io::Error> {
         // panic?
     }
 
-    Ok(MainFunction { stmts })
+    Ok((
+        Function {
+            name: todo!(),
+            identifier: todo!(),
+            body: stmts,
+        },
+        r,
+    ))
 }
 
 fn parse_asmt(tokens: &[Token]) -> Result<(Asnmt, &[Token]), io::Error> {
@@ -251,7 +143,7 @@ fn parse_asmt(tokens: &[Token]) -> Result<(Asnmt, &[Token]), io::Error> {
     }
 }
 
-fn parse_stmt(tokens: &[Token]) -> Result<(Stmt, &[Token]), io::Error> {
+fn parse_stmt(tokens: &[Token]) -> Result<(Cmd, &[Token]), io::Error> {
     match tokens {
         [] => todo!(),
         [f, r @ ..] => match f.typ {
@@ -259,12 +151,12 @@ fn parse_stmt(tokens: &[Token]) -> Result<(Stmt, &[Token]), io::Error> {
                 let (a, r) = parse_asmt(tokens)?;
                 let (_, r) = mtch(r, TokenType::PuncSemiColon)?;
 
-                Ok((Stmt::Asnmt(a), r))
+                Ok((Cmd::Asnmt(a), r))
             }
             TokenType::KeywordRet => {
                 let (expr, r) = parse_rel_expr(r)?;
                 let (_, r) = mtch(r, TokenType::PuncSemiColon)?;
-                Ok((Stmt::Return(expr), r))
+                Ok((Cmd::Return(expr), r))
             }
             TokenType::KeywordIf => {
                 let (_, r) = mtch(r, TokenType::PuncLeftParen)?;
@@ -279,7 +171,7 @@ fn parse_stmt(tokens: &[Token]) -> Result<(Stmt, &[Token]), io::Error> {
                 let (_, r) = mtch(r, TokenType::PuncRightBrace)?;
 
                 Ok((
-                    Stmt::IfEls {
+                    Cmd::IfEls {
                         cond: Box::new(cond),
                         then: Box::new(then),
                         els: Box::new(els),
@@ -306,7 +198,7 @@ fn parse_stmt(tokens: &[Token]) -> Result<(Stmt, &[Token]), io::Error> {
                 let (_, r) = mtch(r0, TokenType::PuncRightBrace)?;
 
                 Ok((
-                    Stmt::For {
+                    Cmd::For {
                         asnmt: Box::new(asnmt),
                         cond: Box::new(cond),
                         update: Box::new(update),
@@ -542,7 +434,7 @@ mod test_legal_arithmetic {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse(tokens).unwrap();
+        let tree = super::parse_program(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -561,7 +453,7 @@ mod test_legal_arithmetic {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse(tokens).unwrap();
+        let tree = super::parse_program(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -585,7 +477,7 @@ mod test_legal_arithmetic {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse(tokens).unwrap();
+        let tree = super::parse_program(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -615,7 +507,7 @@ mod test_legal_arithmetic {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse(tokens).unwrap();
+        let tree = super::parse_program(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -640,7 +532,7 @@ mod test_legal_arithmetic {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse(tokens).unwrap();
+        let tree = super::parse_program(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -665,7 +557,7 @@ mod test_legal_arithmetic {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse(tokens).unwrap();
+        let tree = super::parse_program(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -697,7 +589,7 @@ mod test_legal_arithmetic_precedence {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse(tokens).unwrap();
+        let tree = super::parse_program(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -726,7 +618,7 @@ mod test_legal_arithmetic_precedence {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse(tokens).unwrap();
+        let tree = super::parse_program(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -755,7 +647,7 @@ mod test_legal_arithmetic_precedence {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse(tokens).unwrap();
+        let tree = super::parse_program(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -784,7 +676,7 @@ mod test_legal_arithmetic_precedence {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse(tokens).unwrap();
+        let tree = super::parse_program(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -826,7 +718,7 @@ mod test_legal_control_flow {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse(tokens).unwrap();
+        let tree = super::parse_program(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -850,7 +742,7 @@ mod test_legal_control_flow {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse(tokens).unwrap();
+        let tree = super::parse_program(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -874,7 +766,7 @@ mod test_legal_control_flow {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse(tokens).unwrap();
+        let tree = super::parse_program(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -898,7 +790,7 @@ mod test_legal_control_flow {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse(tokens).unwrap();
+        let tree = super::parse_program(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -922,7 +814,7 @@ mod test_legal_control_flow {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse(tokens).unwrap();
+        let tree = super::parse_program(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -946,7 +838,7 @@ mod test_legal_control_flow {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse(tokens).unwrap();
+        let tree = super::parse_program(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -970,7 +862,7 @@ mod test_legal_control_flow {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse(tokens).unwrap();
+        let tree = super::parse_program(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -1001,7 +893,7 @@ mod test_legal_control_flow {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse(tokens).unwrap();
+        let tree = super::parse_program(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -1065,7 +957,7 @@ mod test_legal_data_flow {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse(tokens).unwrap();
+        let tree = super::parse_program(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:
@@ -1089,7 +981,7 @@ mod test_legal_data_flow {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse(tokens).unwrap();
+        let tree = super::parse_program(tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         main_function:

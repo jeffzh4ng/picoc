@@ -2,13 +2,15 @@ use crate::parser;
 
 pub fn gen(tree: parser::Program) -> Vec<String> {
     let prologue = vec!["mv fp,sp".to_owned(), "addi sp,sp,208".to_owned()]; // 26 vars
-    let program = tree
-        .main_function
-        .stmts
-        .into_iter()
-        .map(|s| gen_stmt(s))
-        .flatten()
-        .collect::<Vec<_>>();
+
+    let program: Vec<String> = todo!();
+    // let program = tree
+    //     .main_function
+    //     .stmts
+    //     .into_iter()
+    //     .map(|s| gen_stmt(s))
+    //     .flatten()
+    //     .collect::<Vec<_>>();
 
     let output: Vec<String> = vec![
         ".text".to_owned(),
@@ -37,7 +39,10 @@ fn calc_offset(id: &parser::Id) -> u8 {
 
 fn gen_asnmt(a: parser::Asnmt) -> Vec<String> {
     match a {
-        parser::Asnmt::CreateBind { id, expr } => {
+        parser::Asnmt::CreateBind {
+            var: id,
+            body: expr,
+        } => {
             let offset = calc_offset(&id);
             let expr = gen_expr(*expr);
 
@@ -71,17 +76,17 @@ fn gen_asnmt(a: parser::Asnmt) -> Vec<String> {
     }
 }
 
-fn gen_stmt(s: parser::Stmt) -> Vec<String> {
+fn gen_stmt(s: parser::Cmd) -> Vec<String> {
     match s {
-        parser::Stmt::Asnmt(a) => gen_asnmt(a),
-        parser::Stmt::For {
+        parser::Cmd::Asnmt(a) => gen_asnmt(a),
+        parser::Cmd::For {
             asnmt,
             cond,
             update,
             body,
         } => todo!(),
-        parser::Stmt::While => todo!(),
-        parser::Stmt::Return(e) => {
+        parser::Cmd::While => todo!(),
+        parser::Cmd::Return(e) => {
             let output = vec![
                 gen_expr(e)
                     .iter()
@@ -96,8 +101,8 @@ fn gen_stmt(s: parser::Stmt) -> Vec<String> {
 
             output
         }
-        parser::Stmt::If => todo!(),
-        parser::Stmt::IfEls { cond, then, els } => {
+        parser::Cmd::If => todo!(),
+        parser::Cmd::IfEls { cond, then, els } => {
             let cond_mc = gen_expr(*cond);
             let then_mc = gen_stmt(*then);
             let els_mc = gen_stmt(*els);

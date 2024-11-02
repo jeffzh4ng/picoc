@@ -30,12 +30,11 @@ fn main() {
         .map(|b| *b as char)
         .collect::<Vec<_>>();
     let tokens = lexer::lex(&chars);
-    let tree = parser::parse(tokens).unwrap(); // C0 is a subset of C89 and share the same syntax
-                                               // println!("{:?}", tree);
-
+    let tree = parser::parse_program(tokens).unwrap(); // C0 is a subset of C89 and share the same syntax
+                                                       // println!("{:?}", tree);
     match strat.as_str() {
         "interpretc0" => {
-            let val = evaluator::eval(tree);
+            let val = evaluator::eval_main(tree);
             println!("picoc089-info: evaluated: {val}");
         }
         "compilec89" => {

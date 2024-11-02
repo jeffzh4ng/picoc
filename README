@@ -3,3 +3,11 @@ picoc089 is a C0 interpreter and C89 compiler
 Usage:
 cargo run interpretc0 ./path/to/file.c0
 cargo run compilec89 ./path/to/file.c
+
+Correct:
+snapshots sub langs (arith, bindings, control, heap)
+smokes with egos2000, xv6, git, and sqlite
+
+Speed:
+20% optimizations for 80% of the Speed
+inline, unroll, cse, dce, motion, fold, peephole

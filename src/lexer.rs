@@ -643,7 +643,7 @@ mod test_legal_control_flow {
 }
 
 #[cfg(test)]
-mod test_legal_data_flow {
+mod test_legal_bindings {
     use std::fs;
 
     const TEST_DIR: &str = "tests/fixtures/legal/data_flow";

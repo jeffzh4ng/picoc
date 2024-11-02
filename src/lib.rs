@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-pub mod evaluator;
-pub mod generator;
+// pub mod evaluator;
+// pub mod generator;
 pub mod lexer;
 pub mod parser;
 pub mod typer;
@@ -28,7 +28,7 @@ macro_rules! common_enum {
 #[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]
 pub struct Program(HashMap<String, Lambda>); // todo: we still need a separate map for the nv where the user can store bindings
 
-// funcdef and lambdas are pulled out of Expr because in C, functions are not expressions.
+// funcdef and lambdas are pulled out of Expr because functions are not expressions in C
 // funcapply is still an Expr.
 struct FuncDef {} // todo: can we desugar to Let? rust doesn't have let?
 common_struct! { pub struct Lambda { pub formal_param: String, pub body: Expr } } // todo: 1. func is not an expr in c? check spec 2. body is a List<___> ?>);
@@ -44,10 +44,6 @@ common_enum! {
 // right now, before we get into the month of october, values seem to correspond to types.
 // C has int x = 0, bool y = true, but NOT func my_adder = adder
 // once you extend values from i32 -> bool -> FuncVal, you need a value type for your interprer to type.
-
-// the only way to introduce functions in c is at the top level.
-// in c, functions are not expressions!!
-
 common_enum! {
     #[rustfmt::skip]
     pub enum Expr {
