@@ -1,15 +1,15 @@
 int main() {
-    return f(9);
+    return f();
 }
 
-int f(int x) {
-    return x + g(10);
+int f() {
+    return 9 + g();
 }
 
-int g(int y) {
-    return y + 11 + h();
+int g() {
+    return 10 + h();
 }
 
-int h(void) {
-    return 12;
+int h() {
+    return 11;
 }

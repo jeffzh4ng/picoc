@@ -27,14 +27,14 @@ macro_rules! common_enum {
 
 // ***** nv: Map<Alias, Val> *****
 common_struct! { pub struct Nv { fnv: HashMap<String, Lambda>, vnv: HashMap<String, Val>, body: Lambda }}
-common_struct! { pub struct Lambda { pub formal_param: String, pub body: Expr } } // todo: body: Vec<Stmt> + Expr. desugar to let?
+common_struct! { pub struct Lambda { pub formal_param: String, pub body: Expr } } // todo: formal_param: Vec<String>, body: Vec<Stmt> + Expr. desugar?
 common_enum! { pub enum Val { Int(i32), Bool(bool) } }
 
-// ***** prg: Vec<Declr> *****
-type Prg = Vec<Declr>;
-common_enum! { pub enum Declr { Func(FuncDecl), Var(VarDecl) } }
-common_struct! { pub struct FuncDecl { pub alias: String, pub formal_param: String, pub body: Expr } }
-common_struct! { pub struct VarDecl { alias: String, expr: Box<Expr> }} // UpdateBind { alias: String, op: BinOp, expr: Box<Expr> }}
+// ***** prg: Vec<Defs> *****
+type Prg = Vec<Defs>;
+common_enum! { pub enum Defs { Func(FuncDef), Var(VarDef) } }
+common_struct! { pub struct FuncDef { pub alias: String, pub formal_param: String, pub body: Vec<Stmt> } }
+common_struct! { pub struct VarDef { alias: String, expr: Box<Expr> }} // UpdateBind { alias: String, op: BinOp, expr: Box<Expr> }
 
 common_enum! {
     #[rustfmt::skip]
@@ -51,7 +51,7 @@ common_enum! {
 
 common_enum! {
     pub enum Stmt {
-        Asnmt(VarDecl),
+        Asnmt(VarDef),
         Return(Expr), // hm...
         While, If, IfEls { cond: Box<Expr>, then: Box<Stmt>, els: Box<Stmt> }
     }

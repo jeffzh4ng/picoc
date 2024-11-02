@@ -474,7 +474,7 @@ mod test_bindings {
         - lexeme: int
           typ: KeywordInt
         - lexeme: main
-          typ: KeywordMain
+          typ: Identifier
         - lexeme: (
           typ: PuncLeftParen
         - lexeme: )
@@ -524,7 +524,7 @@ mod test_control {
         - lexeme: int
           typ: KeywordInt
         - lexeme: main
-          typ: KeywordMain
+          typ: Identifier
         - lexeme: (
           typ: PuncLeftParen
         - lexeme: )

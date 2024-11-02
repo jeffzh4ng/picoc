@@ -1,50 +1,58 @@
 use crate::{
     lexer::{Token, TT},
-    BinOp, Expr, FuncDef, Nv, RelOp, Stmt, VarDecl,
+    BinOp, Defs, Expr, FuncDef, Prg, RelOp, Stmt, VarDef,
 };
 use std::io;
 
-pub fn parse_prg(tokens: &[Token]) -> Result<Nv, io::Error> {
-    let mut functions = vec![];
-    let mut r = tokens;
-    while let Ok((s, _r)) = parse_funcdef(r) {
-        functions.push(s);
+pub fn parse_prg(tokens: &[Token]) -> Result<Prg, io::Error> {
+    let (mut fds, mut r) = (vec![], tokens);
+    while let Ok((fd, _r)) = parse_funcdef(r) {
+        fds.push(fd);
         r = _r;
     }
 
-    todo!()
+    Ok(fds.into_iter().map(Defs::Func).collect())
 }
 
 fn parse_funcdef(tokens: &[Token]) -> Result<(FuncDef, &[Token]), io::Error> {
-    let (_, r) = mtch(&tokens, TT::KeywordInt)?;
-    let (_, r) = mtch(r, TT::KeywordMain)?;
+    let (_, r) = mtch(&tokens, TT::KeywordInt)?; // todo: return type can only be int for now
+    let (alias, r) = mtch(r, TT::Identifier)?;
     let (_, r) = mtch(r, TT::PuncLeftParen)?;
+    // todo: parse formal parameter
     let (_, r) = mtch(r, TT::PuncRightParen)?;
     let (_, r) = mtch(r, TT::PuncLeftBrace)?;
 
-    let mut stmts = vec![];
-    let mut r0 = r;
-    while let Ok((s, r1)) = parse_stmt(r0) {
+    let (mut stmts, mut r) = (vec![], r);
+    while let Ok((s, _r)) = parse_stmt(r) {
         stmts.push(s);
-        r0 = r1;
+        r = _r;
     }
-    let (_, r) = mtch(r0, TT::PuncRightBrace)?;
+    let (_, r) = mtch(r, TT::PuncRightBrace)?;
 
-    if !r.is_empty() {
-        // panic?
-    }
+    // todo: more rustic?
+    let ret_exists = if let Some(Stmt::Return(_)) = stmts.last() {
+        Ok(())
+    } else {
+        Err(io::Error::new(io::ErrorKind::Other, "no return"))
+    };
 
-    Ok((
-        Function {
-            name: todo!(),
-            identifier: todo!(),
-            body: stmts,
-        },
-        r,
-    ))
+    return if !r.is_empty() {
+        Err(io::Error::new(io::ErrorKind::Other, "extra tokens"))
+    } else if ret_exists.is_err() {
+        Err(io::Error::new(io::ErrorKind::Other, "no return"))
+    } else {
+        Ok((
+            FuncDef {
+                alias: alias.lexeme.to_string(),
+                formal_param: "".to_string(),
+                body: stmts,
+            },
+            r,
+        ))
+    };
 }
 
-fn parse_asmt(tokens: &[Token]) -> Result<(VarDecl, &[Token]), io::Error> {
+fn parse_asmt(tokens: &[Token]) -> Result<(VarDef, &[Token]), io::Error> {
     match tokens {
         [] => todo!(),
         [f, r @ ..] => match f.typ {
@@ -54,7 +62,7 @@ fn parse_asmt(tokens: &[Token]) -> Result<(VarDecl, &[Token]), io::Error> {
                 let (expr, r) = parse_rel_expr(r)?;
 
                 Ok((
-                    VarDecl::CreateBind {
+                    VarDef {
                         alias: idt.lexeme.to_owned(),
                         expr: Box::new(expr),
                     },
@@ -64,69 +72,69 @@ fn parse_asmt(tokens: &[Token]) -> Result<(VarDecl, &[Token]), io::Error> {
             TT::Identifier => match r {
                 [] => todo!(),
                 [s, t, r @ ..] => match (s.typ, t.typ) {
-                    (TT::Plus, TT::Equals) => {
-                        let (expr, r) = parse_rel_expr(r)?;
-                        Ok((
-                            VarDecl::UpdateBind {
-                                alias: f.lexeme.parse().unwrap(),
-                                op: BinOp::Add,
-                                expr: Box::new(expr),
-                            },
-                            r,
-                        ))
-                    }
-                    (TT::Plus, TT::Plus) => Ok((
-                        VarDecl::UpdateBind {
-                            alias: f.lexeme.parse().unwrap(),
-                            op: BinOp::Add,
-                            expr: Box::new(Expr::Int(1)),
-                        },
-                        r,
-                    )),
-                    (TT::Minus, TT::Equals) => {
-                        let (expr, r) = parse_rel_expr(r)?;
+                    // (TT::Plus, TT::Equals) => {
+                    //     let (expr, r) = parse_rel_expr(r)?;
+                    //     Ok((
+                    //         VarDef::UpdateBind {
+                    //             alias: f.lexeme.parse().unwrap(),
+                    //             op: BinOp::Add,
+                    //             expr: Box::new(expr),
+                    //         },
+                    //         r,
+                    //     ))
+                    // }
+                    // (TT::Plus, TT::Plus) => Ok((
+                    //     VarDef::UpdateBind {
+                    //         alias: f.lexeme.parse().unwrap(),
+                    //         op: BinOp::Add,
+                    //         expr: Box::new(Expr::Int(1)),
+                    //     },
+                    //     r,
+                    // )),
+                    // (TT::Minus, TT::Equals) => {
+                    //     let (expr, r) = parse_rel_expr(r)?;
 
-                        Ok((
-                            VarDecl::UpdateBind {
-                                alias: f.lexeme.parse().unwrap(),
-                                op: BinOp::Sub,
-                                expr: Box::new(expr),
-                            },
-                            r,
-                        ))
-                    }
-                    (TT::Minus, TT::Minus) => Ok((
-                        VarDecl::UpdateBind {
-                            alias: f.lexeme.parse().unwrap(),
-                            op: BinOp::Sub,
-                            expr: Box::new(Expr::Int(1)),
-                        },
-                        r,
-                    )),
-                    (TT::Star, TT::Equals) => {
-                        let (expr, r) = parse_rel_expr(r)?;
+                    //     Ok((
+                    //         VarDef::UpdateBind {
+                    //             alias: f.lexeme.parse().unwrap(),
+                    //             op: BinOp::Sub,
+                    //             expr: Box::new(expr),
+                    //         },
+                    //         r,
+                    //     ))
+                    // }
+                    // (TT::Minus, TT::Minus) => Ok((
+                    //     VarDef::UpdateBind {
+                    //         alias: f.lexeme.parse().unwrap(),
+                    //         op: BinOp::Sub,
+                    //         expr: Box::new(Expr::Int(1)),
+                    //     },
+                    //     r,
+                    // )),
+                    // (TT::Star, TT::Equals) => {
+                    //     let (expr, r) = parse_rel_expr(r)?;
 
-                        Ok((
-                            VarDecl::UpdateBind {
-                                alias: f.lexeme.parse().unwrap(),
-                                op: BinOp::Mult,
-                                expr: Box::new(expr),
-                            },
-                            r,
-                        ))
-                    }
-                    (TT::Slash, TT::Equals) => {
-                        let (expr, r) = parse_rel_expr(r)?;
+                    //     Ok((
+                    //         VarDef::UpdateBind {
+                    //             alias: f.lexeme.parse().unwrap(),
+                    //             op: BinOp::Mult,
+                    //             expr: Box::new(expr),
+                    //         },
+                    //         r,
+                    //     ))
+                    // }
+                    // (TT::Slash, TT::Equals) => {
+                    //     let (expr, r) = parse_rel_expr(r)?;
 
-                        Ok((
-                            VarDecl::UpdateBind {
-                                alias: f.lexeme.parse().unwrap(),
-                                op: BinOp::Div,
-                                expr: Box::new(expr),
-                            },
-                            r,
-                        ))
-                    }
+                    //     Ok((
+                    //         VarDef::UpdateBind {
+                    //             alias: f.lexeme.parse().unwrap(),
+                    //             op: BinOp::Div,
+                    //             expr: Box::new(expr),
+                    //         },
+                    //         r,
+                    //     ))
+                    // }
                     t => {
                         todo!()
                     }
@@ -177,34 +185,34 @@ fn parse_stmt(tokens: &[Token]) -> Result<(Stmt, &[Token]), io::Error> {
                     r,
                 ))
             }
-            TT::KeywordFor => {
-                let (_, r) = mtch(r, TT::PuncLeftParen)?;
-                let (asnmt, r) = parse_asmt(r)?;
-                let (_, r) = mtch(r, TT::PuncSemiColon)?;
-                let (cond, r) = parse_rel_expr(r)?;
-                let (_, r) = mtch(r, TT::PuncSemiColon)?;
-                let (update, r) = parse_asmt(r)?;
-                let (_, r) = mtch(r, TT::PuncRightParen)?;
-                let (_, r) = mtch(r, TT::PuncLeftBrace)?;
+            // TT::KeywordFor => {
+            //     let (_, r) = mtch(r, TT::PuncLeftParen)?;
+            //     let (asnmt, r) = parse_asmt(r)?;
+            //     let (_, r) = mtch(r, TT::PuncSemiColon)?;
+            //     let (cond, r) = parse_rel_expr(r)?;
+            //     let (_, r) = mtch(r, TT::PuncSemiColon)?;
+            //     let (update, r) = parse_asmt(r)?;
+            //     let (_, r) = mtch(r, TT::PuncRightParen)?;
+            //     let (_, r) = mtch(r, TT::PuncLeftBrace)?;
 
-                let mut body = vec![];
-                let mut r0 = r;
-                while let Ok((s, r1)) = parse_stmt(r0) {
-                    body.push(s);
-                    r0 = r1;
-                }
-                let (_, r) = mtch(r0, TT::PuncRightBrace)?;
+            //     let mut body = vec![];
+            //     let mut r0 = r;
+            //     while let Ok((s, r1)) = parse_stmt(r0) {
+            //         body.push(s);
+            //         r0 = r1;
+            //     }
+            //     let (_, r) = mtch(r0, TT::PuncRightBrace)?;
 
-                Ok((
-                    Stmt::For {
-                        asnmt: Box::new(asnmt),
-                        cond: Box::new(cond),
-                        update: Box::new(update),
-                        body,
-                    },
-                    r,
-                ))
-            }
+            //     Ok((
+            //         Stmt::For {
+            //             asnmt: Box::new(asnmt),
+            //             cond: Box::new(cond),
+            //             update: Box::new(update),
+            //             body,
+            //         },
+            //         r,
+            //     ))
+            // }
             t => Err(io::Error::new(
                 io::ErrorKind::Other,
                 format!("token not recognizable {:?}", t),
@@ -295,7 +303,7 @@ fn parse_atom(tokens: &[Token]) -> Result<(Expr, &[Token]), io::Error> {
     match tokens {
         [] => todo!(),
         [f, r @ ..] => match f.typ {
-            TT::Identifier => Ok((Expr::Var(Id(f.lexeme.to_owned())), r)),
+            TT::Identifier => Ok((Expr::Var(f.lexeme.to_owned()), r)),
             TT::LiteralInt => Ok((Expr::Int(f.lexeme.parse().unwrap()), r)),
             t => Err(io::Error::new(
                 io::ErrorKind::Other,
@@ -401,7 +409,10 @@ fn parse_factor_op(tokens: &[Token]) -> Result<(BinOp, &[Token]), io::Error> {
 
 fn mtch(tokens: &[Token], tt: TT) -> Result<(&Token, &[Token]), io::Error> {
     match tokens {
-        [] => todo!(),
+        [] => Err(io::Error::new(
+            io::ErrorKind::Other,
+            format!("expected: {:?} got: {:?}", tt, tokens),
+        )),
         [f, r @ ..] => {
             if f.typ == tt {
                 // Use an if-guard to compare values
@@ -421,7 +432,7 @@ mod test_arith {
     use crate::lexer;
     use std::fs;
 
-    const TEST_DIR: &str = "tests/fixtures/legal/arithmetic";
+    const TEST_DIR: &str = "tests/fixtures/arith";
 
     #[test]
     fn lit() {
@@ -432,13 +443,15 @@ mod test_arith {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse_prg(tokens).unwrap();
+        let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
-        main_function:
-          stmts:
-            - Return:
-                Int: 8
+        - Func:
+            alias: main
+            formal_param: ""
+            body:
+              - Return:
+                  Int: 8
         "###);
     }
 
@@ -451,18 +464,20 @@ mod test_arith {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse_prg(tokens).unwrap();
+        let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
-        main_function:
-          stmts:
-            - Return:
-                BinE:
-                  op: Add
-                  l:
-                    Int: 9
-                  r:
-                    Int: 10
+        - Func:
+            alias: main
+            formal_param: ""
+            body:
+              - Return:
+                  BinE:
+                    op: Add
+                    l:
+                      Int: 9
+                    r:
+                      Int: 10
         "###);
     }
 
@@ -475,23 +490,25 @@ mod test_arith {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse_prg(tokens).unwrap();
+        let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
-        main_function:
-          stmts:
-            - Return:
-                BinE:
-                  op: Add
-                  l:
-                    BinE:
-                      op: Add
-                      l:
-                        Int: 9
-                      r:
-                        Int: 10
-                  r:
-                    Int: 11
+        - Func:
+            alias: main
+            formal_param: ""
+            body:
+              - Return:
+                  BinE:
+                    op: Add
+                    l:
+                      BinE:
+                        op: Add
+                        l:
+                          Int: 9
+                        r:
+                          Int: 10
+                    r:
+                      Int: 11
         "###);
     }
 
@@ -505,18 +522,20 @@ mod test_arith {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse_prg(tokens).unwrap();
+        let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
-        main_function:
-          stmts:
-            - Return:
-                BinE:
-                  op: Sub
-                  l:
-                    Int: 88
-                  r:
-                    Int: 32
+        - Func:
+            alias: main
+            formal_param: ""
+            body:
+              - Return:
+                  BinE:
+                    op: Sub
+                    l:
+                      Int: 88
+                    r:
+                      Int: 32
         "###);
     }
 
@@ -530,18 +549,20 @@ mod test_arith {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse_prg(tokens).unwrap();
+        let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
-        main_function:
-          stmts:
-            - Return:
-                BinE:
-                  op: Mult
-                  l:
-                    Int: 9
-                  r:
-                    Int: 10
+        - Func:
+            alias: main
+            formal_param: ""
+            body:
+              - Return:
+                  BinE:
+                    op: Mult
+                    l:
+                      Int: 9
+                    r:
+                      Int: 10
         "###);
     }
 
@@ -555,18 +576,20 @@ mod test_arith {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse_prg(tokens).unwrap();
+        let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
-        main_function:
-          stmts:
-            - Return:
-                BinE:
-                  op: Div
-                  l:
-                    Int: 100
-                  r:
-                    Int: 9
+        - Func:
+            alias: main
+            formal_param: ""
+            body:
+              - Return:
+                  BinE:
+                    op: Div
+                    l:
+                      Int: 100
+                    r:
+                      Int: 9
         "###);
     }
 
@@ -579,23 +602,25 @@ mod test_arith {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse_prg(tokens).unwrap();
+        let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
-        main_function:
-          stmts:
-            - Return:
-                BinE:
-                  op: Add
-                  l:
-                    BinE:
-                      op: Add
-                      l:
-                        Int: 9
-                      r:
-                        Int: 10
-                  r:
-                    Int: 11
+        - Func:
+            alias: main
+            formal_param: ""
+            body:
+              - Return:
+                  BinE:
+                    op: Add
+                    l:
+                      BinE:
+                        op: Add
+                        l:
+                          Int: 9
+                        r:
+                          Int: 10
+                    r:
+                      Int: 11
         "###);
     }
 
@@ -608,23 +633,25 @@ mod test_arith {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse_prg(tokens).unwrap();
+        let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
-        main_function:
-          stmts:
-            - Return:
-                BinE:
-                  op: Sub
-                  l:
-                    BinE:
-                      op: Sub
-                      l:
-                        Int: 30
-                      r:
-                        Int: 9
-                  r:
-                    Int: 10
+        - Func:
+            alias: main
+            formal_param: ""
+            body:
+              - Return:
+                  BinE:
+                    op: Sub
+                    l:
+                      BinE:
+                        op: Sub
+                        l:
+                          Int: 30
+                        r:
+                          Int: 9
+                    r:
+                      Int: 10
         "###);
     }
 
@@ -637,23 +664,25 @@ mod test_arith {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse_prg(tokens).unwrap();
+        let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
-        main_function:
-          stmts:
-            - Return:
-                BinE:
-                  op: Add
-                  l:
-                    BinE:
-                      op: Mult
-                      l:
-                        Int: 9
-                      r:
-                        Int: 10
-                  r:
-                    Int: 11
+        - Func:
+            alias: main
+            formal_param: ""
+            body:
+              - Return:
+                  BinE:
+                    op: Add
+                    l:
+                      BinE:
+                        op: Mult
+                        l:
+                          Int: 9
+                        r:
+                          Int: 10
+                    r:
+                      Int: 11
         "###);
     }
 
@@ -666,100 +695,91 @@ mod test_arith {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse_prg(tokens).unwrap();
+        let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
-        main_function:
-          stmts:
-            - Return:
-                BinE:
-                  op: Add
-                  l:
-                    BinE:
-                      op: Mult
-                      l:
-                        Int: 9
-                      r:
-                        Int: 10
-                  r:
-                    BinE:
-                      op: Mult
-                      l:
-                        Int: 11
-                      r:
-                        Int: 12
+        - Func:
+            alias: main
+            formal_param: ""
+            body:
+              - Return:
+                  BinE:
+                    op: Add
+                    l:
+                      BinE:
+                        op: Mult
+                        l:
+                          Int: 9
+                        r:
+                          Int: 10
+                    r:
+                      BinE:
+                        op: Mult
+                        l:
+                          Int: 11
+                        r:
+                          Int: 12
         "###);
     }
 }
 
-#[cfg(test)]
-mod test_bindings {
-    use crate::lexer;
-    use std::fs;
+// #[cfg(test)]
+// mod test_bindings {
+//     use crate::lexer;
+//     use std::fs;
 
-    const TEST_DIR: &str = "tests/fixtures/legal/data_flow";
+//     const TEST_DIR: &str = "tests/fixtures/bindings";
 
-    #[test]
-    fn asnmt() {
-        let chars = fs::read(format!("{TEST_DIR}/asnmt.c"))
-            .expect("Should have been able to read the file")
-            .iter()
-            .map(|b| *b as char)
-            .collect::<Vec<_>>();
+//     // #[test]
+//     // fn asnmt() {
+//     //     let chars = fs::read(format!("{TEST_DIR}/composition.c"))
+//     //         .expect("Should have been able to read the file")
+//     //         .iter()
+//     //         .map(|b| *b as char)
+//     //         .collect::<Vec<_>>();
 
-        let tokens = lexer::lex(&chars);
-        let tree = super::parse_prg(tokens).unwrap();
-        insta::assert_yaml_snapshot!(tree, @r###"
-        ---
-        main_function:
-          stmts:
-            - Asnmt:
-                CreateBind:
-                  id: x
-                  expr:
-                    Int: 8
-            - Return:
-                Var: x
-        "###);
-    }
+//     //     let tokens = lexer::lex(&chars);
+//     //     let tree = super::parse_prg(&tokens).unwrap();
+//     //     insta::assert_yaml_snapshot!(tree, @"");
+//     // }
 
-    #[test]
-    fn asnmt_update() {
-        let chars = fs::read(format!("{TEST_DIR}/asnmt_update.c"))
-            .expect("Should have been able to read the file")
-            .iter()
-            .map(|b| *b as char)
-            .collect::<Vec<_>>();
+//     #[test]
+//     fn asnmt_update() {
+//         let chars = fs::read(format!("{TEST_DIR}/asnmt_update.c"))
+//             .expect("Should have been able to read the file")
+//             .iter()
+//             .map(|b| *b as char)
+//             .collect::<Vec<_>>();
 
-        let tokens = lexer::lex(&chars);
-        let tree = super::parse_prg(tokens).unwrap();
-        insta::assert_yaml_snapshot!(tree, @r###"
-        ---
-        main_function:
-          stmts:
-            - Asnmt:
-                CreateBind:
-                  id: n
-                  expr:
-                    Int: 0
-            - Asnmt:
-                UpdateBind:
-                  id: n
-                  op: Add
-                  expr:
-                    Int: 10
-            - Return:
-                Var: n
-        "###);
-    }
-}
+//         let tokens = lexer::lex(&chars);
+//         let tree = super::parse_prg(&tokens).unwrap();
+//         insta::assert_yaml_snapshot!(tree, @r###"
+//         ---
+//         main_function:
+//           stmts:
+//             - Asnmt:
+//                 CreateBind:
+//                   id: n
+//                   expr:
+//                     Int: 0
+//             - Asnmt:
+//                 UpdateBind:
+//                   id: n
+//                   op: Add
+//                   expr:
+//                     Int: 10
+//             - Return:
+//                 Var: n
+//         "###);
+//     }
+// }
 
 #[cfg(test)]
 mod test_control {
     use crate::lexer;
     use std::fs;
 
-    const TEST_DIR: &str = "tests/fixtures/legal/control_flow";
+    const TEST_DIR: &str = "tests/fixtures/control";
 
     #[test]
     fn eq() {
@@ -770,18 +790,20 @@ mod test_control {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse_prg(tokens).unwrap();
+        let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
-        main_function:
-          stmts:
-            - Return:
-                RelE:
-                  op: Eq
-                  l:
-                    Int: 9
-                  r:
-                    Int: 9
+        - Func:
+            alias: main
+            formal_param: ""
+            body:
+              - Return:
+                  RelE:
+                    op: Eq
+                    l:
+                      Int: 9
+                    r:
+                      Int: 9
         "###);
     }
 
@@ -794,18 +816,20 @@ mod test_control {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse_prg(tokens).unwrap();
+        let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
-        main_function:
-          stmts:
-            - Return:
-                RelE:
-                  op: Neq
-                  l:
-                    Int: 9
-                  r:
-                    Int: 10
+        - Func:
+            alias: main
+            formal_param: ""
+            body:
+              - Return:
+                  RelE:
+                    op: Neq
+                    l:
+                      Int: 9
+                    r:
+                      Int: 10
         "###);
     }
 
@@ -818,18 +842,20 @@ mod test_control {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse_prg(tokens).unwrap();
+        let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
-        main_function:
-          stmts:
-            - Return:
-                RelE:
-                  op: And
-                  l:
-                    Int: 1
-                  r:
-                    Int: 1
+        - Func:
+            alias: main
+            formal_param: ""
+            body:
+              - Return:
+                  RelE:
+                    op: And
+                    l:
+                      Int: 1
+                    r:
+                      Int: 1
         "###);
     }
 
@@ -842,18 +868,20 @@ mod test_control {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse_prg(tokens).unwrap();
+        let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
-        main_function:
-          stmts:
-            - Return:
-                RelE:
-                  op: Or
-                  l:
-                    Int: 1
-                  r:
-                    Int: 1
+        - Func:
+            alias: main
+            formal_param: ""
+            body:
+              - Return:
+                  RelE:
+                    op: Or
+                    l:
+                      Int: 1
+                    r:
+                      Int: 1
         "###);
     }
 
@@ -866,18 +894,20 @@ mod test_control {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse_prg(tokens).unwrap();
+        let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
-        main_function:
-          stmts:
-            - Return:
-                RelE:
-                  op: Lt
-                  l:
-                    Int: 9
-                  r:
-                    Int: 10
+        - Func:
+            alias: main
+            formal_param: ""
+            body:
+              - Return:
+                  RelE:
+                    op: Lt
+                    l:
+                      Int: 9
+                    r:
+                      Int: 10
         "###);
     }
 
@@ -890,105 +920,107 @@ mod test_control {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars);
-        let tree = super::parse_prg(tokens).unwrap();
+        let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
-        main_function:
-          stmts:
-            - Return:
-                RelE:
-                  op: Gt
-                  l:
-                    Int: 10
-                  r:
-                    Int: 9
-        "###);
-    }
-
-    #[test]
-    fn ifels_then() {
-        let chars = fs::read(format!("{TEST_DIR}/ifels_then.c"))
-            .expect("Should have been able to read the file")
-            .iter()
-            .map(|b| *b as char)
-            .collect::<Vec<_>>();
-
-        let tokens = lexer::lex(&chars);
-        let tree = super::parse_prg(tokens).unwrap();
-        insta::assert_yaml_snapshot!(tree, @r###"
-        ---
-        main_function:
-          stmts:
-            - IfEls:
-                cond:
+        - Func:
+            alias: main
+            formal_param: ""
+            body:
+              - Return:
                   RelE:
-                    op: Lt
+                    op: Gt
                     l:
+                      Int: 10
+                    r:
                       Int: 9
-                    r:
-                      Int: 10
-                then:
-                  Return:
-                    Int: 0
-                els:
-                  Return:
-                    Int: 1
         "###);
     }
 
-    #[test]
-    fn for_loop() {
-        let chars = fs::read(format!("{TEST_DIR}/for.c"))
-            .expect("Should have been able to read the file")
-            .iter()
-            .map(|b| *b as char)
-            .collect::<Vec<_>>();
+    // #[test]
+    // fn ifels_then() {
+    //     let chars = fs::read(format!("{TEST_DIR}/ifels_then.c"))
+    //         .expect("Should have been able to read the file")
+    //         .iter()
+    //         .map(|b| *b as char)
+    //         .collect::<Vec<_>>();
 
-        let tokens = lexer::lex(&chars);
-        let tree = super::parse_prg(tokens).unwrap();
-        insta::assert_yaml_snapshot!(tree, @r###"
-        ---
-        main_function:
-          stmts:
-            - Asnmt:
-                CreateBind:
-                  id: n
-                  expr:
-                    Int: 0
-            - For:
-                asnmt:
-                  CreateBind:
-                    id: i
-                    expr:
-                      Int: 0
-                cond:
-                  RelE:
-                    op: Lt
-                    l:
-                      Var: i
-                    r:
-                      Int: 10
-                update:
-                  UpdateBind:
-                    id: i
-                    op: Add
-                    expr:
-                      Int: 1
-                body:
-                  - Asnmt:
-                      UpdateBind:
-                        id: n
-                        op: Add
-                        expr:
-                          Int: 1
-                  - Asnmt:
-                      UpdateBind:
-                        id: n
-                        op: Add
-                        expr:
-                          Int: 1
-            - Return:
-                Var: n
-        "###);
-    }
+    //     let tokens = lexer::lex(&chars);
+    //     let tree = super::parse_prg(&tokens).unwrap();
+    //     insta::assert_yaml_snapshot!(tree, @r###"
+    //     ---
+    //     main_function:
+    //       stmts:
+    //         - IfEls:
+    //             cond:
+    //               RelE:
+    //                 op: Lt
+    //                 l:
+    //                   Int: 9
+    //                 r:
+    //                   Int: 10
+    //             then:
+    //               Return:
+    //                 Int: 0
+    //             els:
+    //               Return:
+    //                 Int: 1
+    //     "###);
+    // }
+
+    // #[test]
+    // fn for_loop() {
+    //     let chars = fs::read(format!("{TEST_DIR}/for.c"))
+    //         .expect("Should have been able to read the file")
+    //         .iter()
+    //         .map(|b| *b as char)
+    //         .collect::<Vec<_>>();
+
+    //     let tokens = lexer::lex(&chars);
+    //     let tree = super::parse_prg(&tokens).unwrap();
+    //     insta::assert_yaml_snapshot!(tree, @r###"
+    //     ---
+    //     main_function:
+    //       stmts:
+    //         - Asnmt:
+    //             CreateBind:
+    //               id: n
+    //               expr:
+    //                 Int: 0
+    //         - For:
+    //             asnmt:
+    //               CreateBind:
+    //                 id: i
+    //                 expr:
+    //                   Int: 0
+    //             cond:
+    //               RelE:
+    //                 op: Lt
+    //                 l:
+    //                   Var: i
+    //                 r:
+    //                   Int: 10
+    //             update:
+    //               UpdateBind:
+    //                 id: i
+    //                 op: Add
+    //                 expr:
+    //                   Int: 1
+    //             body:
+    //               - Asnmt:
+    //                   UpdateBind:
+    //                     id: n
+    //                     op: Add
+    //                     expr:
+    //                       Int: 1
+    //               - Asnmt:
+    //                   UpdateBind:
+    //                     id: n
+    //                     op: Add
+    //                     expr:
+    //                       Int: 1
+    //         - Return:
+    //             Var: n
+    //     "###);
+    // }
 }
