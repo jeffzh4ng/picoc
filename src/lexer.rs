@@ -1,58 +1,25 @@
 use serde::{Deserialize, Serialize};
+use std::iter;
 
-// non-tokens:
-// - comments
-// - preprocessor directives
-// - macros
-// - whitespace: spaces, tabs, newlines
-
-// note: variations are explicitly typed. Collapsing categories like keywords
-//       into one variant will lose information since lexeme : String, which
-//       will produce redundant work for the parser during syntactic analysis
+#[rustfmt::skip]
 #[derive(Copy, Clone, PartialEq, Serialize, Deserialize, Debug)]
 pub enum TokenType {
-    // introductions (values)
-    LiteralInt, // RE: [0-9]+
-    Identifier, // RE: [a−zA−Z][a−zA−Z0−9]*
-
-    // keywords (subset of identifiers)
-    KeywordInt,
-    KeywordMain,
-    KeywordVoid,
-    KeywordRet,
-    KeywordIf,
-    KeywordEls,
-    KeywordFor,
-
-    // eliminations (operations)
-    Plus,
-    Minus,
-    Star,
-    Slash,
-    LeftAngleBracket,
-    RightAngleBracket,
-    Equals,
-    Bang,
-    Amp,
-    Bar,
-
-    // punctuation
-    PuncLeftParen,
-    PuncRightParen,
-    PuncLeftBrace,
-    PuncRightBrace,
-    PuncSemiColon,
+    LiteralInt, Identifier, // introductions (values) RE: [0-9]+ and [a-zA-Z][a-zA-Z0-9]*
+    KeywordInt, KeywordMain, KeywordVoid, KeywordRet, KeywordIf, KeywordEls, KeywordFor, // keywords ⊂ identifiers
+    Plus, Minus, Star, Slash, LeftAngleBracket, RightAngleBracket, Equals, Bang, Amp, Bar, // eliminations (ops)
+    PuncLeftParen, PuncRightParen, PuncLeftBrace, PuncRightBrace, PuncSemiColon, // punctuation
 }
 
+//  1. variations are explicitly typed. Collapsing categories like keywords
+//     into one variant will lose information since lexeme : String, which
+//     will produce redundant work for the parser during syntactic analysis
+//  2. non-tokens: comments, preprocessor directives, macros, whitespace
+
+#[rustfmt::skip]
 #[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]
-pub struct Token {
-    pub lexeme: String,
-    pub typ: TokenType,
-}
+pub struct Token { pub lexeme: String, pub typ: TokenType }
 
 // TODO: keep track of file and (col, row) for error reporting
-// struct Position {}
-
 // TODO: just filter out whitespace instead of having a helper function
 pub fn lex(input: &[char]) -> Vec<Token> {
     let cs = skip_whitespace(input);
@@ -65,132 +32,84 @@ pub fn lex(input: &[char]) -> Vec<Token> {
             '0'..='9' => scan_int(cs),
             'a'..='z' | 'A'..='Z' => scan_id(cs),
             '+' => {
-                let t = Token {
-                    lexeme: String::from("+"),
-                    typ: TokenType::Plus,
-                };
-
-                std::iter::once(t).chain(lex(r)).collect()
+                #[rustfmt::skip]
+                let t = Token { lexeme: String::from("+"), typ: TokenType::Plus };
+                iter::once(t).chain(lex(r)).collect()
             }
             '-' => {
-                let t = Token {
-                    lexeme: String::from("-"),
-                    typ: TokenType::Minus,
-                };
-
-                std::iter::once(t).chain(lex(r)).collect()
+                #[rustfmt::skip]
+                let t = Token { lexeme: String::from("-"), typ: TokenType::Minus };
+                iter::once(t).chain(lex(r)).collect()
             }
             '*' => {
-                let t = Token {
-                    lexeme: String::from("*"),
-                    typ: TokenType::Star,
-                };
-
-                std::iter::once(t).chain(lex(r)).collect()
+                #[rustfmt::skip]
+                let t = Token { lexeme: String::from("*"), typ: TokenType::Star };
+                iter::once(t).chain(lex(r)).collect()
             }
             '/' => {
-                let t = Token {
-                    lexeme: String::from("/"),
-                    typ: TokenType::Slash,
-                };
-
-                std::iter::once(t).chain(lex(r)).collect()
+                #[rustfmt::skip]
+                let t = Token { lexeme: String::from("/"), typ: TokenType::Slash };
+                iter::once(t).chain(lex(r)).collect()
             }
             '<' => {
-                let t = Token {
-                    lexeme: String::from("<"),
-                    typ: TokenType::LeftAngleBracket,
-                };
-
-                std::iter::once(t).chain(lex(r)).collect()
+                #[rustfmt::skip]
+                let t = Token { lexeme: String::from("<"), typ: TokenType::LeftAngleBracket };
+                iter::once(t).chain(lex(r)).collect()
             }
             '>' => {
-                let t = Token {
-                    lexeme: String::from(">"),
-                    typ: TokenType::RightAngleBracket,
-                };
-
-                std::iter::once(t).chain(lex(r)).collect()
+                #[rustfmt::skip]
+                let t = Token { lexeme: String::from(">"), typ: TokenType::RightAngleBracket };
+                iter::once(t).chain(lex(r)).collect()
             }
             '=' => {
-                let t = Token {
-                    lexeme: String::from("="),
-                    typ: TokenType::Equals,
-                };
-
-                std::iter::once(t).chain(lex(r)).collect()
+                #[rustfmt::skip]
+                let t = Token { lexeme: String::from("="), typ: TokenType::Equals };
+                iter::once(t).chain(lex(r)).collect()
             }
             '!' => {
-                let t = Token {
-                    lexeme: String::from("!"),
-                    typ: TokenType::Bang,
-                };
-
-                std::iter::once(t).chain(lex(r)).collect()
+                #[rustfmt::skip]
+                let t = Token { lexeme: String::from("!"), typ: TokenType::Bang };
+                iter::once(t).chain(lex(r)).collect()
             }
             '&' => {
-                let t = Token {
-                    lexeme: String::from("&"),
-                    typ: TokenType::Amp,
-                };
-
-                std::iter::once(t).chain(lex(r)).collect()
+                #[rustfmt::skip]
+                let t = Token { lexeme: String::from("&"), typ: TokenType::Amp };
+                iter::once(t).chain(lex(r)).collect()
             }
             '|' => {
-                let t = Token {
-                    lexeme: String::from("|"),
-                    typ: TokenType::Bar,
-                };
-
-                std::iter::once(t).chain(lex(r)).collect()
+                #[rustfmt::skip]
+                let t = Token { lexeme: String::from("|"), typ: TokenType::Bar };
+                iter::once(t).chain(lex(r)).collect()
             }
             '(' => {
-                let t = Token {
-                    lexeme: String::from("("),
-                    typ: TokenType::PuncLeftParen,
-                };
-
-                std::iter::once(t).chain(lex(r)).collect()
+                #[rustfmt::skip]
+                let t = Token { lexeme: String::from("("), typ: TokenType::PuncLeftParen };
+                iter::once(t).chain(lex(r)).collect()
             }
             ')' => {
-                let t = Token {
-                    lexeme: String::from(")"),
-                    typ: TokenType::PuncRightParen,
-                };
-
-                std::iter::once(t).chain(lex(r)).collect()
+                #[rustfmt::skip]
+                let t = Token { lexeme: String::from(")"), typ: TokenType::PuncRightParen };
+                iter::once(t).chain(lex(r)).collect()
             }
             '{' => {
-                let t = Token {
-                    lexeme: String::from("{"),
-                    typ: TokenType::PuncLeftBrace,
-                };
-
-                std::iter::once(t).chain(lex(r)).collect()
+                #[rustfmt::skip]
+                let t = Token { lexeme: String::from("{"), typ: TokenType::PuncLeftBrace };
+                iter::once(t).chain(lex(r)).collect()
             }
             '}' => {
-                let t = Token {
-                    lexeme: String::from("}"),
-                    typ: TokenType::PuncRightBrace,
-                };
-
-                std::iter::once(t).chain(lex(r)).collect()
+                #[rustfmt::skip]
+                let t = Token { lexeme: String::from("}"), typ: TokenType::PuncRightBrace };
+                iter::once(t).chain(lex(r)).collect()
             }
             ';' => {
-                let t = Token {
-                    lexeme: String::from(";"),
-                    typ: TokenType::PuncSemiColon,
-                };
-
-                std::iter::once(t).chain(lex(r)).collect()
+                #[rustfmt::skip]
+                let t = Token { lexeme: String::from(";"), typ: TokenType::PuncSemiColon };
+                iter::once(t).chain(lex(r)).collect()
             }
             _ => {
-                let t = Token {
-                    lexeme: String::from("PANIC?"),
-                    typ: TokenType::Plus,
-                };
-
-                std::iter::once(t).chain(lex(r)).collect()
+                #[rustfmt::skip]
+                let t = Token { lexeme: String::from("PANIC?"), typ: TokenType::Plus };
+                iter::once(t).chain(lex(r)).collect()
             }
         },
     }
@@ -221,7 +140,7 @@ fn scan_int(input: &[char]) -> Vec<Token> {
                     typ: TokenType::LiteralInt,
                 };
 
-                std::iter::once(t).chain(lex(new_r)).collect()
+                iter::once(t).chain(lex(new_r)).collect()
             }
             _ => {
                 // panic
@@ -286,7 +205,7 @@ fn scan_id(input: &[char]) -> Vec<Token> {
                     },
                 };
 
-                std::iter::once(t).chain(lex(new_r)).collect()
+                iter::once(t).chain(lex(new_r)).collect()
             }
             _ => {
                 // panic
@@ -310,10 +229,10 @@ fn skip_whitespace(input: &[char]) -> &[char] {
 }
 
 #[cfg(test)]
-mod test_legal_arithmetic {
+mod test_arith {
     use std::fs;
 
-    const TEST_DIR: &str = "tests/fixtures/legal/arithmetic";
+    const TEST_DIR: &str = "tests/fixtures/arith";
 
     #[test]
     fn lit() {
@@ -539,10 +458,60 @@ mod test_legal_arithmetic {
 }
 
 #[cfg(test)]
-mod test_legal_control_flow {
+mod test_bindings {
     use std::fs;
 
-    const TEST_DIR: &str = "tests/fixtures/legal/control_flow";
+    const TEST_DIR: &str = "tests/fixtures/bindings";
+
+    #[test]
+    fn asnmt() {
+        #[rustfmt::skip]
+        let input = fs::read(format!("{TEST_DIR}/asnmt.c"))
+            .expect("Should have been able to read the file")
+            .iter()
+            .map(|b| *b as char)
+            .collect::<Vec<_>>();
+
+        let output = super::lex(input.as_slice());
+        insta::assert_yaml_snapshot!(output, @r###"
+        ---
+        - lexeme: int
+          typ: KeywordInt
+        - lexeme: main
+          typ: KeywordMain
+        - lexeme: (
+          typ: PuncLeftParen
+        - lexeme: )
+          typ: PuncRightParen
+        - lexeme: "{"
+          typ: PuncLeftBrace
+        - lexeme: int
+          typ: KeywordInt
+        - lexeme: x
+          typ: Identifier
+        - lexeme: "="
+          typ: Equals
+        - lexeme: "8"
+          typ: LiteralInt
+        - lexeme: ;
+          typ: PuncSemiColon
+        - lexeme: return
+          typ: KeywordRet
+        - lexeme: x
+          typ: Identifier
+        - lexeme: ;
+          typ: PuncSemiColon
+        - lexeme: "}"
+          typ: PuncRightBrace
+        "###);
+    }
+}
+
+#[cfg(test)]
+mod test_control {
+    use std::fs;
+
+    const TEST_DIR: &str = "tests/fixtures/control";
 
     #[test]
     fn for_loop() {
@@ -641,95 +610,3 @@ mod test_legal_control_flow {
         "###);
     }
 }
-
-#[cfg(test)]
-mod test_legal_bindings {
-    use std::fs;
-
-    const TEST_DIR: &str = "tests/fixtures/legal/data_flow";
-
-    #[test]
-    fn asnmt() {
-        #[rustfmt::skip]
-        let input = fs::read(format!("{TEST_DIR}/asnmt.c"))
-            .expect("Should have been able to read the file")
-            .iter()
-            .map(|b| *b as char)
-            .collect::<Vec<_>>();
-
-        let output = super::lex(input.as_slice());
-        insta::assert_yaml_snapshot!(output, @r###"
-        ---
-        - lexeme: int
-          typ: KeywordInt
-        - lexeme: main
-          typ: KeywordMain
-        - lexeme: (
-          typ: PuncLeftParen
-        - lexeme: )
-          typ: PuncRightParen
-        - lexeme: "{"
-          typ: PuncLeftBrace
-        - lexeme: int
-          typ: KeywordInt
-        - lexeme: x
-          typ: Identifier
-        - lexeme: "="
-          typ: Equals
-        - lexeme: "8"
-          typ: LiteralInt
-        - lexeme: ;
-          typ: PuncSemiColon
-        - lexeme: return
-          typ: KeywordRet
-        - lexeme: x
-          typ: Identifier
-        - lexeme: ;
-          typ: PuncSemiColon
-        - lexeme: "}"
-          typ: PuncRightBrace
-        "###);
-    }
-}
-
-// #[cfg(test)]
-// fn vecs_match<T: PartialEq>(a: &Vec<T>, b: &Vec<T>) -> bool {
-//     #[rustfmt::skip]
-//     let matching = a
-//         .iter()
-//         .zip(b.iter())
-//         .filter(|&(a, b)| a == b)
-//         .count();
-
-//     matching == a.len() && matching == b.len()
-// }
-
-// #[cfg(test)]
-// mod test_invalid {}
-
-// #[cfg(test)]
-// mod test_skip_whitespace {
-//     use super::*;
-
-//     #[test]
-//     fn skip_space() {
-//         let input = "    7".chars().collect::<Vec<_>>();
-//         let output = skip_whitespace(input.as_slice());
-//         let expected_output = "7".chars().collect::<Vec<_>>();
-
-//         assert!(vecs_match(&output.to_vec(), &expected_output))
-//     }
-
-//     #[test]
-//     fn skip_newline() {
-//         let input = r#"
-
-//         7"#
-//         .chars()
-//         .collect::<Vec<_>>();
-//         let output = skip_whitespace(input.as_slice());
-//         let expected_output = "7".chars().collect::<Vec<_>>();
-
-//         assert!(vecs_match(&output.to_vec(), &expected_output))
-//     }
-// }

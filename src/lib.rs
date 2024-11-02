@@ -4,8 +4,8 @@ use std::collections::HashMap;
 // pub mod evaluator;
 // pub mod generator;
 pub mod lexer;
-pub mod parser;
-pub mod typer;
+// pub mod parser;
+// pub mod typer;
 
 #[macro_use]
 macro_rules! common_struct {
