@@ -32,7 +32,7 @@ use crate::parser;
 //     fn test_valid() {
 //         #[rustfmt::skip]
 //         let chars = fs::read("tests/valid/hello.c")
-//             .expect("Should have been able to read the file")
+//             .expect("file dne")
 //             .iter()
 //             .map(|b| *b as char)
 //             .collect::<Vec<_>>();
@@ -47,7 +47,7 @@ use crate::parser;
 //     fn test_valid_add() {
 //         #[rustfmt::skip]
 //         let chars = fs::read("tests/valid/arithmetic/add.c")
-//             .expect("Should have been able to read the file")
+//             .expect("file dne")
 //             .iter()
 //             .map(|b| *b as char)
 //             .collect::<Vec<_>>();
@@ -62,7 +62,7 @@ use crate::parser;
 //     fn test_valid_add_multi() {
 //         #[rustfmt::skip]
 //         let chars = fs::read("tests/valid/arithmetic/add_multi.c")
-//             .expect("Should have been able to read the file")
+//             .expect("file dne")
 //             .iter()
 //             .map(|b| *b as char)
 //             .collect::<Vec<_>>();
@@ -77,7 +77,7 @@ use crate::parser;
 //     fn test_valid_subtraction() {
 //         #[rustfmt::skip]
 //         let chars = fs::read("tests/valid/arithmetic/sub.c")
-//             .expect("Should have been able to read the file")
+//             .expect("file dne")
 //             .iter()
 //             .map(|b| *b as char)
 //             .collect::<Vec<_>>();
@@ -92,7 +92,7 @@ use crate::parser;
 //     fn test_valid_mult() {
 //         #[rustfmt::skip]
 //         let chars = fs::read("tests/valid/arithmetic/mult.c")
-//             .expect("Should have been able to read the file")
+//             .expect("file dne")
 //             .iter()
 //             .map(|b| *b as char)
 //             .collect::<Vec<_>>();
@@ -107,7 +107,7 @@ use crate::parser;
 //     fn test_valid_div() {
 //         #[rustfmt::skip]
 //         let chars = fs::read("tests/valid/arithmetic/div.c")
-//             .expect("Should have been able to read the file")
+//             .expect("file dne")
 //             .iter()
 //             .map(|b| *b as char)
 //             .collect::<Vec<_>>();

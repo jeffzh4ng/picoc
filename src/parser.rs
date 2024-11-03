@@ -437,7 +437,7 @@ mod test_arith {
     #[test]
     fn lit() {
         let chars = fs::read(format!("{TEST_DIR}/lit.c"))
-            .expect("Should have been able to read the file")
+            .expect("file dne")
             .iter()
             .map(|b| *b as char)
             .collect::<Vec<_>>();
@@ -458,7 +458,7 @@ mod test_arith {
     #[test]
     fn add() {
         let chars = fs::read(format!("{TEST_DIR}/add.c"))
-            .expect("Should have been able to read the file")
+            .expect("file dne")
             .iter()
             .map(|b| *b as char)
             .collect::<Vec<_>>();
@@ -484,7 +484,7 @@ mod test_arith {
     #[test]
     fn add_multi() {
         let chars = fs::read(format!("{TEST_DIR}/add_multi.c"))
-            .expect("Should have been able to read the file")
+            .expect("file dne")
             .iter()
             .map(|b| *b as char)
             .collect::<Vec<_>>();
@@ -516,7 +516,7 @@ mod test_arith {
     fn sub() {
         #[rustfmt::skip]
         let chars = fs::read(format!("{TEST_DIR}/sub.c"))
-            .expect("Should have been able to read the file")
+            .expect("file dne")
             .iter()
             .map(|b| *b as char)
             .collect::<Vec<_>>();
@@ -543,7 +543,7 @@ mod test_arith {
     fn mult() {
         #[rustfmt::skip]
         let chars = fs::read(format!("{TEST_DIR}/mult.c"))
-            .expect("Should have been able to read the file")
+            .expect("file dne")
             .iter()
             .map(|b| *b as char)
             .collect::<Vec<_>>();
@@ -570,7 +570,7 @@ mod test_arith {
     fn div() {
         #[rustfmt::skip]
         let chars = fs::read(format!("{TEST_DIR}/div.c"))
-            .expect("Should have been able to read the file")
+            .expect("file dne")
             .iter()
             .map(|b| *b as char)
             .collect::<Vec<_>>();
@@ -596,7 +596,7 @@ mod test_arith {
     #[test]
     fn add_associative() {
         let chars = fs::read(format!("{TEST_DIR}/add_associative.c"))
-            .expect("Should have been able to read the file")
+            .expect("file dne")
             .iter()
             .map(|b| *b as char)
             .collect::<Vec<_>>();
@@ -627,7 +627,7 @@ mod test_arith {
     #[test]
     fn sub_associative() {
         let chars = fs::read(format!("{TEST_DIR}/sub_associative.c"))
-            .expect("Should have been able to read the file")
+            .expect("file dne")
             .iter()
             .map(|b| *b as char)
             .collect::<Vec<_>>();
@@ -658,7 +658,7 @@ mod test_arith {
     #[test]
     fn mult_add_precedence() {
         let chars = fs::read(format!("{TEST_DIR}/mult_add_precedence.c"))
-            .expect("Should have been able to read the file")
+            .expect("file dne")
             .iter()
             .map(|b| *b as char)
             .collect::<Vec<_>>();
@@ -689,7 +689,7 @@ mod test_arith {
     #[test]
     fn mult_add_precedence_multi() {
         let chars = fs::read(format!("{TEST_DIR}/mult_add_precedence_multi.c"))
-            .expect("Should have been able to read the file")
+            .expect("file dne")
             .iter()
             .map(|b| *b as char)
             .collect::<Vec<_>>();
@@ -733,7 +733,7 @@ mod test_arith {
 //     // #[test]
 //     // fn asnmt() {
 //     //     let chars = fs::read(format!("{TEST_DIR}/composition.c"))
-//     //         .expect("Should have been able to read the file")
+//     //         .expect("file dne")
 //     //         .iter()
 //     //         .map(|b| *b as char)
 //     //         .collect::<Vec<_>>();
@@ -746,7 +746,7 @@ mod test_arith {
 //     #[test]
 //     fn asnmt_update() {
 //         let chars = fs::read(format!("{TEST_DIR}/asnmt_update.c"))
-//             .expect("Should have been able to read the file")
+//             .expect("file dne")
 //             .iter()
 //             .map(|b| *b as char)
 //             .collect::<Vec<_>>();
@@ -784,7 +784,7 @@ mod test_control {
     #[test]
     fn eq() {
         let chars = fs::read(format!("{TEST_DIR}/eq_true.c"))
-            .expect("Should have been able to read the file")
+            .expect("file dne")
             .iter()
             .map(|b| *b as char)
             .collect::<Vec<_>>();
@@ -810,7 +810,7 @@ mod test_control {
     #[test]
     fn neq() {
         let chars = fs::read(format!("{TEST_DIR}/neq_true.c"))
-            .expect("Should have been able to read the file")
+            .expect("file dne")
             .iter()
             .map(|b| *b as char)
             .collect::<Vec<_>>();
@@ -836,7 +836,7 @@ mod test_control {
     #[test]
     fn and() {
         let chars = fs::read(format!("{TEST_DIR}/and_true.c"))
-            .expect("Should have been able to read the file")
+            .expect("file dne")
             .iter()
             .map(|b| *b as char)
             .collect::<Vec<_>>();
@@ -862,7 +862,7 @@ mod test_control {
     #[test]
     fn or() {
         let chars = fs::read(format!("{TEST_DIR}/or_true.c"))
-            .expect("Should have been able to read the file")
+            .expect("file dne")
             .iter()
             .map(|b| *b as char)
             .collect::<Vec<_>>();
@@ -888,7 +888,7 @@ mod test_control {
     #[test]
     fn lt() {
         let chars = fs::read(format!("{TEST_DIR}/lt_true.c"))
-            .expect("Should have been able to read the file")
+            .expect("file dne")
             .iter()
             .map(|b| *b as char)
             .collect::<Vec<_>>();
@@ -914,7 +914,7 @@ mod test_control {
     #[test]
     fn gt() {
         let chars = fs::read(format!("{TEST_DIR}/gt_true.c"))
-            .expect("Should have been able to read the file")
+            .expect("file dne")
             .iter()
             .map(|b| *b as char)
             .collect::<Vec<_>>();
@@ -940,7 +940,7 @@ mod test_control {
     // #[test]
     // fn ifels_then() {
     //     let chars = fs::read(format!("{TEST_DIR}/ifels_then.c"))
-    //         .expect("Should have been able to read the file")
+    //         .expect("file dne")
     //         .iter()
     //         .map(|b| *b as char)
     //         .collect::<Vec<_>>();
@@ -971,7 +971,7 @@ mod test_control {
     // #[test]
     // fn for_loop() {
     //     let chars = fs::read(format!("{TEST_DIR}/for.c"))
-    //         .expect("Should have been able to read the file")
+    //         .expect("file dne")
     //         .iter()
     //         .map(|b| *b as char)
     //         .collect::<Vec<_>>();

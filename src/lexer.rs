@@ -234,7 +234,7 @@ mod test_arith {
     fn lit() {
         #[rustfmt::skip]
         let input = fs::read(format!("{TEST_DIR}/lit.c"))
-            .expect("Should have been able to read the file")
+            .expect("file dne")
             .iter()
             .map(|b| *b as char)
             .collect::<Vec<_>>();
@@ -267,7 +267,7 @@ mod test_arith {
     fn add() {
         #[rustfmt::skip]
         let input = fs::read(format!("{TEST_DIR}/add.c"))
-            .expect("Should have been able to read the file")
+            .expect("file dne")
             .iter()
             .map(|b| *b as char)
             .collect::<Vec<_>>();
@@ -304,7 +304,7 @@ mod test_arith {
     fn add_multi() {
         #[rustfmt::skip]
         let input = fs::read(format!("{TEST_DIR}/add_multi.c"))
-            .expect("Should have been able to read the file")
+            .expect("file dne")
             .iter()
             .map(|b| *b as char)
             .collect::<Vec<_>>();
@@ -345,7 +345,7 @@ mod test_arith {
     fn sub() {
         #[rustfmt::skip]
         let input = fs::read(format!("{}/sub.c", TEST_DIR))
-            .expect("Should have been able to read the file")
+            .expect("file dne")
             .iter()
             .map(|b| *b as char)
             .collect::<Vec<_>>();
@@ -382,7 +382,7 @@ mod test_arith {
     fn mult() {
         #[rustfmt::skip]
         let input = fs::read(format!("{TEST_DIR}/mult.c"))
-            .expect("Should have been able to read the file")
+            .expect("file dne")
             .iter()
             .map(|b| *b as char)
             .collect::<Vec<_>>();
@@ -419,7 +419,7 @@ mod test_arith {
     fn div() {
         #[rustfmt::skip]
         let input = fs::read(format!("{TEST_DIR}/div.c"))
-            .expect("Should have been able to read the file")
+            .expect("file dne")
             .iter()
             .map(|b| *b as char)
             .collect::<Vec<_>>();
@@ -463,7 +463,7 @@ mod test_bindings {
     fn asnmt() {
         #[rustfmt::skip]
         let input = fs::read(format!("{TEST_DIR}/asnmt.c"))
-            .expect("Should have been able to read the file")
+            .expect("file dne")
             .iter()
             .map(|b| *b as char)
             .collect::<Vec<_>>();
@@ -501,6 +501,19 @@ mod test_bindings {
           typ: PuncRightBrace
         "###);
     }
+
+    // #[test]
+    // fn composition() {
+    //     #[rustfmt::skip]
+    //     let input = fs::read(format!("{TEST_DIR}/composition.c"))
+    //         .expect("file dne")
+    //         .iter()
+    //         .map(|b| *b as char)
+    //         .collect::<Vec<_>>();
+
+    //     let output = super::lex(input.as_slice());
+    //     insta::assert_yaml_snapshot!(output, @r###"
+    // }
 }
 
 #[cfg(test)]
@@ -513,7 +526,7 @@ mod test_control {
     fn for_loop() {
         #[rustfmt::skip]
         let input = fs::read(format!("{TEST_DIR}/for.c"))
-            .expect("Should have been able to read the file")
+            .expect("file dne")
             .iter()
             .map(|b| *b as char)
             .collect::<Vec<_>>();

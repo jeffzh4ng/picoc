@@ -16,8 +16,8 @@ fn main() {
 
     let strat = env::args()
         .nth(1)
-        .expect("picoc089-error: no evaluation strategy given");
-    println!("picoc089-info: received evaluation strategy: {strat}");
+        .expect("picoc089-error: no strategy given");
+    println!("picoc089-info: received strategy: {strat}");
 
     let src = env::args()
         .nth(2)
@@ -25,7 +25,7 @@ fn main() {
     println!("picoc089-info: received source: {src}");
 
     let chars = fs::read(src)
-        .expect("picoc089-error: should have been able to read the file")
+        .expect("picoc089-error: file dne")
         .iter()
         .map(|b| *b as char)
         .collect::<Vec<_>>();
