@@ -444,7 +444,7 @@ mod test_arith {
             .map(|b| *b as char)
             .collect::<Vec<_>>();
 
-        let tokens = lexer::lex(&chars);
+        let tokens = lexer::lex(&chars).unwrap();
         let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
@@ -465,7 +465,7 @@ mod test_arith {
             .map(|b| *b as char)
             .collect::<Vec<_>>();
 
-        let tokens = lexer::lex(&chars);
+        let tokens = lexer::lex(&chars).unwrap();
         let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
@@ -491,7 +491,7 @@ mod test_arith {
             .map(|b| *b as char)
             .collect::<Vec<_>>();
 
-        let tokens = lexer::lex(&chars);
+        let tokens = lexer::lex(&chars).unwrap();
         let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
@@ -523,7 +523,7 @@ mod test_arith {
             .map(|b| *b as char)
             .collect::<Vec<_>>();
 
-        let tokens = lexer::lex(&chars);
+        let tokens = lexer::lex(&chars).unwrap();
         let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
@@ -550,7 +550,7 @@ mod test_arith {
             .map(|b| *b as char)
             .collect::<Vec<_>>();
 
-        let tokens = lexer::lex(&chars);
+        let tokens = lexer::lex(&chars).unwrap();
         let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
@@ -577,7 +577,7 @@ mod test_arith {
             .map(|b| *b as char)
             .collect::<Vec<_>>();
 
-        let tokens = lexer::lex(&chars);
+        let tokens = lexer::lex(&chars).unwrap();
         let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
@@ -603,7 +603,7 @@ mod test_arith {
             .map(|b| *b as char)
             .collect::<Vec<_>>();
 
-        let tokens = lexer::lex(&chars);
+        let tokens = lexer::lex(&chars).unwrap();
         let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
@@ -634,7 +634,7 @@ mod test_arith {
             .map(|b| *b as char)
             .collect::<Vec<_>>();
 
-        let tokens = lexer::lex(&chars);
+        let tokens = lexer::lex(&chars).unwrap();
         let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
@@ -665,7 +665,7 @@ mod test_arith {
             .map(|b| *b as char)
             .collect::<Vec<_>>();
 
-        let tokens = lexer::lex(&chars);
+        let tokens = lexer::lex(&chars).unwrap();
         let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
@@ -696,7 +696,7 @@ mod test_arith {
             .map(|b| *b as char)
             .collect::<Vec<_>>();
 
-        let tokens = lexer::lex(&chars);
+        let tokens = lexer::lex(&chars).unwrap();
         let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
@@ -740,7 +740,7 @@ mod test_bindings {
             .map(|b| *b as char)
             .collect::<Vec<_>>();
 
-        let tokens = lexer::lex(&chars);
+        let tokens = lexer::lex(&chars).unwrap();
         let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @"");
     }
@@ -753,7 +753,7 @@ mod test_bindings {
     //         .map(|b| *b as char)
     //         .collect::<Vec<_>>();
 
-    //     let tokens = lexer::lex(&chars);
+    //     let tokens = lexer::lex(&chars).unwrap();
     //     let tree = super::parse_prg(&tokens).unwrap();
     //     insta::assert_yaml_snapshot!(tree, @"");
     // }
@@ -766,7 +766,7 @@ mod test_bindings {
     //         .map(|b| *b as char)
     //         .collect::<Vec<_>>();
 
-    //     let tokens = lexer::lex(&chars);
+    //     let tokens = lexer::lex(&chars).unwrap();
     //     let tree = super::parse_prg(&tokens).unwrap();
     //     insta::assert_yaml_snapshot!(tree, @r###"
     //     ---
@@ -804,7 +804,7 @@ mod test_control {
             .map(|b| *b as char)
             .collect::<Vec<_>>();
 
-        let tokens = lexer::lex(&chars);
+        let tokens = lexer::lex(&chars).unwrap();
         let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
@@ -830,7 +830,7 @@ mod test_control {
             .map(|b| *b as char)
             .collect::<Vec<_>>();
 
-        let tokens = lexer::lex(&chars);
+        let tokens = lexer::lex(&chars).unwrap();
         let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
@@ -856,7 +856,7 @@ mod test_control {
             .map(|b| *b as char)
             .collect::<Vec<_>>();
 
-        let tokens = lexer::lex(&chars);
+        let tokens = lexer::lex(&chars).unwrap();
         let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
@@ -882,7 +882,7 @@ mod test_control {
             .map(|b| *b as char)
             .collect::<Vec<_>>();
 
-        let tokens = lexer::lex(&chars);
+        let tokens = lexer::lex(&chars).unwrap();
         let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
@@ -908,7 +908,7 @@ mod test_control {
             .map(|b| *b as char)
             .collect::<Vec<_>>();
 
-        let tokens = lexer::lex(&chars);
+        let tokens = lexer::lex(&chars).unwrap();
         let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
@@ -934,7 +934,7 @@ mod test_control {
             .map(|b| *b as char)
             .collect::<Vec<_>>();
 
-        let tokens = lexer::lex(&chars);
+        let tokens = lexer::lex(&chars).unwrap();
         let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
@@ -960,7 +960,7 @@ mod test_control {
     //         .map(|b| *b as char)
     //         .collect::<Vec<_>>();
 
-    //     let tokens = lexer::lex(&chars);
+    //     let tokens = lexer::lex(&chars).unwrap();
     //     let tree = super::parse_prg(&tokens).unwrap();
     //     insta::assert_yaml_snapshot!(tree, @r###"
     //     ---
@@ -991,7 +991,7 @@ mod test_control {
     //         .map(|b| *b as char)
     //         .collect::<Vec<_>>();
 
-    //     let tokens = lexer::lex(&chars);
+    //     let tokens = lexer::lex(&chars).unwrap();
     //     let tree = super::parse_prg(&tokens).unwrap();
     //     insta::assert_yaml_snapshot!(tree, @r###"
     //     ---

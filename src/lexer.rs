@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::iter;
+use std::{io, iter};
 
 #[rustfmt::skip]
 #[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]
@@ -19,112 +19,110 @@ pub enum TT {
 //     will produce redundant work for the parser during syntactic analysis
 //  2. non-tokens: comments, preprocessor directives, macros, whitespace
 
-// TODO: keep track of file and (col, row) for error reporting
-// TODO: just filter out whitespace instead of having a helper function
-pub fn lex(input: &[char]) -> Vec<Token> {
-    let cs = skip_whitespace(input);
+pub fn lex(input: &[char]) -> Result<Vec<Token>, io::Error> {
+    let cs = skip_ws(input);
 
     // literals and identifiers have arbitrary length
     // operations and punctuations are single ASCII characters
     match cs {
-        [] => vec![],
+        [] => Ok(vec![]),
         [f, r @ ..] => match f {
             '0'..='9' => scan_int(cs),
             'a'..='z' | 'A'..='Z' => scan_id(cs),
             '+' => {
                 #[rustfmt::skip]
                 let t = Token { lexeme: String::from("+"), typ: TT::Plus };
-                iter::once(t).chain(lex(r)).collect()
+                Ok(iter::once(t).chain(lex(r).unwrap()).collect())
             }
             '-' => {
                 #[rustfmt::skip]
                 let t = Token { lexeme: String::from("-"), typ: TT::Minus };
-                iter::once(t).chain(lex(r)).collect()
+                Ok(iter::once(t).chain(lex(r).unwrap()).collect())
             }
             '*' => {
                 #[rustfmt::skip]
                 let t = Token { lexeme: String::from("*"), typ: TT::Star };
-                iter::once(t).chain(lex(r)).collect()
+                Ok(iter::once(t).chain(lex(r).unwrap()).collect())
             }
             '/' => {
                 #[rustfmt::skip]
                 let t = Token { lexeme: String::from("/"), typ: TT::Slash };
-                iter::once(t).chain(lex(r)).collect()
+                Ok(iter::once(t).chain(lex(r).unwrap()).collect())
             }
             '<' => {
                 #[rustfmt::skip]
                 let t = Token { lexeme: String::from("<"), typ: TT::LeftAngleBracket };
-                iter::once(t).chain(lex(r)).collect()
+                Ok(iter::once(t).chain(lex(r).unwrap()).collect())
             }
             '>' => {
                 #[rustfmt::skip]
                 let t = Token { lexeme: String::from(">"), typ: TT::RightAngleBracket };
-                iter::once(t).chain(lex(r)).collect()
+                Ok(iter::once(t).chain(lex(r).unwrap()).collect())
             }
             '=' => {
                 #[rustfmt::skip]
                 let t = Token { lexeme: String::from("="), typ: TT::Equals };
-                iter::once(t).chain(lex(r)).collect()
+                Ok(iter::once(t).chain(lex(r).unwrap()).collect())
             }
             '!' => {
                 #[rustfmt::skip]
                 let t = Token { lexeme: String::from("!"), typ: TT::Bang };
-                iter::once(t).chain(lex(r)).collect()
+                Ok(iter::once(t).chain(lex(r).unwrap()).collect())
             }
             '&' => {
                 #[rustfmt::skip]
                 let t = Token { lexeme: String::from("&"), typ: TT::Amp };
-                iter::once(t).chain(lex(r)).collect()
+                Ok(iter::once(t).chain(lex(r).unwrap()).collect())
             }
             '|' => {
                 #[rustfmt::skip]
                 let t = Token { lexeme: String::from("|"), typ: TT::Bar };
-                iter::once(t).chain(lex(r)).collect()
+                Ok(iter::once(t).chain(lex(r).unwrap()).collect())
             }
             '(' => {
                 #[rustfmt::skip]
                 let t = Token { lexeme: String::from("("), typ: TT::PuncLeftParen };
-                iter::once(t).chain(lex(r)).collect()
+                Ok(iter::once(t).chain(lex(r).unwrap()).collect())
             }
             ')' => {
                 #[rustfmt::skip]
                 let t = Token { lexeme: String::from(")"), typ: TT::PuncRightParen };
-                iter::once(t).chain(lex(r)).collect()
+                Ok(iter::once(t).chain(lex(r).unwrap()).collect())
             }
             '{' => {
                 #[rustfmt::skip]
                 let t = Token { lexeme: String::from("{"), typ: TT::PuncLeftBrace };
-                iter::once(t).chain(lex(r)).collect()
+                Ok(iter::once(t).chain(lex(r).unwrap()).collect())
             }
             '}' => {
                 #[rustfmt::skip]
                 let t = Token { lexeme: String::from("}"), typ: TT::PuncRightBrace };
-                iter::once(t).chain(lex(r)).collect()
+                Ok(iter::once(t).chain(lex(r).unwrap()).collect())
             }
             ';' => {
                 #[rustfmt::skip]
                 let t = Token { lexeme: String::from(";"), typ: TT::PuncSemiColon };
-                iter::once(t).chain(lex(r)).collect()
+                Ok(iter::once(t).chain(lex(r).unwrap()).collect())
             }
             _ => {
                 #[rustfmt::skip]
                 let t = Token { lexeme: String::from("PANIC?"), typ: TT::Plus };
-                iter::once(t).chain(lex(r)).collect()
+                Ok(iter::once(t).chain(lex(r).unwrap()).collect())
             }
         },
     }
 }
 
-fn scan_int(input: &[char]) -> Vec<Token> {
+fn scan_int(input: &[char]) -> Result<Vec<Token>, io::Error> {
     // scan_int calls skip_whitespace too to remain idempotent
-    let cs = skip_whitespace(input);
+    let cs = skip_ws(input);
 
     match cs {
-        [] => vec![],
-        [f, r @ ..] => match f {
+        [] => Ok(vec![]),
+        [f, _r @ ..] => match f {
             '0'..='9' => {
                 #[rustfmt::skip]
-                let i = r
+                let i = _r
                     .iter()
                     .take_while(|&&c| c.is_numeric())
                     .count();
@@ -133,30 +131,30 @@ fn scan_int(input: &[char]) -> Vec<Token> {
                 let f = cs[..=i]
                     .iter()
                     .collect::<String>();
-                let new_r = &cs[i + 1..];
+                let r = &cs[i + 1..];
 
                 let t = Token {
                     lexeme: f,
                     typ: TT::LiteralInt,
                 };
 
-                iter::once(t).chain(lex(new_r)).collect()
+                Ok(iter::once(t).chain(lex(r).unwrap()).collect())
             }
-            _ => {
-                // panic
-                todo!()
-            }
+            _ => Err(io::Error::new(
+                io::ErrorKind::Other,
+                format!("unexpected token: {:?}", f),
+            )),
         },
     }
 }
 
 // TODO: support identifiers with alpha*numeric* characters after first alphabetic
-fn scan_id(input: &[char]) -> Vec<Token> {
+fn scan_id(input: &[char]) -> Result<Vec<Token>, io::Error> {
     // scan_id calls skip_whitespace too to remain idempotent
-    let cs = skip_whitespace(input);
+    let cs = skip_ws(input);
 
     match cs {
-        [] => vec![],
+        [] => Ok(vec![]),
         [f, r @ ..] => match f {
             'a'..='z' => {
                 // Find the index where the alphabetic characters end
@@ -201,22 +199,22 @@ fn scan_id(input: &[char]) -> Vec<Token> {
                     },
                 };
 
-                iter::once(t).chain(lex(new_r)).collect()
+                Ok(iter::once(t).chain(lex(new_r).unwrap()).collect())
             }
-            _ => {
-                // panic
-                todo!()
-            }
+            _ => Err(io::Error::new(
+                io::ErrorKind::Other,
+                format!("unexpected token: {:?}", f),
+            )),
         },
     }
 }
 
-fn skip_whitespace(input: &[char]) -> &[char] {
+fn skip_ws(input: &[char]) -> &[char] {
     match input {
         [] => input,
         [f, r @ ..] => {
             if f.is_whitespace() {
-                skip_whitespace(r)
+                skip_ws(r)
             } else {
                 input
             }
@@ -239,7 +237,7 @@ mod test_arith {
             .map(|b| *b as char)
             .collect::<Vec<_>>();
 
-        let output = super::lex(input.as_slice());
+        let output = super::lex(input.as_slice()).unwrap();
         insta::assert_yaml_snapshot!(output, @r###"
         ---
         - lexeme: int
@@ -272,7 +270,7 @@ mod test_arith {
             .map(|b| *b as char)
             .collect::<Vec<_>>();
 
-        let output = super::lex(input.as_slice());
+        let output = super::lex(input.as_slice()).unwrap();
         insta::assert_yaml_snapshot!(output, @r###"
         ---
         - lexeme: int
@@ -309,7 +307,7 @@ mod test_arith {
             .map(|b| *b as char)
             .collect::<Vec<_>>();
 
-        let output = super::lex(input.as_slice());
+        let output = super::lex(input.as_slice()).unwrap();
         insta::assert_yaml_snapshot!(output, @r###"
         ---
         - lexeme: int
@@ -350,7 +348,7 @@ mod test_arith {
             .map(|b| *b as char)
             .collect::<Vec<_>>();
 
-        let output = super::lex(input.as_slice());
+        let output = super::lex(input.as_slice()).unwrap();
         insta::assert_yaml_snapshot!(output, @r###"
         ---
         - lexeme: int
@@ -387,7 +385,7 @@ mod test_arith {
             .map(|b| *b as char)
             .collect::<Vec<_>>();
 
-        let output = super::lex(input.as_slice());
+        let output = super::lex(input.as_slice()).unwrap();
         insta::assert_yaml_snapshot!(output, @r###"
         ---
         - lexeme: int
@@ -424,7 +422,7 @@ mod test_arith {
             .map(|b| *b as char)
             .collect::<Vec<_>>();
 
-        let output = super::lex(input.as_slice());
+        let output = super::lex(input.as_slice()).unwrap();
         insta::assert_yaml_snapshot!(output, @r###"
         ---
         - lexeme: int
@@ -468,7 +466,7 @@ mod test_bindings {
             .map(|b| *b as char)
             .collect::<Vec<_>>();
 
-        let output = super::lex(input.as_slice());
+        let output = super::lex(input.as_slice()).unwrap();
         insta::assert_yaml_snapshot!(output, @r###"
         ---
         - lexeme: int
@@ -511,7 +509,7 @@ mod test_bindings {
             .map(|b| *b as char)
             .collect::<Vec<_>>();
 
-        let output = super::lex(input.as_slice());
+        let output = super::lex(input.as_slice()).unwrap();
         insta::assert_yaml_snapshot!(output, @r###"
         ---
         - lexeme: int

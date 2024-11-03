@@ -29,7 +29,7 @@ fn main() {
         .iter()
         .map(|b| *b as char)
         .collect::<Vec<_>>();
-    let tokens = lexer::lex(&chars);
+    let tokens = lexer::lex(&chars).unwrap();
     let tree = parser::parse_prg(&tokens).unwrap(); // C0 is a subset of C89 and share the same syntax
     println!("{:?}", tree);
 
