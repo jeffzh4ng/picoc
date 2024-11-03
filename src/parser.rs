@@ -4,6 +4,26 @@ use crate::{
 };
 use std::io;
 
+fn eat(tokens: &[Token], tt: TT) -> Result<(&Token, &[Token]), io::Error> {
+    match tokens {
+        [] => Err(io::Error::new(
+            io::ErrorKind::Other,
+            format!("expected: {:?} got: {:?}", tt, tokens),
+        )),
+        [f, r @ ..] => {
+            if f.typ == tt {
+                // Use an if-guard to compare values
+                Ok((f, r))
+            } else {
+                Err(io::Error::new(
+                    io::ErrorKind::Other,
+                    format!("expected: {:?} got: {:?}", tt, f),
+                ))
+            }
+        }
+    }
+}
+
 pub fn parse_prg(tokens: &[Token]) -> Result<Prg, io::Error> {
     let (mut fds, mut r) = (vec![], tokens);
     while let Ok((fd, _r)) = parse_funcdef(r) {
@@ -15,19 +35,19 @@ pub fn parse_prg(tokens: &[Token]) -> Result<Prg, io::Error> {
 }
 
 fn parse_funcdef(tokens: &[Token]) -> Result<(FuncDef, &[Token]), io::Error> {
-    let (_, r) = mtch(&tokens, TT::KeywordInt)?; // todo: return type can only be int for now
-    let (alias, r) = mtch(r, TT::Alias)?;
-    let (_, r) = mtch(r, TT::PuncLeftParen)?;
+    let (_, r) = eat(&tokens, TT::KeywordInt)?; // todo: return type can only be int for now
+    let (alias, r) = eat(r, TT::Alias)?;
+    let (_, r) = eat(r, TT::PuncLeftParen)?;
     // todo: parse formal parameter
-    let (_, r) = mtch(r, TT::PuncRightParen)?;
-    let (_, r) = mtch(r, TT::PuncLeftBrace)?;
+    let (_, r) = eat(r, TT::PuncRightParen)?;
+    let (_, r) = eat(r, TT::PuncLeftBrace)?;
 
     let (mut stmts, mut r) = (vec![], r);
     while let Ok((s, _r)) = parse_stmt(r) {
         stmts.push(s);
         r = _r;
     }
-    let (_, r) = mtch(r, TT::PuncRightBrace)?;
+    let (_, r) = eat(r, TT::PuncRightBrace)?;
 
     // todo: more rustic?
     let ret_exists = if let Some(Stmt::Return(_)) = stmts.last() {
@@ -52,13 +72,13 @@ fn parse_funcdef(tokens: &[Token]) -> Result<(FuncDef, &[Token]), io::Error> {
     };
 }
 
-fn parse_asmt(tokens: &[Token]) -> Result<(VarDef, &[Token]), io::Error> {
+fn parse_vardef(tokens: &[Token]) -> Result<(VarDef, &[Token]), io::Error> {
     match tokens {
         [] => todo!(),
         [f, r @ ..] => match f.typ {
             TT::KeywordInt => {
-                let (idt, r) = mtch(r, TT::Alias)?;
-                let (_, r) = mtch(r, TT::Equals)?;
+                let (idt, r) = eat(r, TT::Alias)?;
+                let (_, r) = eat(r, TT::Equals)?;
                 let (expr, r) = parse_rel_expr(r)?;
 
                 Ok((
@@ -154,27 +174,27 @@ fn parse_stmt(tokens: &[Token]) -> Result<(Stmt, &[Token]), io::Error> {
         [] => todo!(),
         [f, r @ ..] => match f.typ {
             TT::KeywordInt | TT::Alias => {
-                let (a, r) = parse_asmt(tokens)?;
-                let (_, r) = mtch(r, TT::PuncSemiColon)?;
+                let (a, r) = parse_vardef(tokens)?;
+                let (_, r) = eat(r, TT::PuncSemiColon)?;
 
                 Ok((Stmt::Asnmt(a), r))
             }
             TT::KeywordRet => {
                 let (expr, r) = parse_rel_expr(r)?;
-                let (_, r) = mtch(r, TT::PuncSemiColon)?;
+                let (_, r) = eat(r, TT::PuncSemiColon)?;
                 Ok((Stmt::Return(expr), r))
             }
             TT::KeywordIf => {
-                let (_, r) = mtch(r, TT::PuncLeftParen)?;
+                let (_, r) = eat(r, TT::PuncLeftParen)?;
                 let (cond, r) = parse_rel_expr(r)?;
-                let (_, r) = mtch(r, TT::PuncRightParen)?;
-                let (_, r) = mtch(r, TT::PuncLeftBrace)?;
+                let (_, r) = eat(r, TT::PuncRightParen)?;
+                let (_, r) = eat(r, TT::PuncLeftBrace)?;
                 let (then, r) = parse_stmt(r)?;
-                let (_, r) = mtch(r, TT::PuncRightBrace)?;
-                let (_, r) = mtch(r, TT::KeywordEls)?;
-                let (_, r) = mtch(r, TT::PuncLeftBrace)?;
+                let (_, r) = eat(r, TT::PuncRightBrace)?;
+                let (_, r) = eat(r, TT::KeywordEls)?;
+                let (_, r) = eat(r, TT::PuncLeftBrace)?;
                 let (els, r) = parse_stmt(r)?;
-                let (_, r) = mtch(r, TT::PuncRightBrace)?;
+                let (_, r) = eat(r, TT::PuncRightBrace)?;
 
                 Ok((
                     Stmt::IfEls {
@@ -221,6 +241,7 @@ fn parse_stmt(tokens: &[Token]) -> Result<(Stmt, &[Token]), io::Error> {
     }
 }
 
+// ***** introductions *****
 fn parse_rel_expr(tokens: &[Token]) -> Result<(Expr, &[Token]), io::Error> {
     let (left, r) = parse_term(tokens)?;
 
@@ -313,6 +334,7 @@ fn parse_atom(tokens: &[Token]) -> Result<(Expr, &[Token]), io::Error> {
     }
 }
 
+// ***** eliminations *****
 fn parse_rel_op(tokens: &[Token]) -> Result<(RelOp, &[Token]), io::Error> {
     match tokens {
         [] => todo!(),
@@ -404,26 +426,6 @@ fn parse_factor_op(tokens: &[Token]) -> Result<(BinOp, &[Token]), io::Error> {
                 format!("token not recognizable {:?}", t),
             )),
         },
-    }
-}
-
-fn mtch(tokens: &[Token], tt: TT) -> Result<(&Token, &[Token]), io::Error> {
-    match tokens {
-        [] => Err(io::Error::new(
-            io::ErrorKind::Other,
-            format!("expected: {:?} got: {:?}", tt, tokens),
-        )),
-        [f, r @ ..] => {
-            if f.typ == tt {
-                // Use an if-guard to compare values
-                Ok((f, r))
-            } else {
-                Err(io::Error::new(
-                    io::ErrorKind::Other,
-                    format!("expected: {:?} got: {:?}", tt, f),
-                ))
-            }
-        }
     }
 }
 
