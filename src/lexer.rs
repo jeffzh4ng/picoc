@@ -2,9 +2,13 @@ use serde::{Deserialize, Serialize};
 use std::iter;
 
 #[rustfmt::skip]
+#[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]
+pub struct Token { pub lexeme: String, pub typ: TT }
+
+#[rustfmt::skip]
 #[derive(Copy, Clone, PartialEq, Serialize, Deserialize, Debug)]
 pub enum TT {
-    LiteralInt, Identifier, // introductions (values) RE: [0-9]+ and [a-zA-Z][a-zA-Z0-9]*
+    LiteralInt, Alias, // introductions (values) RE: [0-9]+ and [a-zA-Z][a-zA-Z0-9]*
     KeywordInt, KeywordChar, KeywordVoid, KeywordRet, KeywordIf, KeywordEls, KeywordFor, // keywords ⊂ identifiers
     Plus, Minus, Star, Slash, LeftAngleBracket, RightAngleBracket, Equals, Bang, Amp, Bar, // eliminations (ops)
     PuncLeftParen, PuncRightParen, PuncLeftBrace, PuncRightBrace, PuncSemiColon, // punctuation
@@ -14,10 +18,6 @@ pub enum TT {
 //     into one variant will lose information since lexeme : String, which
 //     will produce redundant work for the parser during syntactic analysis
 //  2. non-tokens: comments, preprocessor directives, macros, whitespace
-
-#[rustfmt::skip]
-#[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]
-pub struct Token { pub lexeme: String, pub typ: TT }
 
 // TODO: keep track of file and (col, row) for error reporting
 // TODO: just filter out whitespace instead of having a helper function
@@ -197,7 +197,7 @@ fn scan_id(input: &[char]) -> Vec<Token> {
                     Some(k) => k,
                     None => Token {
                         lexeme: f,
-                        typ: TT::Identifier,
+                        typ: TT::Alias,
                     },
                 };
 
@@ -245,7 +245,7 @@ mod test_arith {
         - lexeme: int
           typ: KeywordInt
         - lexeme: main
-          typ: Identifier
+          typ: Alias
         - lexeme: (
           typ: PuncLeftParen
         - lexeme: )
@@ -278,7 +278,7 @@ mod test_arith {
         - lexeme: int
           typ: KeywordInt
         - lexeme: main
-          typ: Identifier
+          typ: Alias
         - lexeme: (
           typ: PuncLeftParen
         - lexeme: )
@@ -315,7 +315,7 @@ mod test_arith {
         - lexeme: int
           typ: KeywordInt
         - lexeme: main
-          typ: Identifier
+          typ: Alias
         - lexeme: (
           typ: PuncLeftParen
         - lexeme: )
@@ -356,7 +356,7 @@ mod test_arith {
         - lexeme: int
           typ: KeywordInt
         - lexeme: main
-          typ: Identifier
+          typ: Alias
         - lexeme: (
           typ: PuncLeftParen
         - lexeme: )
@@ -393,7 +393,7 @@ mod test_arith {
         - lexeme: int
           typ: KeywordInt
         - lexeme: main
-          typ: Identifier
+          typ: Alias
         - lexeme: (
           typ: PuncLeftParen
         - lexeme: )
@@ -430,7 +430,7 @@ mod test_arith {
         - lexeme: int
           typ: KeywordInt
         - lexeme: main
-          typ: Identifier
+          typ: Alias
         - lexeme: (
           typ: PuncLeftParen
         - lexeme: )
@@ -474,7 +474,7 @@ mod test_bindings {
         - lexeme: int
           typ: KeywordInt
         - lexeme: main
-          typ: Identifier
+          typ: Alias
         - lexeme: (
           typ: PuncLeftParen
         - lexeme: )
@@ -484,7 +484,7 @@ mod test_bindings {
         - lexeme: int
           typ: KeywordInt
         - lexeme: x
-          typ: Identifier
+          typ: Alias
         - lexeme: "="
           typ: Equals
         - lexeme: "8"
@@ -494,7 +494,7 @@ mod test_bindings {
         - lexeme: return
           typ: KeywordRet
         - lexeme: x
-          typ: Identifier
+          typ: Alias
         - lexeme: ;
           typ: PuncSemiColon
         - lexeme: "}"
@@ -517,7 +517,7 @@ mod test_bindings {
         - lexeme: int
           typ: KeywordInt
         - lexeme: main
-          typ: Identifier
+          typ: Alias
         - lexeme: (
           typ: PuncLeftParen
         - lexeme: )
@@ -527,7 +527,7 @@ mod test_bindings {
         - lexeme: return
           typ: KeywordRet
         - lexeme: f
-          typ: Identifier
+          typ: Alias
         - lexeme: (
           typ: PuncLeftParen
         - lexeme: )
@@ -539,7 +539,7 @@ mod test_bindings {
         - lexeme: int
           typ: KeywordInt
         - lexeme: f
-          typ: Identifier
+          typ: Alias
         - lexeme: (
           typ: PuncLeftParen
         - lexeme: )
@@ -553,7 +553,7 @@ mod test_bindings {
         - lexeme: +
           typ: Plus
         - lexeme: g
-          typ: Identifier
+          typ: Alias
         - lexeme: (
           typ: PuncLeftParen
         - lexeme: )
@@ -565,7 +565,7 @@ mod test_bindings {
         - lexeme: int
           typ: KeywordInt
         - lexeme: g
-          typ: Identifier
+          typ: Alias
         - lexeme: (
           typ: PuncLeftParen
         - lexeme: )
@@ -579,7 +579,7 @@ mod test_bindings {
         - lexeme: +
           typ: Plus
         - lexeme: h
-          typ: Identifier
+          typ: Alias
         - lexeme: (
           typ: PuncLeftParen
         - lexeme: )
@@ -591,7 +591,7 @@ mod test_bindings {
         - lexeme: int
           typ: KeywordInt
         - lexeme: h
-          typ: Identifier
+          typ: Alias
         - lexeme: (
           typ: PuncLeftParen
         - lexeme: )

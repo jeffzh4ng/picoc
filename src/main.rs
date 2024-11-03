@@ -30,9 +30,8 @@ fn main() {
         .map(|b| *b as char)
         .collect::<Vec<_>>();
     let tokens = lexer::lex(&chars);
-    // println!("{:?}", &tokens);
     let tree = parser::parse_prg(&tokens).unwrap(); // C0 is a subset of C89 and share the same syntax
-                                                    // println!("{:?}", tree);
+    println!("{:?}", tree);
 
     // match strat.as_str() {
     //     "interpretc0" => {

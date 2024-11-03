@@ -1,5 +1,5 @@
 .DS_Store
-/src/eval.rs
+.vscode
 /target
 tmp.s
 tmp

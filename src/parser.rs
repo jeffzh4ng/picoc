@@ -16,7 +16,7 @@ pub fn parse_prg(tokens: &[Token]) -> Result<Prg, io::Error> {
 
 fn parse_funcdef(tokens: &[Token]) -> Result<(FuncDef, &[Token]), io::Error> {
     let (_, r) = mtch(&tokens, TT::KeywordInt)?; // todo: return type can only be int for now
-    let (alias, r) = mtch(r, TT::Identifier)?;
+    let (alias, r) = mtch(r, TT::Alias)?;
     let (_, r) = mtch(r, TT::PuncLeftParen)?;
     // todo: parse formal parameter
     let (_, r) = mtch(r, TT::PuncRightParen)?;
@@ -57,7 +57,7 @@ fn parse_asmt(tokens: &[Token]) -> Result<(VarDef, &[Token]), io::Error> {
         [] => todo!(),
         [f, r @ ..] => match f.typ {
             TT::KeywordInt => {
-                let (idt, r) = mtch(r, TT::Identifier)?;
+                let (idt, r) = mtch(r, TT::Alias)?;
                 let (_, r) = mtch(r, TT::Equals)?;
                 let (expr, r) = parse_rel_expr(r)?;
 
@@ -69,7 +69,7 @@ fn parse_asmt(tokens: &[Token]) -> Result<(VarDef, &[Token]), io::Error> {
                     r,
                 ))
             }
-            TT::Identifier => match r {
+            TT::Alias => match r {
                 [] => todo!(),
                 [s, t, r @ ..] => match (s.typ, t.typ) {
                     // (TT::Plus, TT::Equals) => {
@@ -153,7 +153,7 @@ fn parse_stmt(tokens: &[Token]) -> Result<(Stmt, &[Token]), io::Error> {
     match tokens {
         [] => todo!(),
         [f, r @ ..] => match f.typ {
-            TT::KeywordInt | TT::Identifier => {
+            TT::KeywordInt | TT::Alias => {
                 let (a, r) = parse_asmt(tokens)?;
                 let (_, r) = mtch(r, TT::PuncSemiColon)?;
 
@@ -303,7 +303,7 @@ fn parse_atom(tokens: &[Token]) -> Result<(Expr, &[Token]), io::Error> {
     match tokens {
         [] => todo!(),
         [f, r @ ..] => match f.typ {
-            TT::Identifier => Ok((Expr::Var(f.lexeme.to_owned()), r)),
+            TT::Alias => Ok((Expr::Var(f.lexeme.to_owned()), r)),
             TT::LiteralInt => Ok((Expr::Int(f.lexeme.parse().unwrap()), r)),
             t => Err(io::Error::new(
                 io::ErrorKind::Other,
@@ -723,56 +723,69 @@ mod test_arith {
     }
 }
 
-// #[cfg(test)]
-// mod test_bindings {
-//     use crate::lexer;
-//     use std::fs;
+#[cfg(test)]
+mod test_bindings {
+    use crate::lexer;
+    use std::fs;
 
-//     const TEST_DIR: &str = "tests/fixtures/bindings";
+    const TEST_DIR: &str = "tests/fixtures/bindings";
 
-//     // #[test]
-//     // fn asnmt() {
-//     //     let chars = fs::read(format!("{TEST_DIR}/composition.c"))
-//     //         .expect("file dne")
-//     //         .iter()
-//     //         .map(|b| *b as char)
-//     //         .collect::<Vec<_>>();
+    #[test]
+    fn composition() {
+        let chars = fs::read(format!("{TEST_DIR}/composition.c"))
+            .expect("file dne")
+            .iter()
+            .map(|b| *b as char)
+            .collect::<Vec<_>>();
 
-//     //     let tokens = lexer::lex(&chars);
-//     //     let tree = super::parse_prg(&tokens).unwrap();
-//     //     insta::assert_yaml_snapshot!(tree, @"");
-//     // }
+        let tokens = lexer::lex(&chars);
+        let tree = super::parse_prg(&tokens).unwrap();
+        insta::assert_yaml_snapshot!(tree, @"");
+    }
 
-//     #[test]
-//     fn asnmt_update() {
-//         let chars = fs::read(format!("{TEST_DIR}/asnmt_update.c"))
-//             .expect("file dne")
-//             .iter()
-//             .map(|b| *b as char)
-//             .collect::<Vec<_>>();
+    // #[test]
+    // fn asnmt() {
+    //     let chars = fs::read(format!("{TEST_DIR}/composition.c"))
+    //         .expect("file dne")
+    //         .iter()
+    //         .map(|b| *b as char)
+    //         .collect::<Vec<_>>();
 
-//         let tokens = lexer::lex(&chars);
-//         let tree = super::parse_prg(&tokens).unwrap();
-//         insta::assert_yaml_snapshot!(tree, @r###"
-//         ---
-//         main_function:
-//           stmts:
-//             - Asnmt:
-//                 CreateBind:
-//                   id: n
-//                   expr:
-//                     Int: 0
-//             - Asnmt:
-//                 UpdateBind:
-//                   id: n
-//                   op: Add
-//                   expr:
-//                     Int: 10
-//             - Return:
-//                 Var: n
-//         "###);
-//     }
-// }
+    //     let tokens = lexer::lex(&chars);
+    //     let tree = super::parse_prg(&tokens).unwrap();
+    //     insta::assert_yaml_snapshot!(tree, @"");
+    // }
+
+    // #[test]
+    // fn asnmt_update() {
+    //     let chars = fs::read(format!("{TEST_DIR}/asnmt_update.c"))
+    //         .expect("file dne")
+    //         .iter()
+    //         .map(|b| *b as char)
+    //         .collect::<Vec<_>>();
+
+    //     let tokens = lexer::lex(&chars);
+    //     let tree = super::parse_prg(&tokens).unwrap();
+    //     insta::assert_yaml_snapshot!(tree, @r###"
+    //     ---
+    //     main_function:
+    //       stmts:
+    //         - Asnmt:
+    //             CreateBind:
+    //               id: n
+    //               expr:
+    //                 Int: 0
+    //         - Asnmt:
+    //             UpdateBind:
+    //               id: n
+    //               op: Add
+    //               expr:
+    //                 Int: 10
+    //         - Return:
+    //             Var: n
+    //     "###);
+    // }
+}
 
 #[cfg(test)]
 mod test_control {
