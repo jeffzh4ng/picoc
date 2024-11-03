@@ -502,30 +502,10 @@ mod test_bindings {
         "###);
     }
 
-    // #[test]
-    // fn composition() {
-    //     #[rustfmt::skip]
-    //     let input = fs::read(format!("{TEST_DIR}/composition.c"))
-    //         .expect("file dne")
-    //         .iter()
-    //         .map(|b| *b as char)
-    //         .collect::<Vec<_>>();
-
-    //     let output = super::lex(input.as_slice());
-    //     insta::assert_yaml_snapshot!(output, @r###"
-    // }
-}
-
-#[cfg(test)]
-mod test_control {
-    use std::fs;
-
-    const TEST_DIR: &str = "tests/fixtures/control";
-
     #[test]
-    fn for_loop() {
+    fn composition() {
         #[rustfmt::skip]
-        let input = fs::read(format!("{TEST_DIR}/for.c"))
+        let input = fs::read(format!("{TEST_DIR}/composition.c"))
             .expect("file dne")
             .iter()
             .map(|b| *b as char)
@@ -544,74 +524,84 @@ mod test_control {
           typ: PuncRightParen
         - lexeme: "{"
           typ: PuncLeftBrace
-        - lexeme: int
-          typ: KeywordInt
-        - lexeme: n
+        - lexeme: return
+          typ: KeywordRet
+        - lexeme: f
           typ: Identifier
-        - lexeme: "="
-          typ: Equals
-        - lexeme: "0"
-          typ: LiteralInt
-        - lexeme: ;
-          typ: PuncSemiColon
-        - lexeme: for
-          typ: KeywordFor
         - lexeme: (
           typ: PuncLeftParen
-        - lexeme: int
-          typ: KeywordInt
-        - lexeme: i
-          typ: Identifier
-        - lexeme: "="
-          typ: Equals
-        - lexeme: "0"
-          typ: LiteralInt
-        - lexeme: ;
-          typ: PuncSemiColon
-        - lexeme: i
-          typ: Identifier
-        - lexeme: "<"
-          typ: LeftAngleBracket
-        - lexeme: "10"
-          typ: LiteralInt
-        - lexeme: ;
-          typ: PuncSemiColon
-        - lexeme: i
-          typ: Identifier
-        - lexeme: +
-          typ: Plus
-        - lexeme: +
-          typ: Plus
         - lexeme: )
           typ: PuncRightParen
-        - lexeme: "{"
-          typ: PuncLeftBrace
-        - lexeme: n
-          typ: Identifier
-        - lexeme: +
-          typ: Plus
-        - lexeme: "="
-          typ: Equals
-        - lexeme: "1"
-          typ: LiteralInt
-        - lexeme: ;
-          typ: PuncSemiColon
-        - lexeme: n
-          typ: Identifier
-        - lexeme: +
-          typ: Plus
-        - lexeme: "="
-          typ: Equals
-        - lexeme: "1"
-          typ: LiteralInt
         - lexeme: ;
           typ: PuncSemiColon
         - lexeme: "}"
           typ: PuncRightBrace
+        - lexeme: int
+          typ: KeywordInt
+        - lexeme: f
+          typ: Identifier
+        - lexeme: (
+          typ: PuncLeftParen
+        - lexeme: )
+          typ: PuncRightParen
+        - lexeme: "{"
+          typ: PuncLeftBrace
         - lexeme: return
           typ: KeywordRet
-        - lexeme: n
+        - lexeme: "9"
+          typ: LiteralInt
+        - lexeme: +
+          typ: Plus
+        - lexeme: g
           typ: Identifier
+        - lexeme: (
+          typ: PuncLeftParen
+        - lexeme: )
+          typ: PuncRightParen
+        - lexeme: ;
+          typ: PuncSemiColon
+        - lexeme: "}"
+          typ: PuncRightBrace
+        - lexeme: int
+          typ: KeywordInt
+        - lexeme: g
+          typ: Identifier
+        - lexeme: (
+          typ: PuncLeftParen
+        - lexeme: )
+          typ: PuncRightParen
+        - lexeme: "{"
+          typ: PuncLeftBrace
+        - lexeme: return
+          typ: KeywordRet
+        - lexeme: "10"
+          typ: LiteralInt
+        - lexeme: +
+          typ: Plus
+        - lexeme: h
+          typ: Identifier
+        - lexeme: (
+          typ: PuncLeftParen
+        - lexeme: )
+          typ: PuncRightParen
+        - lexeme: ;
+          typ: PuncSemiColon
+        - lexeme: "}"
+          typ: PuncRightBrace
+        - lexeme: int
+          typ: KeywordInt
+        - lexeme: h
+          typ: Identifier
+        - lexeme: (
+          typ: PuncLeftParen
+        - lexeme: )
+          typ: PuncRightParen
+        - lexeme: "{"
+          typ: PuncLeftBrace
+        - lexeme: return
+          typ: KeywordRet
+        - lexeme: "11"
+          typ: LiteralInt
         - lexeme: ;
           typ: PuncSemiColon
         - lexeme: "}"

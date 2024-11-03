@@ -25,7 +25,7 @@ fn main() {
     println!("picoc089-info: received source: {src}");
 
     let chars = fs::read(src)
-        .expect("picoc089-error: file dne")
+        .expect("picoc089-error: file dne`")
         .iter()
         .map(|b| *b as char)
         .collect::<Vec<_>>();
