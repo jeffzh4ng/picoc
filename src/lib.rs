@@ -45,7 +45,7 @@ common_enum! {
         // ***** eliminations (operators) *****
         UnaryE { op: UnaryOp, l: Box<Expr> }, BinE { op: BinOp, l: Box<Expr>, r: Box<Expr> }, LogE { op: LogOp, l: Box<Expr>, r: Box<Expr> },
         BitE { op: BitOp, l: Box<Expr>, r: Box<Expr> }, RelE { op: RelOp, l: Box<Expr>, r: Box<Expr> },
-        Var(String), FuncApply{ alias: String, actual_param: Option<Box<Expr>> }
+        Alias(String), FuncApp{ alias: String, actual_param: Option<Box<Expr>> }
     }
 }
 

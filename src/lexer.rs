@@ -127,10 +127,7 @@ fn scan_int(input: &[char]) -> Result<Vec<Token>, io::Error> {
                     .take_while(|&&c| c.is_numeric())
                     .count();
 
-                #[rustfmt::skip]
-                let f = cs[..=i]
-                    .iter()
-                    .collect::<String>();
+                let f = cs[..=i].iter().collect::<String>();
                 let r = &cs[i + 1..];
 
                 let t = Token {
