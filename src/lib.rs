@@ -1,11 +1,11 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-// pub mod evaluator;
 // pub mod generator;
+// pub mod typer;
+pub mod evaluator;
 pub mod lexer;
 pub mod parser;
-// pub mod typer;
 
 #[macro_use]
 macro_rules! common_struct {
@@ -25,16 +25,16 @@ macro_rules! common_enum {
     }
 }
 
-// ***** nv: Map<Alias, Val> *****
-common_struct! { pub struct Nv { fnv: HashMap<String, Lambda>, vnv: HashMap<String, Val>, body: Lambda }}
-common_struct! { pub struct Lambda { pub formal_param: String, pub body: Expr } } // todo: formal_param: Vec<String>, body: Vec<Stmt> + Expr. desugar?
-common_enum! { pub enum Val { Int(i32), Bool(bool) } }
-
 // ***** prg: Vec<Defs> *****
 type Prg = Vec<Defs>;
 common_enum! { pub enum Defs { FuncDef(FuncDef), VarDef(VarDef) } }
 common_struct! { pub struct FuncDef { pub alias: String, pub formal_param: String, pub body: Vec<Stmt> } }
 common_struct! { pub struct VarDef { alias: String, expr: Box<Expr> }} // UpdateBind { alias: String, op: BinOp, expr: Box<Expr> }
+
+// ***** nv: Map<Alias, Val> *****
+common_struct! { pub struct Nv { fnv: HashMap<String, Lambda>, vnv: HashMap<String, Val> }}
+common_struct! { pub struct Lambda { pub formal_param: String, pub body: Vec<Stmt> } } // todo: formal_param: Vec<String>, body: Vec<Stmt> + Expr. desugar?
+common_enum! { pub enum Val { Int(i32), Bool(bool) } }
 
 common_enum! {
     #[rustfmt::skip]

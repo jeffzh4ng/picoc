@@ -540,7 +540,6 @@ mod test_arith {
 
     #[test]
     fn sub() {
-        #[rustfmt::skip]
         let chars = fs::read(format!("{TEST_DIR}/sub.c"))
             .expect("file dne")
             .iter()
@@ -567,7 +566,6 @@ mod test_arith {
 
     #[test]
     fn mult() {
-        #[rustfmt::skip]
         let chars = fs::read(format!("{TEST_DIR}/mult.c"))
             .expect("file dne")
             .iter()
@@ -594,7 +592,6 @@ mod test_arith {
 
     #[test]
     fn div() {
-        #[rustfmt::skip]
         let chars = fs::read(format!("{TEST_DIR}/div.c"))
             .expect("file dne")
             .iter()
