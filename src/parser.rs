@@ -421,7 +421,7 @@ fn parse_funcapp(tokens: &[Token]) -> Result<(Expr, &[Token]), io::Error> {
                 let (_, _r) = eat(r, TT::PuncRightParen)?;
 
                 match left {
-                    Expr::Alias(alias) => Ok((
+                    Expr::VarApp(alias) => Ok((
                         Expr::FuncApp {
                             alias,
                             actual_param,
@@ -444,7 +444,7 @@ fn parse_atom(tokens: &[Token]) -> Result<(Expr, &[Token]), io::Error> {
     match tokens {
         [] => todo!(),
         [f, r @ ..] => match f.typ {
-            TT::Alias => Ok((Expr::Alias(f.lexeme.to_owned()), r)),
+            TT::Alias => Ok((Expr::VarApp(f.lexeme.to_owned()), r)),
             TT::LiteralInt => Ok((Expr::Int(f.lexeme.parse().unwrap()), r)),
             t => Err(io::Error::new(
                 io::ErrorKind::Other,
@@ -830,7 +830,7 @@ mod test_bindings {
                   expr:
                     Int: 9
               - Return:
-                  Alias: x
+                  VarApp: x
         "###);
     }
 

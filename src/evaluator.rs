@@ -17,22 +17,27 @@ pub fn eval_prg(prg: Prg) -> i32 {
         .collect::<HashMap<String, Lambda>>();
 
     // defining nv here so eval_fn can borrow both
-    let nv = Nv {
+    let mut nv = Nv {
         fnv,
         vnv: HashMap::new(),
     };
-    eval_fn(&nv.fnv["main"], &nv)
+    eval_fn(nv.fnv["main"].clone(), &mut nv)
 }
 
 // substitution is implemented with a cache (nv) and tree traversal,
 // rather than tree rewriting
-fn eval_fn(l: &Lambda, nv: &Nv) -> i32 {
+
+// todo: avoid taking ownership of l, where l is a value of &mut nv?
+fn eval_fn(l: Lambda, nv: &mut Nv) -> i32 {
     let foo = l
         .body
         .iter()
         .take_while(|&stmt| !matches!(stmt, Stmt::Return(_)))
         .map(|stmt| match stmt {
-            Stmt::Asnmt(var_def) => todo!(),
+            Stmt::Asnmt(var_def) => {
+                let val = eval_expr(&var_def.expr, nv); // eager
+                nv.vnv.insert(var_def.alias.clone(), val);
+            }
             Stmt::While => todo!(),
             Stmt::If => todo!(),
             Stmt::IfEls { cond, then, els } => todo!(),
@@ -47,7 +52,7 @@ fn eval_fn(l: &Lambda, nv: &Nv) -> i32 {
     }
 }
 
-fn eval_expr(e: &Expr, nv: &Nv) -> i32 {
+fn eval_expr(e: &Expr, nv: &mut Nv) -> i32 {
     match e {
         Expr::Int(n) => *n,
         Expr::UnaryE { op, l } => todo!(),
@@ -61,11 +66,11 @@ fn eval_expr(e: &Expr, nv: &Nv) -> i32 {
         Expr::LogE { op, l, r } => todo!(),
         Expr::BitE { op, l, r } => todo!(),
         Expr::RelE { op, l, r } => todo!(),
-        Expr::Alias(_) => todo!(),
+        Expr::VarApp(alias) => nv.vnv[alias].clone(),
         Expr::FuncApp {
             alias,
             actual_param,
-        } => eval_fn(&nv.fnv[alias], &nv),
+        } => eval_fn(nv.fnv[alias].clone(), nv),
     }
 }
 
