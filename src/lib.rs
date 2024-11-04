@@ -52,7 +52,7 @@ common_enum! {
 common_enum! {
     pub enum Stmt {
         Asnmt(VarDef),
-        Return(Expr), // hm...
+        Return(Expr),
         While, If, IfEls { cond: Box<Expr>, then: Box<Stmt>, els: Box<Stmt> }
     }
 }

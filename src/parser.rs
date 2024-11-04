@@ -67,13 +67,13 @@ fn parse_vardef(tokens: &[Token]) -> Result<(VarDef, &[Token]), io::Error> {
         [] => todo!(),
         [f, r @ ..] => match f.typ {
             TT::KeywordInt => {
-                let (idt, r) = eat(r, TT::Alias)?;
+                let (alias, r) = eat(r, TT::Alias)?;
                 let (_, r) = eat(r, TT::Equals)?;
                 let (expr, r) = parse_expr(r)?;
 
                 Ok((
                     VarDef {
-                        alias: idt.lexeme.to_owned(),
+                        alias: alias.lexeme.to_owned(),
                         expr: Box::new(expr),
                     },
                     r,
@@ -163,7 +163,8 @@ fn parse_stmt(tokens: &[Token]) -> Result<(Stmt, &[Token]), io::Error> {
     match tokens {
         [] => todo!(),
         [f, r @ ..] => match f.typ {
-            TT::KeywordInt | TT::Alias => {
+            TT::KeywordInt => {
+                // todo: | TT:KeywordAlias{++, --, -=}, etc.
                 let (a, r) = parse_vardef(tokens)?;
                 let (_, r) = eat(r, TT::PuncSemiColon)?;
 
@@ -808,18 +809,30 @@ mod test_bindings {
         "###);
     }
 
-    // #[test]
-    // fn asnmt() {
-    //     let chars = fs::read(format!("{TEST_DIR}/composition.c"))
-    //         .expect("file dne")
-    //         .iter()
-    //         .map(|b| *b as char)
-    //         .collect::<Vec<_>>();
+    #[test]
+    fn asnmt() {
+        let chars = fs::read(format!("{TEST_DIR}/assignment.c"))
+            .expect("file dne")
+            .iter()
+            .map(|b| *b as char)
+            .collect::<Vec<_>>();
 
-    //     let tokens = lexer::lex(&chars).unwrap();
-    //     let tree = super::parse_prg(&tokens).unwrap();
-    //     insta::assert_yaml_snapshot!(tree, @"");
-    // }
+        let tokens = lexer::lex(&chars).unwrap();
+        let tree = super::parse_prg(&tokens).unwrap();
+        insta::assert_yaml_snapshot!(tree, @r###"
+        ---
+        - FuncDef:
+            alias: main
+            formal_param: ""
+            body:
+              - Asnmt:
+                  alias: x
+                  expr:
+                    Int: 9
+              - Return:
+                  Alias: x
+        "###);
+    }
 
     // #[test]
     // fn asnmt_update() {
