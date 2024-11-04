@@ -30,7 +30,7 @@ pub fn parse_prg(tokens: &[Token]) -> Result<Prg, io::Error> {
         r = _r;
     }
 
-    Ok(fds.into_iter().map(Defs::Func).collect())
+    Ok(fds.into_iter().map(Defs::FuncDef).collect())
 }
 
 fn parse_funcdef(tokens: &[Token]) -> Result<(FuncDef, &[Token]), io::Error> {
@@ -472,7 +472,7 @@ mod test_arith {
         let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
-        - Func:
+        - FuncDef:
             alias: main
             formal_param: ""
             body:
@@ -493,7 +493,7 @@ mod test_arith {
         let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
-        - Func:
+        - FuncDef:
             alias: main
             formal_param: ""
             body:
@@ -519,7 +519,7 @@ mod test_arith {
         let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
-        - Func:
+        - FuncDef:
             alias: main
             formal_param: ""
             body:
@@ -551,7 +551,7 @@ mod test_arith {
         let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
-        - Func:
+        - FuncDef:
             alias: main
             formal_param: ""
             body:
@@ -578,7 +578,7 @@ mod test_arith {
         let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
-        - Func:
+        - FuncDef:
             alias: main
             formal_param: ""
             body:
@@ -605,7 +605,7 @@ mod test_arith {
         let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
-        - Func:
+        - FuncDef:
             alias: main
             formal_param: ""
             body:
@@ -631,7 +631,7 @@ mod test_arith {
         let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
-        - Func:
+        - FuncDef:
             alias: main
             formal_param: ""
             body:
@@ -662,7 +662,7 @@ mod test_arith {
         let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
-        - Func:
+        - FuncDef:
             alias: main
             formal_param: ""
             body:
@@ -693,7 +693,7 @@ mod test_arith {
         let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
-        - Func:
+        - FuncDef:
             alias: main
             formal_param: ""
             body:
@@ -724,7 +724,7 @@ mod test_arith {
         let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
-        - Func:
+        - FuncDef:
             alias: main
             formal_param: ""
             body:
@@ -766,7 +766,49 @@ mod test_bindings {
 
         let tokens = lexer::lex(&chars).unwrap();
         let tree = super::parse_prg(&tokens).unwrap();
-        insta::assert_yaml_snapshot!(tree, @"");
+        insta::assert_yaml_snapshot!(tree, @r###"
+        ---
+        - FuncDef:
+            alias: main
+            formal_param: ""
+            body:
+              - Return:
+                  FuncApp:
+                    alias: f
+                    actual_param: ~
+        - FuncDef:
+            alias: f
+            formal_param: ""
+            body:
+              - Return:
+                  BinE:
+                    op: Add
+                    l:
+                      Int: 9
+                    r:
+                      FuncApp:
+                        alias: g
+                        actual_param: ~
+        - FuncDef:
+            alias: g
+            formal_param: ""
+            body:
+              - Return:
+                  BinE:
+                    op: Add
+                    l:
+                      Int: 10
+                    r:
+                      FuncApp:
+                        alias: h
+                        actual_param: ~
+        - FuncDef:
+            alias: h
+            formal_param: ""
+            body:
+              - Return:
+                  Int: 11
+        "###);
     }
 
     // #[test]
@@ -832,7 +874,7 @@ mod test_control {
         let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
-        - Func:
+        - FuncDef:
             alias: main
             formal_param: ""
             body:
@@ -858,7 +900,7 @@ mod test_control {
         let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
-        - Func:
+        - FuncDef:
             alias: main
             formal_param: ""
             body:
@@ -884,7 +926,7 @@ mod test_control {
         let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
-        - Func:
+        - FuncDef:
             alias: main
             formal_param: ""
             body:
@@ -910,7 +952,7 @@ mod test_control {
         let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
-        - Func:
+        - FuncDef:
             alias: main
             formal_param: ""
             body:
@@ -936,7 +978,7 @@ mod test_control {
         let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
-        - Func:
+        - FuncDef:
             alias: main
             formal_param: ""
             body:
@@ -962,7 +1004,7 @@ mod test_control {
         let tree = super::parse_prg(&tokens).unwrap();
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
-        - Func:
+        - FuncDef:
             alias: main
             formal_param: ""
             body:

@@ -32,7 +32,7 @@ common_enum! { pub enum Val { Int(i32), Bool(bool) } }
 
 // ***** prg: Vec<Defs> *****
 type Prg = Vec<Defs>;
-common_enum! { pub enum Defs { Func(FuncDef), Var(VarDef) } }
+common_enum! { pub enum Defs { FuncDef(FuncDef), VarDef(VarDef) } }
 common_struct! { pub struct FuncDef { pub alias: String, pub formal_param: String, pub body: Vec<Stmt> } }
 common_struct! { pub struct VarDef { alias: String, expr: Box<Expr> }} // UpdateBind { alias: String, op: BinOp, expr: Box<Expr> }
 
