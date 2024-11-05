@@ -38,8 +38,6 @@ fn parse_funcdef(tokens: &[Token]) -> Result<(FuncDef, &[Token]), io::Error> {
     let (alias, r) = eat(r, TT::Alias)?;
     let (_, r) = eat(r, TT::PuncLeftParen)?;
 
-    println!("picoc089-info: alias: {alias:?}");
-
     // todo: formal param needs to include type (int, bool, etc)
     let (mut formal_params, mut r) = (vec![], r);
     // for now, single formal param
@@ -426,9 +424,9 @@ fn parse_funcapp(tokens: &[Token]) -> Result<(Expr, &[Token]), io::Error> {
             if let TT::PuncLeftParen = f.typ {
                 let (actual_param, r) = if !_r.is_empty() && _r[0].typ != TT::PuncRightParen {
                     let (actual_param, r) = parse_expr(_r)?; // single param for now
-                    (Some(Box::new(actual_param)), r)
+                    ((vec![actual_param]), r)
                 } else {
-                    (None, _r)
+                    (vec![], _r)
                 };
                 let (_, _r) = eat(r, TT::PuncRightParen)?;
 
@@ -436,7 +434,7 @@ fn parse_funcapp(tokens: &[Token]) -> Result<(Expr, &[Token]), io::Error> {
                     Expr::VarApp(alias) => Ok((
                         Expr::FuncApp {
                             alias,
-                            actual_param,
+                            ap: actual_param,
                         },
                         _r,
                     )),
@@ -790,7 +788,7 @@ mod test_bindings {
               - Return:
                   FuncApp:
                     alias: f
-                    actual_param: ~
+                    ap: []
         - FuncDef:
             alias: f
             formal_param: []
@@ -803,7 +801,7 @@ mod test_bindings {
                     r:
                       FuncApp:
                         alias: g
-                        actual_param: ~
+                        ap: []
         - FuncDef:
             alias: g
             formal_param: []
@@ -816,7 +814,7 @@ mod test_bindings {
                     r:
                       FuncApp:
                         alias: h
-                        actual_param: ~
+                        ap: []
         - FuncDef:
             alias: h
             formal_param: []
@@ -845,8 +843,8 @@ mod test_bindings {
               - Return:
                   FuncApp:
                     alias: f
-                    actual_param:
-                      Int: 9
+                    ap:
+                      - Int: 9
         - FuncDef:
             alias: f
             formal_param:
@@ -922,7 +920,6 @@ mod test_bindings {
 mod test_control {
     use crate::lexer;
     use std::fs;
-
     const TEST_DIR: &str = "tests/fixtures/control";
 
     #[test]

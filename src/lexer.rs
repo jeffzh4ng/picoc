@@ -222,7 +222,6 @@ fn skip_ws(input: &[char]) -> &[char] {
 #[cfg(test)]
 mod test_arith {
     use std::fs;
-
     const TEST_DIR: &str = "tests/fixtures/arith";
 
     #[test]
@@ -451,7 +450,6 @@ mod test_arith {
 #[cfg(test)]
 mod test_bindings {
     use std::fs;
-
     const TEST_DIR: &str = "tests/fixtures/bindings";
 
     #[test]

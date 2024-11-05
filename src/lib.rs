@@ -33,7 +33,7 @@ common_struct! { pub struct VarDef { alias: String, expr: Box<Expr> }} // Update
 
 // ***** nv: Map<Alias, Val> *****
 common_struct! { pub struct Nv { fnv: HashMap<String, Lambda>, vnv: HashMap<String, i32> }}
-common_struct! { pub struct Lambda { pub formal_param: Vec<String>, pub body: Vec<Stmt> } } // todo: formal_param: Vec<String>, body: Vec<Stmt> + Expr. desugar?
+common_struct! { pub struct Lambda { pub fp: Vec<String>, pub body: Vec<Stmt>} } // todo: formal_param: Vec<String>, body: Vec<Stmt> + Expr. desugar?
 common_enum! { pub enum Val { Int(i32), Bool(bool) } }
 
 common_enum! {
@@ -45,7 +45,7 @@ common_enum! {
         // ***** eliminations (operators) *****
         UnaryE { op: UnaryOp, l: Box<Expr> }, BinE { op: BinOp, l: Box<Expr>, r: Box<Expr> }, LogE { op: LogOp, l: Box<Expr>, r: Box<Expr> },
         BitE { op: BitOp, l: Box<Expr>, r: Box<Expr> }, RelE { op: RelOp, l: Box<Expr>, r: Box<Expr> },
-        VarApp(String), FuncApp{ alias: String, actual_param: Option<Box<Expr>> }
+        VarApp(String), FuncApp{ alias: String, ap: Vec<Expr> }
     }
 }
 

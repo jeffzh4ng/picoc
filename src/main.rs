@@ -31,7 +31,6 @@ fn main() {
         .collect::<Vec<_>>();
     let tokens = lexer::lex(&chars).unwrap();
     let tree = parser::parse_prg(&tokens).unwrap();
-    println!("picoc089-info: parsed tree: {tree:#?}");
 
     match strat.as_str() {
         "interpretc0" => {
