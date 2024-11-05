@@ -1,7 +1,7 @@
 use crate::{BinOp, Defs, Expr, Lambda, Nv, Prg, Stmt};
-use std::collections::HashMap;
+use std::{collections::HashMap, io};
 
-pub fn eval_prg(prg: Prg) -> i32 {
+pub fn eval_prg(prg: Prg) -> Result<i32, io::Error> {
     let fnv = prg
         .iter()
         .map(|defs| match defs {
@@ -28,57 +28,53 @@ pub fn eval_prg(prg: Prg) -> i32 {
 // rather than tree rewriting
 
 // todo: avoid taking ownership of l, where l is a value of &mut nv?
-fn eval_fn(l: Lambda, nv: &mut Nv) -> i32 {
+fn eval_fn(l: Lambda, nv: &mut Nv) -> Result<i32, io::Error> {
+    // anyhow, this error
     let foo = l
         .body
         .iter()
         .take_while(|&stmt| !matches!(stmt, Stmt::Return(_)))
-        .map(|stmt| match stmt {
-            Stmt::Asnmt(var_def) => {
-                let val = eval_expr(&var_def.expr, nv); // eager
-                nv.vnv.insert(var_def.alias.clone(), val);
+        .map(|stmt| -> Result<(), io::Error> {
+            match stmt {
+                Stmt::Asnmt(var_def) => {
+                    let val = eval_expr(&var_def.expr, nv)?; // eager
+                    nv.vnv.insert(var_def.alias.clone(), val);
+                    Ok(())
+                }
+                Stmt::While => todo!(),
+                Stmt::If => todo!(),
+                Stmt::IfEls { cond, then, els } => todo!(),
+                _ => panic!(), // todo: fix
             }
-            Stmt::While => todo!(),
-            Stmt::If => todo!(),
-            Stmt::IfEls { cond, then, els } => todo!(),
-            _ => panic!(), // todo: fix
         })
-        .collect::<Vec<_>>();
+        .collect::<Result<Vec<_>, io::Error>>()?;
 
-    if let Stmt::Return(e) = l.body.last().unwrap() {
-        eval_expr(e, nv)
+    if let Some(Stmt::Return(e)) = l.body.last() {
+        Ok(eval_expr(e, nv)?)
     } else {
-        panic!() // todo: fix
+        todo!() // anyhow, thiserror
+                // Err(Error::EvalError("no return stmt".to_string()))
     }
 }
 
-fn eval_expr(e: &Expr, nv: &mut Nv) -> i32 {
+fn eval_expr(e: &Expr, nv: &mut Nv) -> Result<i32, io::Error> {
     match e {
-        Expr::Int(n) => *n,
+        Expr::Int(n) => Ok(*n),
         Expr::UnaryE { op, l } => todo!(),
         Expr::BinE { op, l, r } => match op {
-            BinOp::Add => eval_expr(l, nv) + eval_expr(r, nv),
-            BinOp::Sub => eval_expr(l, nv) - eval_expr(r, nv),
-            BinOp::Mult => eval_expr(l, nv) * eval_expr(r, nv),
-            BinOp::Div => eval_expr(l, nv) / eval_expr(r, nv),
-            BinOp::Mod => eval_expr(l, nv) % eval_expr(r, nv),
+            BinOp::Add => Ok(eval_expr(l, nv)? + eval_expr(r, nv)?),
+            BinOp::Sub => Ok(eval_expr(l, nv)? - eval_expr(r, nv)?),
+            BinOp::Mult => Ok(eval_expr(l, nv)? * eval_expr(r, nv)?),
+            BinOp::Div => Ok(eval_expr(l, nv)? / eval_expr(r, nv)?),
+            BinOp::Mod => Ok(eval_expr(l, nv)? % eval_expr(r, nv)?),
         },
         Expr::LogE { op, l, r } => todo!(),
         Expr::BitE { op, l, r } => todo!(),
         Expr::RelE { op, l, r } => todo!(),
-        Expr::VarApp(alias) => nv.vnv[alias].clone(),
+        Expr::VarApp(alias) => Ok(nv.vnv[alias].clone()),
         Expr::FuncApp {
             alias,
             actual_param,
         } => eval_fn(nv.fnv[alias].clone(), nv),
     }
 }
-
-// mod tests {
-//     use super::*;
-
-//     #[test]
-//     fn simple() {
-//         assert_eq!(9, super::eval(&Expr::Int(9)));
-//     }
-// }

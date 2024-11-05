@@ -34,7 +34,7 @@ fn main() {
 
     match strat.as_str() {
         "interpretc0" => {
-            let val = evaluator::eval_prg(tree);
+            let val = evaluator::eval_prg(tree).unwrap();
             println!("picoc089-info: evaluated: {val}");
         }
         // "compilec89" => {

@@ -2,7 +2,7 @@ use crate::{
     lexer::{Token, TT},
     BinOp, Defs, Expr, FuncDef, Prg, RelOp, Stmt, VarDef,
 };
-use std::io;
+use std::{io, num::ParseIntError};
 
 fn eat(tokens: &[Token], tt: TT) -> Result<(&Token, &[Token]), io::Error> {
     match tokens {
@@ -445,7 +445,12 @@ fn parse_atom(tokens: &[Token]) -> Result<(Expr, &[Token]), io::Error> {
         [] => todo!(),
         [f, r @ ..] => match f.typ {
             TT::Alias => Ok((Expr::VarApp(f.lexeme.to_owned()), r)),
-            TT::LiteralInt => Ok((Expr::Int(f.lexeme.parse().unwrap()), r)),
+            TT::LiteralInt => Ok((
+                Expr::Int(f.lexeme.parse().map_err(|e: ParseIntError| {
+                    io::Error::new(io::ErrorKind::Other, e.to_string())
+                })?),
+                r,
+            )),
             t => Err(io::Error::new(
                 io::ErrorKind::Other,
                 format!("token not recognizable {:?}", t),

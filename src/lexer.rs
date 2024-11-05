@@ -32,82 +32,82 @@ pub fn lex(input: &[char]) -> Result<Vec<Token>, io::Error> {
             '+' => {
                 #[rustfmt::skip]
                 let t = Token { lexeme: String::from("+"), typ: TT::Plus };
-                Ok(iter::once(t).chain(lex(r).unwrap()).collect())
+                Ok(iter::once(t).chain(lex(r)?).collect())
             }
             '-' => {
                 #[rustfmt::skip]
                 let t = Token { lexeme: String::from("-"), typ: TT::Minus };
-                Ok(iter::once(t).chain(lex(r).unwrap()).collect())
+                Ok(iter::once(t).chain(lex(r)?).collect())
             }
             '*' => {
                 #[rustfmt::skip]
                 let t = Token { lexeme: String::from("*"), typ: TT::Star };
-                Ok(iter::once(t).chain(lex(r).unwrap()).collect())
+                Ok(iter::once(t).chain(lex(r)?).collect())
             }
             '/' => {
                 #[rustfmt::skip]
                 let t = Token { lexeme: String::from("/"), typ: TT::Slash };
-                Ok(iter::once(t).chain(lex(r).unwrap()).collect())
+                Ok(iter::once(t).chain(lex(r)?).collect())
             }
             '<' => {
                 #[rustfmt::skip]
                 let t = Token { lexeme: String::from("<"), typ: TT::LeftAngleBracket };
-                Ok(iter::once(t).chain(lex(r).unwrap()).collect())
+                Ok(iter::once(t).chain(lex(r)?).collect())
             }
             '>' => {
                 #[rustfmt::skip]
                 let t = Token { lexeme: String::from(">"), typ: TT::RightAngleBracket };
-                Ok(iter::once(t).chain(lex(r).unwrap()).collect())
+                Ok(iter::once(t).chain(lex(r)?).collect())
             }
             '=' => {
                 #[rustfmt::skip]
                 let t = Token { lexeme: String::from("="), typ: TT::Equals };
-                Ok(iter::once(t).chain(lex(r).unwrap()).collect())
+                Ok(iter::once(t).chain(lex(r)?).collect())
             }
             '!' => {
                 #[rustfmt::skip]
                 let t = Token { lexeme: String::from("!"), typ: TT::Bang };
-                Ok(iter::once(t).chain(lex(r).unwrap()).collect())
+                Ok(iter::once(t).chain(lex(r)?).collect())
             }
             '&' => {
                 #[rustfmt::skip]
                 let t = Token { lexeme: String::from("&"), typ: TT::Amp };
-                Ok(iter::once(t).chain(lex(r).unwrap()).collect())
+                Ok(iter::once(t).chain(lex(r)?).collect())
             }
             '|' => {
                 #[rustfmt::skip]
                 let t = Token { lexeme: String::from("|"), typ: TT::Bar };
-                Ok(iter::once(t).chain(lex(r).unwrap()).collect())
+                Ok(iter::once(t).chain(lex(r)?).collect())
             }
             '(' => {
                 #[rustfmt::skip]
                 let t = Token { lexeme: String::from("("), typ: TT::PuncLeftParen };
-                Ok(iter::once(t).chain(lex(r).unwrap()).collect())
+                Ok(iter::once(t).chain(lex(r)?).collect())
             }
             ')' => {
                 #[rustfmt::skip]
                 let t = Token { lexeme: String::from(")"), typ: TT::PuncRightParen };
-                Ok(iter::once(t).chain(lex(r).unwrap()).collect())
+                Ok(iter::once(t).chain(lex(r)?).collect())
             }
             '{' => {
                 #[rustfmt::skip]
                 let t = Token { lexeme: String::from("{"), typ: TT::PuncLeftBrace };
-                Ok(iter::once(t).chain(lex(r).unwrap()).collect())
+                Ok(iter::once(t).chain(lex(r)?).collect())
             }
             '}' => {
                 #[rustfmt::skip]
                 let t = Token { lexeme: String::from("}"), typ: TT::PuncRightBrace };
-                Ok(iter::once(t).chain(lex(r).unwrap()).collect())
+                Ok(iter::once(t).chain(lex(r)?).collect())
             }
             ';' => {
                 #[rustfmt::skip]
                 let t = Token { lexeme: String::from(";"), typ: TT::PuncSemiColon };
-                Ok(iter::once(t).chain(lex(r).unwrap()).collect())
+                Ok(iter::once(t).chain(lex(r)?).collect())
             }
             _ => {
                 #[rustfmt::skip]
                 let t = Token { lexeme: String::from("PANIC?"), typ: TT::Plus };
-                Ok(iter::once(t).chain(lex(r).unwrap()).collect())
+                Ok(iter::once(t).chain(lex(r)?).collect())
             }
         },
     }
@@ -135,7 +135,7 @@ fn scan_int(input: &[char]) -> Result<Vec<Token>, io::Error> {
                     typ: TT::LiteralInt,
                 };
 
-                Ok(iter::once(t).chain(lex(r).unwrap()).collect())
+                Ok(iter::once(t).chain(lex(r)?).collect())
             }
             _ => Err(io::Error::new(
                 io::ErrorKind::Other,
@@ -196,7 +196,7 @@ fn scan_id(input: &[char]) -> Result<Vec<Token>, io::Error> {
                     },
                 };
 
-                Ok(iter::once(t).chain(lex(new_r).unwrap()).collect())
+                Ok(iter::once(t).chain(lex(new_r)?).collect())
             }
             _ => Err(io::Error::new(
                 io::ErrorKind::Other,
