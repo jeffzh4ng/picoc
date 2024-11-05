@@ -37,7 +37,18 @@ fn parse_funcdef(tokens: &[Token]) -> Result<(FuncDef, &[Token]), io::Error> {
     let (_, r) = eat(&tokens, TT::KeywordInt)?; // todo: return type can only be int for now
     let (alias, r) = eat(r, TT::Alias)?;
     let (_, r) = eat(r, TT::PuncLeftParen)?;
-    // todo: parse formal parameter
+
+    println!("picoc089-info: alias: {alias:?}");
+
+    // todo: formal param needs to include type (int, bool, etc)
+    let (mut formal_params, mut r) = (vec![], r);
+    // for now, single formal param
+    if let Ok((_, _r)) = eat(r, TT::KeywordInt) {
+        let (alias, _r) = eat(_r, TT::Alias)?;
+        formal_params.push(alias.lexeme.to_owned());
+        r = _r;
+    }
+
     let (_, r) = eat(r, TT::PuncRightParen)?;
     let (_, r) = eat(r, TT::PuncLeftBrace)?;
 
@@ -54,7 +65,7 @@ fn parse_funcdef(tokens: &[Token]) -> Result<(FuncDef, &[Token]), io::Error> {
         Ok((
             FuncDef {
                 alias: alias.lexeme.to_string(),
-                formal_param: "".to_string(),
+                formal_param: formal_params,
                 body: stmts,
             },
             r,
@@ -66,6 +77,7 @@ fn parse_vardef(tokens: &[Token]) -> Result<(VarDef, &[Token]), io::Error> {
     match tokens {
         [] => todo!(),
         [f, r @ ..] => match f.typ {
+            // for now int is parsed with vardef
             TT::KeywordInt => {
                 let (alias, r) = eat(r, TT::Alias)?;
                 let (_, r) = eat(r, TT::Equals)?;
@@ -480,7 +492,7 @@ mod test_arith {
         ---
         - FuncDef:
             alias: main
-            formal_param: ""
+            formal_param: []
             body:
               - Return:
                   Int: 8
@@ -501,7 +513,7 @@ mod test_arith {
         ---
         - FuncDef:
             alias: main
-            formal_param: ""
+            formal_param: []
             body:
               - Return:
                   BinE:
@@ -527,7 +539,7 @@ mod test_arith {
         ---
         - FuncDef:
             alias: main
-            formal_param: ""
+            formal_param: []
             body:
               - Return:
                   BinE:
@@ -558,7 +570,7 @@ mod test_arith {
         ---
         - FuncDef:
             alias: main
-            formal_param: ""
+            formal_param: []
             body:
               - Return:
                   BinE:
@@ -584,7 +596,7 @@ mod test_arith {
         ---
         - FuncDef:
             alias: main
-            formal_param: ""
+            formal_param: []
             body:
               - Return:
                   BinE:
@@ -610,7 +622,7 @@ mod test_arith {
         ---
         - FuncDef:
             alias: main
-            formal_param: ""
+            formal_param: []
             body:
               - Return:
                   BinE:
@@ -636,7 +648,7 @@ mod test_arith {
         ---
         - FuncDef:
             alias: main
-            formal_param: ""
+            formal_param: []
             body:
               - Return:
                   BinE:
@@ -667,7 +679,7 @@ mod test_arith {
         ---
         - FuncDef:
             alias: main
-            formal_param: ""
+            formal_param: []
             body:
               - Return:
                   BinE:
@@ -698,7 +710,7 @@ mod test_arith {
         ---
         - FuncDef:
             alias: main
-            formal_param: ""
+            formal_param: []
             body:
               - Return:
                   BinE:
@@ -729,7 +741,7 @@ mod test_arith {
         ---
         - FuncDef:
             alias: main
-            formal_param: ""
+            formal_param: []
             body:
               - Return:
                   BinE:
@@ -773,7 +785,7 @@ mod test_bindings {
         ---
         - FuncDef:
             alias: main
-            formal_param: ""
+            formal_param: []
             body:
               - Return:
                   FuncApp:
@@ -781,7 +793,7 @@ mod test_bindings {
                     actual_param: ~
         - FuncDef:
             alias: f
-            formal_param: ""
+            formal_param: []
             body:
               - Return:
                   BinE:
@@ -794,7 +806,7 @@ mod test_bindings {
                         actual_param: ~
         - FuncDef:
             alias: g
-            formal_param: ""
+            formal_param: []
             body:
               - Return:
                   BinE:
@@ -807,10 +819,46 @@ mod test_bindings {
                         actual_param: ~
         - FuncDef:
             alias: h
-            formal_param: ""
+            formal_param: []
             body:
               - Return:
                   Int: 11
+        "###);
+    }
+
+    #[test]
+    fn formal_param() {
+        let chars = fs::read(format!("{TEST_DIR}/formal_param.c"))
+            .expect("file dne")
+            .iter()
+            .map(|b| *b as char)
+            .collect::<Vec<_>>();
+
+        let tokens = lexer::lex(&chars).unwrap();
+        let tree = super::parse_prg(&tokens).unwrap();
+        insta::assert_yaml_snapshot!(tree, @r###"
+        ---
+        - FuncDef:
+            alias: main
+            formal_param: []
+            body:
+              - Return:
+                  FuncApp:
+                    alias: f
+                    actual_param:
+                      Int: 9
+        - FuncDef:
+            alias: f
+            formal_param:
+              - x
+            body:
+              - Return:
+                  BinE:
+                    op: Add
+                    l:
+                      VarApp: x
+                    r:
+                      Int: 10
         "###);
     }
 
@@ -828,7 +876,7 @@ mod test_bindings {
         ---
         - FuncDef:
             alias: main
-            formal_param: ""
+            formal_param: []
             body:
               - Asnmt:
                   alias: x
@@ -891,7 +939,7 @@ mod test_control {
         ---
         - FuncDef:
             alias: main
-            formal_param: ""
+            formal_param: []
             body:
               - Return:
                   RelE:
@@ -917,7 +965,7 @@ mod test_control {
         ---
         - FuncDef:
             alias: main
-            formal_param: ""
+            formal_param: []
             body:
               - Return:
                   RelE:
@@ -943,7 +991,7 @@ mod test_control {
         ---
         - FuncDef:
             alias: main
-            formal_param: ""
+            formal_param: []
             body:
               - Return:
                   RelE:
@@ -969,7 +1017,7 @@ mod test_control {
         ---
         - FuncDef:
             alias: main
-            formal_param: ""
+            formal_param: []
             body:
               - Return:
                   RelE:
@@ -995,7 +1043,7 @@ mod test_control {
         ---
         - FuncDef:
             alias: main
-            formal_param: ""
+            formal_param: []
             body:
               - Return:
                   RelE:
@@ -1021,7 +1069,7 @@ mod test_control {
         ---
         - FuncDef:
             alias: main
-            formal_param: ""
+            formal_param: []
             body:
               - Return:
                   RelE:

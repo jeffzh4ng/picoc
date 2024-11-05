@@ -28,12 +28,12 @@ macro_rules! common_enum {
 // ***** prg: Vec<Defs> *****
 type Prg = Vec<Defs>;
 common_enum! { pub enum Defs { FuncDef(FuncDef), VarDef(VarDef) } }
-common_struct! { pub struct FuncDef { pub alias: String, pub formal_param: String, pub body: Vec<Stmt> } }
+common_struct! { pub struct FuncDef { pub alias: String, pub formal_param: Vec<String>, pub body: Vec<Stmt> } }
 common_struct! { pub struct VarDef { alias: String, expr: Box<Expr> }} // UpdateBind { alias: String, op: BinOp, expr: Box<Expr> }
 
 // ***** nv: Map<Alias, Val> *****
 common_struct! { pub struct Nv { fnv: HashMap<String, Lambda>, vnv: HashMap<String, i32> }}
-common_struct! { pub struct Lambda { pub formal_param: String, pub body: Vec<Stmt> } } // todo: formal_param: Vec<String>, body: Vec<Stmt> + Expr. desugar?
+common_struct! { pub struct Lambda { pub formal_param: Vec<String>, pub body: Vec<Stmt> } } // todo: formal_param: Vec<String>, body: Vec<Stmt> + Expr. desugar?
 common_enum! { pub enum Val { Int(i32), Bool(bool) } }
 
 common_enum! {

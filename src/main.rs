@@ -30,7 +30,8 @@ fn main() {
         .map(|b| *b as char)
         .collect::<Vec<_>>();
     let tokens = lexer::lex(&chars).unwrap();
-    let tree = parser::parse_prg(&tokens).unwrap(); // C0 is a subset of C89 and share the same syntax
+    let tree = parser::parse_prg(&tokens).unwrap();
+    println!("picoc089-info: parsed tree: {tree:#?}");
 
     match strat.as_str() {
         "interpretc0" => {

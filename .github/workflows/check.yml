@@ -1,9 +1,3 @@
-# Check Workflow:
-# - fmt
-# - clippy
-# - TODO: doc
-# - hack
-
 name: check
 permissions:
   contents: read
