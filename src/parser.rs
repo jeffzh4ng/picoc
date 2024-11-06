@@ -57,18 +57,17 @@ fn parse_funcdef(tokens: &[Token]) -> Result<(FuncDef, &[Token]), io::Error> {
     }
     let (_, r) = eat(r, TT::PuncRightBrace)?;
 
-    if !matches!(stmts.last(), Some(Stmt::Return(_))) {
-        Err(io::Error::new(io::ErrorKind::Other, "no return"))
-    } else {
-        Ok((
-            FuncDef {
-                alias: alias.lexeme.to_string(),
-                formal_param: formal_params,
-                body: stmts,
-            },
-            r,
-        ))
-    }
+    // if !matches!(stmts.last(), Some(Stmt::Return(_))) {
+    //     Err(io::Error::new(io::ErrorKind::Other, "no return"))
+    // } else { todo: is this semantic check possible when return is nested?
+    Ok((
+        FuncDef {
+            alias: alias.lexeme.to_string(),
+            formal_param: formal_params,
+            body: stmts,
+        },
+        r,
+    ))
 }
 
 fn parse_vardef(tokens: &[Token]) -> Result<(VarDef, &[Token]), io::Error> {
@@ -1078,36 +1077,38 @@ mod test_control {
         "###);
     }
 
-    // #[test]
-    // fn ifels_then() {
-    //     let chars = fs::read(format!("{TEST_DIR}/ifels_then.c"))
-    //         .expect("file dne")
-    //         .iter()
-    //         .map(|b| *b as char)
-    //         .collect::<Vec<_>>();
+    #[test]
+    fn ifels_then() {
+        let chars = fs::read(format!("{TEST_DIR}/ifels_then.c"))
+            .expect("file dne")
+            .iter()
+            .map(|b| *b as char)
+            .collect::<Vec<_>>();
 
-    //     let tokens = lexer::lex(&chars).unwrap();
-    //     let tree = super::parse_prg(&tokens).unwrap();
-    //     insta::assert_yaml_snapshot!(tree, @r###"
-    //     ---
-    //     main_function:
-    //       stmts:
-    //         - IfEls:
-    //             cond:
-    //               RelE:
-    //                 op: Lt
-    //                 l:
-    //                   Int: 9
-    //                 r:
-    //                   Int: 10
-    //             then:
-    //               Return:
-    //                 Int: 0
-    //             els:
-    //               Return:
-    //                 Int: 1
-    //     "###);
-    // }
+        let tokens = lexer::lex(&chars).unwrap();
+        let tree = super::parse_prg(&tokens).unwrap();
+        insta::assert_yaml_snapshot!(tree, @r###"
+        ---
+        - FuncDef:
+            alias: main
+            formal_param: []
+            body:
+              - IfEls:
+                  cond:
+                    RelE:
+                      op: Lt
+                      l:
+                        Int: 9
+                      r:
+                        Int: 10
+                  then:
+                    Return:
+                      Int: 0
+                  els:
+                    Return:
+                      Int: 1
+        "###);
+    }
 
     // #[test]
     // fn for_loop() {

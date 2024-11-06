@@ -33,7 +33,7 @@ common_struct! { pub struct VarDef { alias: String, expr: Box<Expr> }} // Update
 
 // ***** nv: Map<Alias, Val> *****
 common_struct! { pub struct Nv { fnv: HashMap<String, Lambda>, vnv: HashMap<String, i32> }}
-common_struct! { pub struct Lambda { pub fp: Vec<String>, pub body: Vec<Stmt>} } // todo: formal_param: Vec<String>, body: Vec<Stmt> + Expr. desugar?
+common_struct! { pub struct Lambda { pub fp: Vec<String>, pub body: Vec<Stmt>} }
 common_enum! { pub enum Val { Int(i32), Bool(bool) } }
 
 common_enum! {
@@ -51,9 +51,8 @@ common_enum! {
 
 common_enum! {
     pub enum Stmt {
-        Asnmt(VarDef),
-        Return(Expr),
-        While, If, IfEls { cond: Box<Expr>, then: Box<Stmt>, els: Box<Stmt> }
+        Asnmt(VarDef), Return(Expr), // bindings
+        While, If, IfEls { cond: Box<Expr>, then: Box<Stmt>, els: Box<Stmt> } // control
     }
 }
 

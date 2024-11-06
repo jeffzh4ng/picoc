@@ -602,3 +602,70 @@ mod test_bindings {
         "###);
     }
 }
+
+#[cfg(test)]
+mod test_control {
+    use std::fs;
+    const TEST_DIR: &str = "tests/fixtures/control";
+
+    #[test]
+    fn lit() {
+        #[rustfmt::skip]
+        let input = fs::read(format!("{TEST_DIR}/ifels_then.c"))
+            .expect("file dne")
+            .iter()
+            .map(|b| *b as char)
+            .collect::<Vec<_>>();
+
+        let output = super::lex(input.as_slice()).unwrap();
+        insta::assert_yaml_snapshot!(output, @r###"
+        ---
+        - lexeme: int
+          typ: KeywordInt
+        - lexeme: main
+          typ: Alias
+        - lexeme: (
+          typ: PuncLeftParen
+        - lexeme: )
+          typ: PuncRightParen
+        - lexeme: "{"
+          typ: PuncLeftBrace
+        - lexeme: if
+          typ: KeywordIf
+        - lexeme: (
+          typ: PuncLeftParen
+        - lexeme: "9"
+          typ: LiteralInt
+        - lexeme: "<"
+          typ: LeftAngleBracket
+        - lexeme: "10"
+          typ: LiteralInt
+        - lexeme: )
+          typ: PuncRightParen
+        - lexeme: "{"
+          typ: PuncLeftBrace
+        - lexeme: return
+          typ: KeywordRet
+        - lexeme: "0"
+          typ: LiteralInt
+        - lexeme: ;
+          typ: PuncSemiColon
+        - lexeme: "}"
+          typ: PuncRightBrace
+        - lexeme: else
+          typ: KeywordEls
+        - lexeme: "{"
+          typ: PuncLeftBrace
+        - lexeme: return
+          typ: KeywordRet
+        - lexeme: "1"
+          typ: LiteralInt
+        - lexeme: ;
+          typ: PuncSemiColon
+        - lexeme: "}"
+          typ: PuncRightBrace
+        - lexeme: "}"
+          typ: PuncRightBrace
+        "###);
+    }
+}
