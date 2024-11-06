@@ -205,6 +205,22 @@ fn parse_stmt(tokens: &[Token]) -> Result<(Stmt, &[Token]), io::Error> {
                     r,
                 ))
             }
+            TT::KeywordWhile => {
+                let (_, r) = eat(r, TT::PuncLeftParen)?;
+                let (cond, r) = parse_rel(r)?;
+                let (_, r) = eat(r, TT::PuncRightParen)?;
+                let (_, r) = eat(r, TT::PuncLeftBrace)?;
+                let (body, r) = parse_stmt(r)?;
+                let (_, r) = eat(r, TT::PuncRightBrace)?;
+
+                Ok((
+                    Stmt::While {
+                        cond: Box::new(cond),
+                        body: Box::new(body),
+                    },
+                    r,
+                ))
+            }
             // TT::KeywordFor => {
             //     let (_, r) = mtch(r, TT::PuncLeftParen)?;
             //     let (asnmt, r) = parse_asmt(r)?;
@@ -1103,6 +1119,19 @@ mod test_control {
                     Return:
                       Int: 10
         "###);
+    }
+
+    #[test]
+    fn whl() {
+        let chars = fs::read(format!("{TEST_DIR}/while.c"))
+            .expect("file dne")
+            .iter()
+            .map(|b| *b as char)
+            .collect::<Vec<_>>();
+
+        let tokens = lexer::lex(&chars).unwrap();
+        let tree = super::parse_prg(&tokens).unwrap();
+        insta::assert_yaml_snapshot!(tree, @r"")
     }
 
     // #[test]

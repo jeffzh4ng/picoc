@@ -51,10 +51,12 @@ fn eval_stmt(
         }
         Stmt::Return(e) => Some(eval_expr(e, gnv, &lvnv)?),
         Stmt::IfEls { cond, then, els } => {
-            if eval_expr(cond, gnv, &lvnv)? == 1 {
-                eval_stmt(then, gnv, lvnv)?
+            let mut new_lvnv = lvnv.clone();
+
+            if eval_expr(cond, gnv, &new_lvnv)? == 1 {
+                eval_stmt(then, gnv, &mut new_lvnv)?
             } else {
-                eval_stmt(els, gnv, lvnv)?
+                eval_stmt(els, gnv, &mut new_lvnv)?
             }
         }
         Stmt::While { cond, body } => {
@@ -109,7 +111,23 @@ mod tests {
 
     #[test]
     fn dyn_scope() {
-        let chars = fs::read(format!("{TEST_DIR}/dyn_scope.c"))
+        let chars = fs::read(format!("tests/fixtures/snap/illegal/dyn_scope.c"))
+            .expect("file dne")
+            .iter()
+            .map(|b| *b as char)
+            .collect::<Vec<_>>();
+        let tokens = lexer::lex(&chars).unwrap();
+        let tree = parser::parse_prg(&tokens).unwrap();
+        let val = eval_prg(tree);
+        assert!(matches!(
+            val,
+            Err(e) if e.kind() == io::ErrorKind::Other && e.to_string() == "undefined variable"
+        ));
+    }
+
+    #[test]
+    fn if_scope() {
+        let chars = fs::read(format!("tests/fixtures/snap/illegal/if_scope.c"))
             .expect("file dne")
             .iter()
             .map(|b| *b as char)

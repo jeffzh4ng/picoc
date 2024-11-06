@@ -9,7 +9,7 @@ pub struct Token { pub lexeme: String, pub typ: TT }
 #[derive(Copy, Clone, PartialEq, Serialize, Deserialize, Debug)]
 pub enum TT {
     LiteralInt, Alias, // introductions (values) RE: [0-9]+ and [a-zA-Z][a-zA-Z0-9]*
-    KeywordInt, KeywordChar, KeywordVoid, KeywordRet, KeywordIf, KeywordEls, KeywordFor, // keywords ⊂ identifiers
+    KeywordInt, KeywordChar, KeywordVoid, KeywordRet, KeywordIf, KeywordEls, KeywordFor, KeywordWhile, // keywords ⊂ identifiers
     Plus, Minus, Star, Slash, LeftAngleBracket, RightAngleBracket, Equals, Bang, Amp, Bar, // eliminations (ops)
     PuncLeftParen, PuncRightParen, PuncLeftBrace, PuncRightBrace, PuncSemiColon, // punctuation
 }
@@ -179,6 +179,10 @@ fn scan_id(input: &[char]) -> Result<Vec<Token>, io::Error> {
                     "for" => Some(Token {
                         lexeme: f.to_string(),
                         typ: TT::KeywordFor,
+                    }),
+                    "while" => Some(Token {
+                        lexeme: f.to_string(),
+                        typ: TT::KeywordWhile,
                     }),
                     "return" => Some(Token {
                         lexeme: f.to_string(),
