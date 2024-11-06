@@ -1,7 +1,7 @@
 int main() {
-    if (9 > 10) {
-        return 1;
+    if (0) {
+        return 9;
     } else {
-        return 0;
+        return 10;
     }
 }

@@ -50,7 +50,13 @@ fn eval_stmt(
             None
         }
         Stmt::Return(e) => Some(eval_expr(e, gnv, &lvnv)?),
-        Stmt::IfEls { cond, then, els } => todo!(),
+        Stmt::IfEls { cond, then, els } => {
+            if eval_expr(cond, gnv, &lvnv)? == 1 {
+                eval_stmt(then, gnv, lvnv)?
+            } else {
+                eval_stmt(els, gnv, lvnv)?
+            }
+        }
         Stmt::While => todo!(),
     })
 }

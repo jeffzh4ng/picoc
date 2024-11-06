@@ -1095,18 +1095,13 @@ mod test_control {
             body:
               - IfEls:
                   cond:
-                    RelE:
-                      op: Lt
-                      l:
-                        Int: 9
-                      r:
-                        Int: 10
+                    Int: 1
                   then:
                     Return:
-                      Int: 0
+                      Int: 9
                   els:
                     Return:
-                      Int: 1
+                      Int: 10
         "###);
     }
 

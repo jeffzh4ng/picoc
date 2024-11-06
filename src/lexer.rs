@@ -634,11 +634,7 @@ mod test_control {
           typ: KeywordIf
         - lexeme: (
           typ: PuncLeftParen
-        - lexeme: "9"
-          typ: LiteralInt
-        - lexeme: "<"
-          typ: LeftAngleBracket
-        - lexeme: "10"
+        - lexeme: "1"
           typ: LiteralInt
         - lexeme: )
           typ: PuncRightParen
@@ -646,7 +642,7 @@ mod test_control {
           typ: PuncLeftBrace
         - lexeme: return
           typ: KeywordRet
-        - lexeme: "0"
+        - lexeme: "9"
           typ: LiteralInt
         - lexeme: ;
           typ: PuncSemiColon
@@ -658,7 +654,7 @@ mod test_control {
           typ: PuncLeftBrace
         - lexeme: return
           typ: KeywordRet
-        - lexeme: "1"
+        - lexeme: "10"
           typ: LiteralInt
         - lexeme: ;
           typ: PuncSemiColon
