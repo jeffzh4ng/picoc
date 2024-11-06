@@ -33,10 +33,9 @@ assert() {
 
 # ---tests---
 # 1. expressions
-# 2. control flow
-# 3. data transfer
-# 5. structs
-# 4. malloc/free
+# 3. bindings
+# 2. control 
+# 4. heap
 
 # --- expressions ---
 assert "./tests/fixtures/legal/arithmetic/lit.c"
@@ -51,7 +50,19 @@ assert "./tests/fixtures/legal/arithmetic_precedence/sub_associative.c"
 assert "./tests/fixtures/legal/arithmetic_precedence/mult_add_precedence.c"
 assert "./tests/fixtures/legal/arithmetic_precedence/mult_add_precedence_multi.c"
 
-# --- control flow ---
+# --- bindings ---
+# -- bindings
+assert "./tests/fixtures/legal/data_flow/asnmt.c"
+assert "./tests/fixtures/legal/data_flow/asnmt_multi.c"
+assert "./tests/fixtures/legal/data_flow/asnmt_multi_expr.c"
+assert "./tests/fixtures/legal/data_flow/asnmt_multi_expr_var.c"
+assert "./tests/fixtures/legal/data_flow/asnmt_update.c"
+assert "./tests/fixtures/legal/data_flow/asnmt_update_inc.c"
+assert "./tests/fixtures/legal/data_flow/asnmt_update_dec.c"
+
+# -- functions
+
+# --- control ---
 # -- booleans
 assert "./tests/fixtures/legal/control_flow/eq_true.c"
 assert "./tests/fixtures/legal/control_flow/eq_false.c"
@@ -77,18 +88,7 @@ assert "./tests/fixtures/legal/control_flow/ifels_els.c"
 # -- loops
 assert "./tests/fixtures/legal/control_flow/for.c"
 
-# -- functions
-
-# --- data transfer ---
-# -- bindings
-assert "./tests/fixtures/legal/data_flow/asnmt.c"
-assert "./tests/fixtures/legal/data_flow/asnmt_multi.c"
-assert "./tests/fixtures/legal/data_flow/asnmt_multi_expr.c"
-assert "./tests/fixtures/legal/data_flow/asnmt_multi_expr_var.c"
-assert "./tests/fixtures/legal/data_flow/asnmt_update.c"
-assert "./tests/fixtures/legal/data_flow/asnmt_update_inc.c"
-assert "./tests/fixtures/legal/data_flow/asnmt_update_dec.c"
-
+## --- heap ---
 # -- malloc/free
 # -- pointer/deref
 # -- structs selec/deref

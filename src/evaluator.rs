@@ -57,7 +57,12 @@ fn eval_stmt(
                 eval_stmt(els, gnv, lvnv)?
             }
         }
-        Stmt::While => todo!(),
+        Stmt::While { cond, body } => {
+            while eval_expr(cond, gnv, &lvnv)? == 1 {
+                eval_stmt(body, gnv, lvnv)?;
+            }
+            None
+        }
     })
 }
 
@@ -100,7 +105,7 @@ mod tests {
     use super::*;
     use crate::{lexer, parser};
     use std::fs;
-    const TEST_DIR: &str = "tests/fixtures/bindings";
+    const TEST_DIR: &str = "tests/fixtures/snap/bindings";
 
     #[test]
     fn dyn_scope() {

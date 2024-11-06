@@ -104,11 +104,10 @@ pub fn lex(input: &[char]) -> Result<Vec<Token>, io::Error> {
                 let t = Token { lexeme: String::from(";"), typ: TT::PuncSemiColon };
                 Ok(iter::once(t).chain(lex(r)?).collect())
             }
-            _ => {
-                #[rustfmt::skip]
-                let t = Token { lexeme: String::from("PANIC?"), typ: TT::Plus };
-                Ok(iter::once(t).chain(lex(r)?).collect())
-            }
+            _ => Err(io::Error::new(
+                io::ErrorKind::Other,
+                format!("unexpected token: {:?}", f),
+            )),
         },
     }
 }
@@ -222,7 +221,7 @@ fn skip_ws(input: &[char]) -> &[char] {
 #[cfg(test)]
 mod test_arith {
     use std::fs;
-    const TEST_DIR: &str = "tests/fixtures/arith";
+    const TEST_DIR: &str = "tests/fixtures/snap/arith";
 
     #[test]
     fn lit() {
@@ -450,7 +449,7 @@ mod test_arith {
 #[cfg(test)]
 mod test_bindings {
     use std::fs;
-    const TEST_DIR: &str = "tests/fixtures/bindings";
+    const TEST_DIR: &str = "tests/fixtures/snap/bindings";
 
     #[test]
     fn asnmt() {
@@ -606,7 +605,7 @@ mod test_bindings {
 #[cfg(test)]
 mod test_control {
     use std::fs;
-    const TEST_DIR: &str = "tests/fixtures/control";
+    const TEST_DIR: &str = "tests/fixtures/snap/control";
 
     #[test]
     fn lit() {

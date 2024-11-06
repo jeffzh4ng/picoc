@@ -473,7 +473,7 @@ mod test_arith {
     use crate::lexer;
     use std::fs;
 
-    const TEST_DIR: &str = "tests/fixtures/arith";
+    const TEST_DIR: &str = "tests/fixtures/snap/arith";
 
     #[test]
     fn lit() {
@@ -766,7 +766,7 @@ mod test_bindings {
     use crate::lexer;
     use std::fs;
 
-    const TEST_DIR: &str = "tests/fixtures/bindings";
+    const TEST_DIR: &str = "tests/fixtures/snap/bindings";
 
     #[test]
     fn composition() {
@@ -919,7 +919,7 @@ mod test_bindings {
 mod test_control {
     use crate::lexer;
     use std::fs;
-    const TEST_DIR: &str = "tests/fixtures/control";
+    const TEST_DIR: &str = "tests/fixtures/snap/control";
 
     #[test]
     fn eq() {
