@@ -26,31 +26,33 @@ pub fn eval_prg(prg: Prg) -> Result<i32, io::Error> {
 }
 
 fn eval_func(l: &Lambda, gnv: &Nv, mut lvnv: HashMap<String, i32>) -> Result<i32, io::Error> {
-    let foo = l
-        .body
+    l.body
         .iter()
-        .take_while(|&stmt| !matches!(stmt, Stmt::Return(_)))
-        .map(|stmt| -> Result<(), io::Error> {
-            match stmt {
-                Stmt::Asnmt(var_def) => {
-                    let val = eval_expr(&var_def.expr, gnv, &lvnv)?; // eager
-                    lvnv.insert(var_def.alias.clone(), val);
-                    Ok(())
-                }
-                Stmt::While => todo!(),
-                Stmt::If => todo!(),
-                Stmt::IfEls { cond, then, els } => todo!(),
-                _ => panic!(), // todo: fix
+        .try_fold(None, |acc, stmt| {
+            if acc.is_none() {
+                eval_stmt(stmt, gnv, &mut lvnv)
+            } else {
+                Ok(acc) // can't break from closures. switch to loop if perf is an issue
             }
-        })
-        .collect::<Result<Vec<_>, io::Error>>()?;
+        })?
+        .ok_or(io::Error::new(io::ErrorKind::Other, "no return stmt"))
+}
 
-    if let Some(Stmt::Return(e)) = l.body.last() {
-        Ok(eval_expr(e, gnv, &lvnv)?)
-    } else {
-        todo!() // anyhow, thiserror
-                // Err(Error::EvalError("no return stmt".to_string()))
-    }
+fn eval_stmt(
+    stmt: &Stmt,
+    gnv: &Nv,
+    lvnv: &mut HashMap<String, i32>,
+) -> Result<Option<i32>, io::Error> {
+    Ok(match stmt {
+        Stmt::Asnmt(var_def) => {
+            let val = eval_expr(&var_def.expr, gnv, &lvnv)?; // eager
+            lvnv.insert(var_def.alias.clone(), val);
+            None
+        }
+        Stmt::Return(e) => Some(eval_expr(e, gnv, &lvnv)?),
+        Stmt::IfEls { cond, then, els } => todo!(),
+        Stmt::While => todo!(),
+    })
 }
 
 fn eval_expr(e: &Expr, gnv: &Nv, lvnv: &HashMap<String, i32>) -> Result<i32, io::Error> {
