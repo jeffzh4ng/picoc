@@ -8,7 +8,6 @@ Correct:
 snap sublangs (arith, bindings, control, heap)
 smokes with egos2000, xv6, git, and sqlite
 diffed against c0deine and gcc
-todo: verification (felleissen/harper/wadler/pierce)
 
 Speed:
 20% opts for 80% perf

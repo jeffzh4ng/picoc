@@ -1,132 +1,48 @@
-use crate::parser;
+use crate::Expr;
+use std::io;
 
-// c is statically, "weakly" typed
-// loopholes
-// - casting
-// - void*
+#[rustfmt::skip]
+#[derive(Debug, Clone, PartialEq)]
+pub enum Type {
+    Int, Str,
+}
 
-// pub fn type_program(p: &parser::Program) -> bool {
-//     match &p.main_function.statement {
-//         parser::Stmt::Return(e) => type_expr(e),
-//         parser::Stmt::If { cond, then, els } => todo!(),
-//     }
-// }
-
-// fn type_expr(e: &parser::Expr) -> bool {
-//     match e {
-//         parser::Expr::Num(_) => true,
-//         parser::Expr::String(_) => todo!(),
-//         parser::Expr::BinaryE { op: _, l, r } => type_expr(l) && type_expr(r),
-//     }
-// }
-
-// #[cfg(test)]
-// mod tests {
-//     use std::fs;
-
-//     use crate::{ir, lexer, parser};
-
-//     use super::*;
-
-//     #[test]
-//     fn test_valid() {
-//         #[rustfmt::skip]
-//         let chars = fs::read("tests/valid/hello.c")
-//             .expect("file dne")
-//             .iter()
-//             .map(|b| *b as char)
-//             .collect::<Vec<_>>();
-
-//         let tokens = lexer::scan(&chars);
-//         let tree = parser::parse_program(tokens).unwrap();
-//         let judgement = type_program(&tree);
-//         insta::assert_yaml_snapshot!(judgement);
-//     }
-
-//     #[test]
-//     fn test_valid_add() {
-//         #[rustfmt::skip]
-//         let chars = fs::read("tests/valid/arithmetic/add.c")
-//             .expect("file dne")
-//             .iter()
-//             .map(|b| *b as char)
-//             .collect::<Vec<_>>();
-
-//         let tokens = lexer::scan(&chars);
-//         let tree = parser::parse_program(tokens).unwrap();
-//         let judgement = type_program(&tree);
-//         insta::assert_yaml_snapshot!(judgement);
-//     }
-
-//     #[test]
-//     fn test_valid_add_multi() {
-//         #[rustfmt::skip]
-//         let chars = fs::read("tests/valid/arithmetic/add_multi.c")
-//             .expect("file dne")
-//             .iter()
-//             .map(|b| *b as char)
-//             .collect::<Vec<_>>();
-
-//         let tokens = lexer::scan(&chars);
-//         let tree = parser::parse_program(tokens).unwrap();
-//         let judgement = type_program(&tree);
-//         insta::assert_yaml_snapshot!(judgement);
-//     }
-
-//     #[test]
-//     fn test_valid_subtraction() {
-//         #[rustfmt::skip]
-//         let chars = fs::read("tests/valid/arithmetic/sub.c")
-//             .expect("file dne")
-//             .iter()
-//             .map(|b| *b as char)
-//             .collect::<Vec<_>>();
-
-//         let tokens = lexer::scan(&chars);
-//         let tree = parser::parse_program(tokens).unwrap();
-//         let judgement = type_program(&tree);
-//         insta::assert_yaml_snapshot!(judgement);
-//     }
-
-//     #[test]
-//     fn test_valid_mult() {
-//         #[rustfmt::skip]
-//         let chars = fs::read("tests/valid/arithmetic/mult.c")
-//             .expect("file dne")
-//             .iter()
-//             .map(|b| *b as char)
-//             .collect::<Vec<_>>();
-
-//         let tokens = lexer::scan(&chars);
-//         let tree = parser::parse_program(tokens).unwrap();
-//         let judgement = type_program(&tree);
-//         insta::assert_yaml_snapshot!(judgement);
-//     }
-
-//     #[test]
-//     fn test_valid_div() {
-//         #[rustfmt::skip]
-//         let chars = fs::read("tests/valid/arithmetic/div.c")
-//             .expect("file dne")
-//             .iter()
-//             .map(|b| *b as char)
-//             .collect::<Vec<_>>();
-
-//         let tokens = lexer::scan(&chars);
-//         let tree = parser::parse_program(tokens).unwrap();
-//         let judgement = type_program(&tree);
-//         insta::assert_yaml_snapshot!(judgement);
-//     }
-
-//     #[test]
-//     fn test() {
-//         let input = Expr::Binary {
-//             op: ir::Op::Add,
-//             l: Box::new(Expr::Num(9)),
-//             r: Box::new(Expr::Num(10)),
-//         };
-
-//         let output = type_expr(&input);
-//         assert!(output);
-//     }
-// }
+pub fn tc(e: &Expr) -> Result<Type, io::Error> {
+    match e {
+        Expr::Int(_) => Ok(Type::Int), // ⊢ n : Int
+        Expr::Str(_) => Ok(Type::Str), // ⊢ s : Str
+        Expr::UnaryE { op, l } => tc(l),
+        Expr::BinE { op, l, r } => match op {
+            crate::BinOp::Add => {
+                // ⊢ e1 : Int, ⊢ e2 : Int
+                // ------------------------
+                //     ⊢ e1 + e2 : Int
+                if tc(l)? == Type::Int && tc(r)? == Type::Int {
+                    Ok(Type::Int)
+                } else {
+                    Err(io::Error::new(io::ErrorKind::Other, "type error"))
+                }
+            }
+            crate::BinOp::AddAdd => {
+                // ⊢ e1 : Str, ⊢ e2 : Str
+                // ------------------------
+                //     ⊢ e1 + e2 : Str
+                if tc(l)? == Type::Str && tc(r)? == Type::Str {
+                    Ok(Type::Str)
+                } else {
+                    Err(io::Error::new(io::ErrorKind::Other, "type error"))
+                }
+            }
+            crate::BinOp::Sub => todo!(),
+            crate::BinOp::Mult => todo!(),
+            crate::BinOp::Div => todo!(),
+            crate::BinOp::Mod => todo!(),
+        },
+        _ => Err(io::Error::new(io::ErrorKind::Other, "type error")),
+        // Expr::LogE { op, l, r } => tc(l) && tc(r),
+        // Expr::BitE { op, l, r } => tc(l) && tc(r),
+        // Expr::RelE { op, l, r } => tc(l) && tc(r),
+        // Expr::VarApp(_) => todo!(),
+        // Expr::FuncApp { alias, ap } => todo!(),
+    }
+}

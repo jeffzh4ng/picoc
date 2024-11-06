@@ -2,10 +2,10 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 // pub mod generator;
-// pub mod typer;
 pub mod evaluator;
 pub mod lexer;
 pub mod parser;
+pub mod typer;
 
 #[macro_use]
 macro_rules! common_struct {
@@ -40,7 +40,7 @@ common_enum! {
     #[rustfmt::skip]
     pub enum Expr {
         // ***** introductions (values) h*****
-        Int(i32),
+        Int(i32), Str(String),
 
         // ***** eliminations (operators) *****
         UnaryE { op: UnaryOp, l: Box<Expr> }, BinE { op: BinOp, l: Box<Expr>, r: Box<Expr> }, LogE { op: LogOp, l: Box<Expr>, r: Box<Expr> },
@@ -59,5 +59,5 @@ common_enum! {
 common_enum! { pub enum LogOp { And, Or } }
 common_enum! { pub enum BitOp { And, Or, Xor } }
 common_enum! { pub enum RelOp { Eq, Neq, And, Or, LtEq, Lt, GtEq, Gt } }
-common_enum! { pub enum BinOp { Add, Sub, Mult, Div, Mod } }
+common_enum! { pub enum BinOp { Add, AddAdd, Sub, Mult, Div, Mod } }
 common_enum! { pub enum UnaryOp { Add, Sub } }

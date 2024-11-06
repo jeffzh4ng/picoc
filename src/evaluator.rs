@@ -71,9 +71,11 @@ fn eval_stmt(
 fn eval_expr(e: &Expr, gnv: &Nv, lvnv: &HashMap<String, i32>) -> Result<i32, io::Error> {
     match e {
         Expr::Int(n) => Ok(*n),
+        Expr::Str(_) => todo!(), // check c0 spec
         Expr::UnaryE { op, l } => todo!(),
         Expr::BinE { op, l, r } => match op {
             BinOp::Add => Ok(eval_expr(l, gnv, lvnv)? + eval_expr(r, gnv, lvnv)?),
+            BinOp::AddAdd => todo!(), // check c0 spec
             BinOp::Sub => Ok(eval_expr(l, gnv, lvnv)? - eval_expr(r, gnv, lvnv)?),
             BinOp::Mult => Ok(eval_expr(l, gnv, lvnv)? * eval_expr(r, gnv, lvnv)?),
             BinOp::Div => Ok(eval_expr(l, gnv, lvnv)? / eval_expr(r, gnv, lvnv)?),
