@@ -5,9 +5,11 @@ cargo run interpretc0 ./path/to/file.c0
 cargo run compilec89 ./path/to/file.c
 
 Correct:
-snapshots sub langs (arith, bindings, control, heap)
+snap sublangs (arith, bindings, control, heap)
 smokes with egos2000, xv6, git, and sqlite
+diffs against c0deine and gcc
+todo: verification (felleissen/harper/wadler/pierce)
 
 Speed:
-20% optimizations for 80% of the speed
+20% opts for 80% perf
 inline, unroll, cse, dce, motion, fold, peephole
