@@ -5,7 +5,7 @@ cargo run interpretc0 ./path/to/file.c0
 cargo run compilec89 ./path/to/file.c
 
 Correct:
-snap sublangs (arith, bindings, control, heap)
+snap sublangs (arith, control, bindings, heap)
 smokes with egos2000, xv6, git, and sqlite
 diffed against c0deine and gcc
 

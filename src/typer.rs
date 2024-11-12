@@ -1,48 +1,99 @@
-use crate::Expr;
-use std::io;
+use crate::{BinOp, Defs, Expr, FuncDef, Prg, Stmt, Tnv, Type};
+use std::{collections::HashMap, io};
 
-#[rustfmt::skip]
-#[derive(Debug, Clone, PartialEq)]
-pub enum Type {
-    Int, Str,
+pub fn type_prg(prg: Prg) -> Result<Type, io::Error> {
+    let foo = prg.iter().map(|defs| match defs {
+        // ---------------------intros-------------------------
+        Defs::FuncDef(func_def) => todo!(),
+        Defs::VarDef(var_def) => todo!(),
+    });
+
+    let tnv = Tnv {
+        fnv: HashMap::new(),
+        vnv: HashMap::new(),
+    };
+    todo!()
 }
 
-pub fn tc(e: &Expr) -> Result<Type, io::Error> {
+pub fn type_func(func_def: &FuncDef, tnv: &Tnv) -> Result<Type, io::Error> {
+    todo!()
+}
+
+pub fn type_stmt(stmt: &Stmt, tnv: &Tnv) -> Result<Type, io::Error> {
+    todo!()
+}
+
+pub fn type_expr(e: &Expr, tnv: &Tnv) -> Result<Type, io::Error> {
     match e {
-        Expr::Int(_) => Ok(Type::Int), // ⊢ n : Int
-        Expr::Str(_) => Ok(Type::Str), // ⊢ s : Str
-        Expr::UnaryE { op, l } => tc(l),
+        // ---------------------intros-------------------------
+        // ⊢ n : Int
+        Expr::Int(_) => Ok(Type::Int),
+        // ⊢ s : Str
+        Expr::Str(_) => Ok(Type::Str),
+        // ---------------------elims--------------------------
+        Expr::UnaryE { op, l } => type_expr(l, tnv),
         Expr::BinE { op, l, r } => match op {
-            crate::BinOp::Add => {
+            // type systems collapse ∞-space of points to a single point
+            // ignoring distinctions within types (sum)
+            BinOp::Add | BinOp::Sub | BinOp::Mult | BinOp::Div | BinOp::Mod => {
                 // ⊢ e1 : Int, ⊢ e2 : Int
                 // ------------------------
                 //     ⊢ e1 + e2 : Int
-                if tc(l)? == Type::Int && tc(r)? == Type::Int {
-                    Ok(Type::Int)
-                } else {
-                    Err(io::Error::new(io::ErrorKind::Other, "type error"))
+                match (type_expr(l, tnv)?, type_expr(r, tnv)?) {
+                    (Type::Int, Type::Int) => Ok(Type::Int),
+                    _ => Err(io::Error::new(io::ErrorKind::Other, "type error")),
                 }
             }
-            crate::BinOp::AddAdd => {
+            // perserves distinctions between types (product)
+            BinOp::AddAdd => {
                 // ⊢ e1 : Str, ⊢ e2 : Str
                 // ------------------------
                 //     ⊢ e1 + e2 : Str
-                if tc(l)? == Type::Str && tc(r)? == Type::Str {
-                    Ok(Type::Str)
-                } else {
-                    Err(io::Error::new(io::ErrorKind::Other, "type error"))
+                match (type_expr(l, tnv)?, type_expr(r, tnv)?) {
+                    (Type::Str, Type::Str) => Ok(Type::Str),
+                    _ => Err(io::Error::new(io::ErrorKind::Other, "type error")),
                 }
             }
-            crate::BinOp::Sub => todo!(),
-            crate::BinOp::Mult => todo!(),
-            crate::BinOp::Div => todo!(),
-            crate::BinOp::Mod => todo!(),
         },
+        Expr::VarApp(id) => tnv
+            .vnv
+            .get(id)
+            .cloned()
+            .ok_or(io::Error::new(io::ErrorKind::Other, "type error")),
+        Expr::FuncApp { alias, ap } => {
+            // 1. get the type of funcdef
+            let f = tnv
+                .fnv
+                .get(alias)
+                .cloned()
+                .ok_or(io::Error::new(io::ErrorKind::Other, "type error"))?;
+
+            //      Γ [V <- T] ⊢ e2 : T2
+            // -------------------------------
+            //    Γ ⊢ f(e1:T1, e2) : (T1-> T2)
+            let parameters_match =
+                f.fp.iter()
+                    .zip(ap.iter())
+                    .map(|(fpt, apt)| {
+                        if let Ok(apt) = type_expr(apt, tnv) {
+                            if apt == *fpt {
+                                Ok(())
+                            } else {
+                                Err(io::Error::new(io::ErrorKind::Other, "type error"))
+                            }
+                        } else {
+                            Err(io::Error::new(io::ErrorKind::Other, "type error"))
+                        }
+                    })
+                    .collect::<Result<Vec<_>, _>>()
+                    .is_ok();
+
+            if parameters_match {
+                Ok(f.body)
+            } else {
+                Err(io::Error::new(io::ErrorKind::Other, "type error"))
+            }
+        }
         _ => Err(io::Error::new(io::ErrorKind::Other, "type error")),
-        // Expr::LogE { op, l, r } => tc(l) && tc(r),
-        // Expr::BitE { op, l, r } => tc(l) && tc(r),
-        // Expr::RelE { op, l, r } => tc(l) && tc(r),
-        // Expr::VarApp(_) => todo!(),
-        // Expr::FuncApp { alias, ap } => todo!(),
     }
 }

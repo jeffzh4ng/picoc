@@ -1,4 +1,4 @@
-use crate::{BinOp, Defs, Expr, Lambda, Nv, Prg, Stmt};
+use crate::{BinOp, Defs, Expr, LambdaVal, Prg, Stmt, Vnv};
 use std::{collections::HashMap, io};
 
 pub fn eval_prg(prg: Prg) -> Result<i32, io::Error> {
@@ -8,24 +8,24 @@ pub fn eval_prg(prg: Prg) -> Result<i32, io::Error> {
             Defs::FuncDef(fd) => (
                 // funcdef simply creates the lambda
                 fd.alias.clone(),
-                Lambda {
+                LambdaVal {
                     fp: fd.formal_param.clone(),
                     body: fd.body.clone(),
                 },
             ),
             _ => todo!(), // next: top-level vardefs
         })
-        .collect::<HashMap<String, Lambda>>();
+        .collect::<HashMap<String, LambdaVal>>();
 
     let vnv = HashMap::new(); // todo: parse global vardefs
-    let nv = Nv { fnv, vnv };
+    let nv = Vnv { fnv, vnv };
 
     // defining nv here so eval_fn can borrow both
     let lvnv = nv.vnv.clone(); // clone it first, before giving &mut
     eval_func(&nv.fnv["main"], &nv, lvnv)
 }
 
-fn eval_func(l: &Lambda, gnv: &Nv, mut lvnv: HashMap<String, i32>) -> Result<i32, io::Error> {
+fn eval_func(l: &LambdaVal, gnv: &Vnv, mut lvnv: HashMap<String, i32>) -> Result<i32, io::Error> {
     l.body
         .iter()
         .try_fold(None, |acc, stmt| {
@@ -40,7 +40,7 @@ fn eval_func(l: &Lambda, gnv: &Nv, mut lvnv: HashMap<String, i32>) -> Result<i32
 
 fn eval_stmt(
     stmt: &Stmt,
-    gnv: &Nv,
+    gnv: &Vnv,
     lvnv: &mut HashMap<String, i32>,
 ) -> Result<Option<i32>, io::Error> {
     Ok(match stmt {
@@ -68,18 +68,18 @@ fn eval_stmt(
     })
 }
 
-fn eval_expr(e: &Expr, gnv: &Nv, lvnv: &HashMap<String, i32>) -> Result<i32, io::Error> {
+fn eval_expr(e: &Expr, gvnv: &Vnv, lvnv: &HashMap<String, i32>) -> Result<i32, io::Error> {
     match e {
         Expr::Int(n) => Ok(*n),
         Expr::Str(_) => todo!(), // check c0 spec
         Expr::UnaryE { op, l } => todo!(),
         Expr::BinE { op, l, r } => match op {
-            BinOp::Add => Ok(eval_expr(l, gnv, lvnv)? + eval_expr(r, gnv, lvnv)?),
+            BinOp::Add => Ok(eval_expr(l, gvnv, lvnv)? + eval_expr(r, gvnv, lvnv)?),
             BinOp::AddAdd => todo!(), // check c0 spec
-            BinOp::Sub => Ok(eval_expr(l, gnv, lvnv)? - eval_expr(r, gnv, lvnv)?),
-            BinOp::Mult => Ok(eval_expr(l, gnv, lvnv)? * eval_expr(r, gnv, lvnv)?),
-            BinOp::Div => Ok(eval_expr(l, gnv, lvnv)? / eval_expr(r, gnv, lvnv)?),
-            BinOp::Mod => Ok(eval_expr(l, gnv, lvnv)? % eval_expr(r, gnv, lvnv)?),
+            BinOp::Sub => Ok(eval_expr(l, gvnv, lvnv)? - eval_expr(r, gvnv, lvnv)?),
+            BinOp::Mult => Ok(eval_expr(l, gvnv, lvnv)? * eval_expr(r, gvnv, lvnv)?),
+            BinOp::Div => Ok(eval_expr(l, gvnv, lvnv)? / eval_expr(r, gvnv, lvnv)?),
+            BinOp::Mod => Ok(eval_expr(l, gvnv, lvnv)? % eval_expr(r, gvnv, lvnv)?),
         },
         Expr::LogE { op, l, r } => todo!(),
         Expr::BitE { op, l, r } => todo!(),
@@ -92,14 +92,14 @@ fn eval_expr(e: &Expr, gnv: &Nv, lvnv: &HashMap<String, i32>) -> Result<i32, io:
             }
         }
         Expr::FuncApp { alias, ap } => {
-            let l = &gnv.fnv[alias];
-            let mut new_lvnv = gnv.vnv.clone(); // this is what gnv is for. each func app needs it's own lvnv extended from gnv
+            let l = &gvnv.fnv[alias];
+            let mut new_lvnv = gvnv.vnv.clone(); // this is what gnv is for. each func app needs it's own lvnv extended from gnv
 
             l.fp.iter().zip(ap.iter()).for_each(|(fp, ap)| {
-                let ap = eval_expr(ap, gnv, &lvnv).unwrap();
+                let ap = eval_expr(ap, gvnv, &lvnv).unwrap();
                 new_lvnv.insert(fp.clone(), ap);
             });
-            eval_func(l, gnv, new_lvnv) // reusing lvnv would be dynamic scope!
+            eval_func(l, gvnv, new_lvnv) // reusing lvnv would be dynamic scope!
         }
     }
 }

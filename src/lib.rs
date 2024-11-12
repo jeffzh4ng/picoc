@@ -28,13 +28,18 @@ macro_rules! common_enum {
 // ***** prg: Vec<Defs> *****
 type Prg = Vec<Defs>;
 common_enum! { pub enum Defs { FuncDef(FuncDef), VarDef(VarDef) } }
-common_struct! { pub struct FuncDef { pub alias: String, pub formal_param: Vec<String>, pub body: Vec<Stmt> } }
-common_struct! { pub struct VarDef { alias: String, expr: Box<Expr> }} // UpdateBind { alias: String, op: BinOp, expr: Box<Expr> }
+common_struct! { pub struct FuncDef {pub alias: String,  pub typ: Type, pub formal_param: Vec<String>, pub body: Vec<Stmt> } }
+common_struct! { pub struct VarDef { pub alias: String, pub typ: Type, pub expr: Box<Expr> }} // UpdateBind { alias: String, op: BinOp, expr: Box<Expr> }
 
-// ***** nv: Map<Alias, Val> *****
-common_struct! { pub struct Nv { fnv: HashMap<String, Lambda>, vnv: HashMap<String, i32> }}
-common_struct! { pub struct Lambda { pub fp: Vec<String>, pub body: Vec<Stmt>} }
-common_enum! { pub enum Val { Int(i32), Bool(bool) } }
+// ***** static tnv: Map<Alias, Type> *****
+common_struct! { pub struct Tnv { fnv: HashMap<String, LambdaType>, vnv: HashMap<String, Type> }}
+common_struct! { pub struct LambdaType { fp: Vec<Type>, body: Type } }
+common_enum! { pub enum Type { Int, Bool, Str } } // Cond(Type::Bool, Box<Type>, Box<Type>),
+
+// ***** dynamic vnv: Map<Alias, Val> *****
+common_struct! { pub struct Vnv { fnv: HashMap<String, LambdaVal>, vnv: HashMap<String, i32> }} // todo, -> Val
+common_struct! { pub struct LambdaVal { pub fp: Vec<String>, pub body: Vec<Stmt>} }
+common_enum! { pub enum Val { Int(i32), Bool(bool), Str(String) } }
 
 common_enum! {
     #[rustfmt::skip]
