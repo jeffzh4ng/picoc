@@ -32,6 +32,9 @@ fn main() {
     let tokens = lexer::lex(&chars).unwrap();
     let tree = parser::parse_prg(&tokens).unwrap();
 
+    let typ = typer::type_prg(tree).unwrap();
+    println!("picoc089-info: type: {:?}", typ);
+
     match strat.as_str() {
         "interpretc0" => {
             let val = evaluator::eval_prg(tree).unwrap();

@@ -1,6 +1,6 @@
 use crate::{
     lexer::{Token, TT},
-    BinOp, Defs, Expr, FuncDef, Prg, RelOp, Stmt, VarDef,
+    BinOp, Def, Expr, FuncDef, Prg, RelOp, Stmt, VarDef,
 };
 use std::{io, num::ParseIntError};
 
@@ -30,7 +30,7 @@ pub fn parse_prg(tokens: &[Token]) -> Result<Prg, io::Error> {
         r = _r;
     }
 
-    Ok(fds.into_iter().map(Defs::FuncDef).collect())
+    Ok(fds.into_iter().map(Def::FuncDef).collect())
 }
 
 fn parse_funcdef(tokens: &[Token]) -> Result<(FuncDef, &[Token]), io::Error> {
@@ -63,7 +63,7 @@ fn parse_funcdef(tokens: &[Token]) -> Result<(FuncDef, &[Token]), io::Error> {
     Ok((
         FuncDef {
             alias: alias.lexeme.to_string(),
-            formal_param: formal_params,
+            fp: formal_params,
             body: stmts,
         },
         r,

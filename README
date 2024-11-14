@@ -4,16 +4,13 @@ Usage:
 cargo run interpretc0 ./path/to/file.c0
 cargo run compilec89 ./path/to/file.c
 
-Correct:
-1. c0
+--c0
 snapped sublangs (arith, control, bindings, heap)
-eyeballed against c0's def
+eyeballed typer/evaluator against c0's statics/dynamics
+smoked with dsa
 
-2. c89
+--c89
 bootstrapped with c0's frontend
-fuzzed with csmith
 smoked with egos2000, xv6, git, and sqlite
-
-Speed:
-20% opts for 80% perf
-inline, unroll, cse, dce, motion, fold, peephole
+fuzzed with csmith
+optimized with inline, unroll, cse, dce, motion, fold, peephole

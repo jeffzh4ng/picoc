@@ -1,15 +1,15 @@
-use crate::{BinOp, Defs, Expr, LambdaVal, Prg, Stmt, Vnv};
+use crate::{BinOp, Def, Expr, LambdaVal, Prg, Stmt, Vnv};
 use std::{collections::HashMap, io};
 
 pub fn eval_prg(prg: Prg) -> Result<i32, io::Error> {
     let fnv = prg
         .iter()
         .map(|defs| match defs {
-            Defs::FuncDef(fd) => (
+            Def::FuncDef(fd) => (
                 // funcdef simply creates the lambda
                 fd.alias.clone(),
                 LambdaVal {
-                    fp: fd.formal_param.clone(),
+                    fp: fd.fp.clone(),
                     body: fd.body.clone(),
                 },
             ),
@@ -75,7 +75,6 @@ fn eval_expr(e: &Expr, gvnv: &Vnv, lvnv: &HashMap<String, i32>) -> Result<i32, i
         Expr::UnaryE { op, l } => todo!(),
         Expr::BinE { op, l, r } => match op {
             BinOp::Add => Ok(eval_expr(l, gvnv, lvnv)? + eval_expr(r, gvnv, lvnv)?),
-            BinOp::AddAdd => todo!(), // check c0 spec
             BinOp::Sub => Ok(eval_expr(l, gvnv, lvnv)? - eval_expr(r, gvnv, lvnv)?),
             BinOp::Mult => Ok(eval_expr(l, gvnv, lvnv)? * eval_expr(r, gvnv, lvnv)?),
             BinOp::Div => Ok(eval_expr(l, gvnv, lvnv)? / eval_expr(r, gvnv, lvnv)?),
@@ -95,10 +94,18 @@ fn eval_expr(e: &Expr, gvnv: &Vnv, lvnv: &HashMap<String, i32>) -> Result<i32, i
             let l = &gvnv.fnv[alias];
             let mut new_lvnv = gvnv.vnv.clone(); // this is what gnv is for. each func app needs it's own lvnv extended from gnv
 
-            l.fp.iter().zip(ap.iter()).for_each(|(fp, ap)| {
-                let ap = eval_expr(ap, gvnv, &lvnv).unwrap();
-                new_lvnv.insert(fp.clone(), ap);
-            });
+            let _ =
+                l.fp.iter()
+                    .zip(ap.iter())
+                    .map(|(fp, ap)| {
+                        eval_expr(ap, gvnv, &lvnv).and_then(|evaluated_ap| {
+                            new_lvnv
+                                .insert(fp.clone(), evaluated_ap)
+                                .ok_or(io::Error::new(io::ErrorKind::Other, "undefined variable"))
+                        })
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
+
             eval_func(l, gvnv, new_lvnv) // reusing lvnv would be dynamic scope!
         }
     }
