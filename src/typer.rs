@@ -11,7 +11,7 @@ pub fn type_prg(prg: Prg) -> Result<Type, io::Error> {
         vnv: HashMap::new(),
     };
 
-    prg.iter().map(|def| match def {
+    prg.iter().for_each(|def| match def {
         Def::FuncDef(fd) => {
             let ltnv = HashMap::new();
             if let Ok(bt) = type_func(fd, &tnv, ltnv) {
@@ -161,5 +161,54 @@ pub fn type_expr(e: &Expr, gtnv: &Tnv, ltnv: &HashMap<String, Type>) -> Result<T
                 .and_then(|_| Ok(f.body)) // Γ ⊢ f(e) : T2
         }
         _ => Err(io::Error::new(io::ErrorKind::Other, "type error")),
+    }
+}
+
+#[cfg(test)]
+mod test_arith {
+    use crate::lexer;
+    use crate::parser;
+    use std::fs;
+
+    const TEST_DIR: &str = "tests/fixtures/snap/statics/arith";
+
+    #[test]
+    fn lit() {
+        let chars = fs::read(format!("{TEST_DIR}/lit.c0"))
+            .expect("file dne")
+            .iter()
+            .map(|b| *b as char)
+            .collect::<Vec<_>>();
+
+        let tokens = lexer::lex(&chars).unwrap();
+        let tree = parser::parse_prg(&tokens).unwrap();
+        let typ = super::type_prg(tree).unwrap();
+        insta::assert_yaml_snapshot!(typ, @r###"
+        ---
+        Int
+        "###);
+    }
+}
+
+#[cfg(test)]
+mod test_control {
+    use crate::lexer;
+    use crate::parser;
+    use std::fs;
+
+    const TEST_DIR: &str = "tests/fixtures/snap/statics/control";
+
+    #[test]
+    fn ifels() {
+        let chars = fs::read(format!("{TEST_DIR}/if.c0"))
+            .expect("file dne")
+            .iter()
+            .map(|b| *b as char)
+            .collect::<Vec<_>>();
+
+        let tokens = lexer::lex(&chars).unwrap();
+        let tree = parser::parse_prg(&tokens).unwrap();
+        let typ = super::type_prg(tree).unwrap();
+        insta::assert_yaml_snapshot!(typ, @r"");
     }
 }

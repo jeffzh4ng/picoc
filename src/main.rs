@@ -35,23 +35,23 @@ fn main() {
     let typ = typer::type_prg(tree).unwrap();
     println!("picoc089-info: type: {:?}", typ);
 
-    match strat.as_str() {
-        //     "interpretc0" => {
-        //         let val = evaluator::eval_prg(tree).unwrap();
-        //         println!("picoc089-info: evaluated: {val}");
-        //     }
-        // "compilec89" => {
-        //     let assembly = generator::gen(tree);
+    // match strat.as_str() {
+    //     "interpretc0" => {
+    //         let val = evaluator::eval_prg(tree).unwrap();
+    //         println!("picoc089-info: evaluated: {val}");
+    //     }
+    // "compilec89" => {
+    //     let assembly = generator::gen(tree);
 
-        //     let trgt = "./tmp.s";
-        //     println!("picoc089-info: generating target: {trgt}");
-        //     let mut f = fs::File::create(trgt).expect("picoc089-error: unable to create file");
-        //     f.write_all(assembly.join("\n").as_bytes())
-        //         .expect("picoc089-error: unable to write data");
-        // }
-        _ => {
-            println!("picoc089-error: unknown strategy: {:?}", strat);
-            std::process::exit(1);
-        }
-    }
+    //     let trgt = "./tmp.s";
+    //     println!("picoc089-info: generating target: {trgt}");
+    //     let mut f = fs::File::create(trgt).expect("picoc089-error: unable to create file");
+    //     f.write_all(assembly.join("\n").as_bytes())
+    //         .expect("picoc089-error: unable to write data");
+    // }
+    //     _ => {
+    //         println!("picoc089-error: unknown strategy: {:?}", strat);
+    //         std::process::exit(1);
+    //     }
+    // }
 }

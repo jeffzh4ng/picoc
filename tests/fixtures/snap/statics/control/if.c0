@@ -1,5 +1,5 @@
 int main() {
-    if (true) {
+    if (1) {
         return 9;
     } else {
         return 10;

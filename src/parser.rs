@@ -490,7 +490,7 @@ mod test_arith {
     use crate::lexer;
     use std::fs;
 
-    const TEST_DIR: &str = "tests/fixtures/snap/arith";
+    const TEST_DIR: &str = "tests/fixtures/snap/shared/arith";
 
     #[test]
     fn lit() {
@@ -506,7 +506,8 @@ mod test_arith {
         ---
         - FuncDef:
             alias: main
-            formal_param: []
+            typ: Int
+            fp: []
             body:
               - Return:
                   Int: 8
@@ -527,7 +528,8 @@ mod test_arith {
         ---
         - FuncDef:
             alias: main
-            formal_param: []
+            typ: Int
+            fp: []
             body:
               - Return:
                   BinE:
@@ -553,7 +555,8 @@ mod test_arith {
         ---
         - FuncDef:
             alias: main
-            formal_param: []
+            typ: Int
+            fp: []
             body:
               - Return:
                   BinE:
@@ -584,7 +587,8 @@ mod test_arith {
         ---
         - FuncDef:
             alias: main
-            formal_param: []
+            typ: Int
+            fp: []
             body:
               - Return:
                   BinE:
@@ -610,7 +614,8 @@ mod test_arith {
         ---
         - FuncDef:
             alias: main
-            formal_param: []
+            typ: Int
+            fp: []
             body:
               - Return:
                   BinE:
@@ -636,7 +641,8 @@ mod test_arith {
         ---
         - FuncDef:
             alias: main
-            formal_param: []
+            typ: Int
+            fp: []
             body:
               - Return:
                   BinE:
@@ -662,7 +668,8 @@ mod test_arith {
         ---
         - FuncDef:
             alias: main
-            formal_param: []
+            typ: Int
+            fp: []
             body:
               - Return:
                   BinE:
@@ -693,7 +700,8 @@ mod test_arith {
         ---
         - FuncDef:
             alias: main
-            formal_param: []
+            typ: Int
+            fp: []
             body:
               - Return:
                   BinE:
@@ -724,7 +732,8 @@ mod test_arith {
         ---
         - FuncDef:
             alias: main
-            formal_param: []
+            typ: Int
+            fp: []
             body:
               - Return:
                   BinE:
@@ -755,7 +764,8 @@ mod test_arith {
         ---
         - FuncDef:
             alias: main
-            formal_param: []
+            typ: Int
+            fp: []
             body:
               - Return:
                   BinE:
@@ -779,164 +789,10 @@ mod test_arith {
 }
 
 #[cfg(test)]
-mod test_bindings {
-    use crate::lexer;
-    use std::fs;
-
-    const TEST_DIR: &str = "tests/fixtures/snap/bindings";
-
-    #[test]
-    fn composition() {
-        let chars = fs::read(format!("{TEST_DIR}/composition.c"))
-            .expect("file dne")
-            .iter()
-            .map(|b| *b as char)
-            .collect::<Vec<_>>();
-
-        let tokens = lexer::lex(&chars).unwrap();
-        let tree = super::parse_prg(&tokens).unwrap();
-        insta::assert_yaml_snapshot!(tree, @r###"
-        ---
-        - FuncDef:
-            alias: main
-            formal_param: []
-            body:
-              - Return:
-                  FuncApp:
-                    alias: f
-                    ap: []
-        - FuncDef:
-            alias: f
-            formal_param: []
-            body:
-              - Return:
-                  BinE:
-                    op: Add
-                    l:
-                      Int: 9
-                    r:
-                      FuncApp:
-                        alias: g
-                        ap: []
-        - FuncDef:
-            alias: g
-            formal_param: []
-            body:
-              - Return:
-                  BinE:
-                    op: Add
-                    l:
-                      Int: 10
-                    r:
-                      FuncApp:
-                        alias: h
-                        ap: []
-        - FuncDef:
-            alias: h
-            formal_param: []
-            body:
-              - Return:
-                  Int: 11
-        "###);
-    }
-
-    #[test]
-    fn formal_param() {
-        let chars = fs::read(format!("{TEST_DIR}/formal_param.c"))
-            .expect("file dne")
-            .iter()
-            .map(|b| *b as char)
-            .collect::<Vec<_>>();
-
-        let tokens = lexer::lex(&chars).unwrap();
-        let tree = super::parse_prg(&tokens).unwrap();
-        insta::assert_yaml_snapshot!(tree, @r###"
-        ---
-        - FuncDef:
-            alias: main
-            formal_param: []
-            body:
-              - Return:
-                  FuncApp:
-                    alias: f
-                    ap:
-                      - Int: 9
-        - FuncDef:
-            alias: f
-            formal_param:
-              - x
-            body:
-              - Return:
-                  BinE:
-                    op: Add
-                    l:
-                      VarApp: x
-                    r:
-                      Int: 10
-        "###);
-    }
-
-    #[test]
-    fn asnmt() {
-        let chars = fs::read(format!("{TEST_DIR}/assignment.c"))
-            .expect("file dne")
-            .iter()
-            .map(|b| *b as char)
-            .collect::<Vec<_>>();
-
-        let tokens = lexer::lex(&chars).unwrap();
-        let tree = super::parse_prg(&tokens).unwrap();
-        insta::assert_yaml_snapshot!(tree, @r###"
-        ---
-        - FuncDef:
-            alias: main
-            formal_param: []
-            body:
-              - Asnmt:
-                  alias: x
-                  expr:
-                    Int: 9
-              - Return:
-                  VarApp: x
-        "###);
-    }
-
-    // #[test]
-    // fn asnmt_update() {
-    //     let chars = fs::read(format!("{TEST_DIR}/asnmt_update.c"))
-    //         .expect("file dne")
-    //         .iter()
-    //         .map(|b| *b as char)
-    //         .collect::<Vec<_>>();
-
-    //     let tokens = lexer::lex(&chars).unwrap();
-    //     let tree = super::parse_prg(&tokens).unwrap();
-    //     insta::assert_yaml_snapshot!(tree, @r###"
-    //     ---
-    //     main_function:
-    //       stmts:
-    //         - Asnmt:
-    //             CreateBind:
-    //               id: n
-    //               expr:
-    //                 Int: 0
-    //         - Asnmt:
-    //             UpdateBind:
-    //               id: n
-    //               op: Add
-    //               expr:
-    //                 Int: 10
-    //         - Return:
-    //             Var: n
-    //     "###);
-    // }
-}
-
-#[cfg(test)]
 mod test_control {
     use crate::lexer;
     use std::fs;
-    const TEST_DIR: &str = "tests/fixtures/snap/control";
+    const TEST_DIR: &str = "tests/fixtures/snap/shared/control";
 
     #[test]
     fn eq() {
@@ -952,7 +808,8 @@ mod test_control {
         ---
         - FuncDef:
             alias: main
-            formal_param: []
+            typ: Int
+            fp: []
             body:
               - Return:
                   RelE:
@@ -978,7 +835,8 @@ mod test_control {
         ---
         - FuncDef:
             alias: main
-            formal_param: []
+            typ: Int
+            fp: []
             body:
               - Return:
                   RelE:
@@ -1004,7 +862,8 @@ mod test_control {
         ---
         - FuncDef:
             alias: main
-            formal_param: []
+            typ: Int
+            fp: []
             body:
               - Return:
                   RelE:
@@ -1030,7 +889,8 @@ mod test_control {
         ---
         - FuncDef:
             alias: main
-            formal_param: []
+            typ: Int
+            fp: []
             body:
               - Return:
                   RelE:
@@ -1056,7 +916,8 @@ mod test_control {
         ---
         - FuncDef:
             alias: main
-            formal_param: []
+            typ: Int
+            fp: []
             body:
               - Return:
                   RelE:
@@ -1082,7 +943,8 @@ mod test_control {
         ---
         - FuncDef:
             alias: main
-            formal_param: []
+            typ: Int
+            fp: []
             body:
               - Return:
                   RelE:
@@ -1108,7 +970,8 @@ mod test_control {
         ---
         - FuncDef:
             alias: main
-            formal_param: []
+            typ: Int
+            fp: []
             body:
               - IfEls:
                   cond:
@@ -1186,6 +1049,169 @@ mod test_control {
     //                     op: Add
     //                     expr:
     //                       Int: 1
+    //         - Return:
+    //             Var: n
+    //     "###);
+    // }
+}
+
+#[cfg(test)]
+mod test_bindings {
+    use crate::lexer;
+    use std::fs;
+
+    const TEST_DIR: &str = "tests/fixtures/snap/shared/bindings";
+
+    #[test]
+    fn composition() {
+        let chars = fs::read(format!("{TEST_DIR}/composition.c"))
+            .expect("file dne")
+            .iter()
+            .map(|b| *b as char)
+            .collect::<Vec<_>>();
+
+        let tokens = lexer::lex(&chars).unwrap();
+        let tree = super::parse_prg(&tokens).unwrap();
+        insta::assert_yaml_snapshot!(tree, @r###"
+        ---
+        - FuncDef:
+            alias: main
+            typ: Int
+            fp: []
+            body:
+              - Return:
+                  FuncApp:
+                    alias: f
+                    ap: []
+        - FuncDef:
+            alias: f
+            typ: Int
+            fp: []
+            body:
+              - Return:
+                  BinE:
+                    op: Add
+                    l:
+                      Int: 9
+                    r:
+                      FuncApp:
+                        alias: g
+                        ap: []
+        - FuncDef:
+            alias: g
+            typ: Int
+            fp: []
+            body:
+              - Return:
+                  BinE:
+                    op: Add
+                    l:
+                      Int: 10
+                    r:
+                      FuncApp:
+                        alias: h
+                        ap: []
+        - FuncDef:
+            alias: h
+            typ: Int
+            fp: []
+            body:
+              - Return:
+                  Int: 11
+        "###);
+    }
+
+    #[test]
+    fn formal_param() {
+        let chars = fs::read(format!("{TEST_DIR}/formal_param.c"))
+            .expect("file dne")
+            .iter()
+            .map(|b| *b as char)
+            .collect::<Vec<_>>();
+
+        let tokens = lexer::lex(&chars).unwrap();
+        let tree = super::parse_prg(&tokens).unwrap();
+        insta::assert_yaml_snapshot!(tree, @r###"
+        ---
+        - FuncDef:
+            alias: main
+            typ: Int
+            fp: []
+            body:
+              - Return:
+                  FuncApp:
+                    alias: f
+                    ap:
+                      - Int: 9
+        - FuncDef:
+            alias: f
+            typ: Int
+            fp:
+              - - x
+                - Int
+            body:
+              - Return:
+                  BinE:
+                    op: Add
+                    l:
+                      VarApp: x
+                    r:
+                      Int: 10
+        "###);
+    }
+
+    #[test]
+    fn asnmt() {
+        let chars = fs::read(format!("{TEST_DIR}/assignment.c"))
+            .expect("file dne")
+            .iter()
+            .map(|b| *b as char)
+            .collect::<Vec<_>>();
+
+        let tokens = lexer::lex(&chars).unwrap();
+        let tree = super::parse_prg(&tokens).unwrap();
+        insta::assert_yaml_snapshot!(tree, @r###"
+        ---
+        - FuncDef:
+            alias: main
+            typ: Int
+            fp: []
+            body:
+              - Asnmt:
+                  alias: x
+                  typ: Int
+                  expr:
+                    Int: 9
+              - Return:
+                  VarApp: x
+        "###);
+    }
+
+    // #[test]
+    // fn asnmt_update() {
+    //     let chars = fs::read(format!("{TEST_DIR}/asnmt_update.c"))
+    //         .expect("file dne")
+    //         .iter()
+    //         .map(|b| *b as char)
+    //         .collect::<Vec<_>>();
+
+    //     let tokens = lexer::lex(&chars).unwrap();
+    //     let tree = super::parse_prg(&tokens).unwrap();
+    //     insta::assert_yaml_snapshot!(tree, @r###"
+    //     ---
+    //     main_function:
+    //       stmts:
+    //         - Asnmt:
+    //             CreateBind:
+    //               id: n
+    //               expr:
+    //                 Int: 0
+    //         - Asnmt:
+    //             UpdateBind:
+    //               id: n
+    //               op: Add
+    //               expr:
+    //                 Int: 10
     //         - Return:
     //             Var: n
     //     "###);
