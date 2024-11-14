@@ -5,9 +5,14 @@ cargo run interpretc0 ./path/to/file.c0
 cargo run compilec89 ./path/to/file.c
 
 Correct:
-snap sublangs (arith, control, bindings, heap)
-smokes with egos2000, xv6, git, and sqlite
-diffed against c0deine and gcc
+1. c0
+snapped sublangs (arith, control, bindings, heap)
+eyeballed against c0's def
+
+2. c89
+bootstrapped with c0's frontend
+fuzzed with csmith
+smoked with egos2000, xv6, git, and sqlite
 
 Speed:
 20% opts for 80% perf
