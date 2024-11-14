@@ -1,6 +1,6 @@
 use crate::{
     lexer::{Token, TT},
-    BinOp, Def, Expr, FuncDef, Prg, RelOp, Stmt, VarDef,
+    BinOp, Def, Expr, FuncDef, Prg, RelOp, Stmt, Type, VarDef,
 };
 use std::{io, num::ParseIntError};
 
@@ -38,12 +38,11 @@ fn parse_funcdef(tokens: &[Token]) -> Result<(FuncDef, &[Token]), io::Error> {
     let (alias, r) = eat(r, TT::Alias)?;
     let (_, r) = eat(r, TT::PuncLeftParen)?;
 
-    // todo: formal param needs to include type (int, bool, etc)
     let (mut formal_params, mut r) = (vec![], r);
     // for now, single formal param
-    if let Ok((_, _r)) = eat(r, TT::KeywordInt) {
+    if let Ok((fp_type, _r)) = eat(r, TT::KeywordInt) {
         let (alias, _r) = eat(_r, TT::Alias)?;
-        formal_params.push(alias.lexeme.to_owned());
+        formal_params.push((alias.lexeme.to_owned(), Type::Int));
         r = _r;
     }
 
@@ -63,6 +62,7 @@ fn parse_funcdef(tokens: &[Token]) -> Result<(FuncDef, &[Token]), io::Error> {
     Ok((
         FuncDef {
             alias: alias.lexeme.to_string(),
+            typ: Type::Int,
             fp: formal_params,
             body: stmts,
         },
@@ -83,6 +83,7 @@ fn parse_vardef(tokens: &[Token]) -> Result<(VarDef, &[Token]), io::Error> {
                 Ok((
                     VarDef {
                         alias: alias.lexeme.to_owned(),
+                        typ: Type::Int,
                         expr: Box::new(expr),
                     },
                     r,

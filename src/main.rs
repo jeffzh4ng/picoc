@@ -1,4 +1,4 @@
-use picoc089::{evaluator, lexer, parser};
+use picoc089::{lexer, parser, typer};
 use std::{env, fs};
 
 fn main() {
@@ -36,10 +36,10 @@ fn main() {
     println!("picoc089-info: type: {:?}", typ);
 
     match strat.as_str() {
-        "interpretc0" => {
-            let val = evaluator::eval_prg(tree).unwrap();
-            println!("picoc089-info: evaluated: {val}");
-        }
+        //     "interpretc0" => {
+        //         let val = evaluator::eval_prg(tree).unwrap();
+        //         println!("picoc089-info: evaluated: {val}");
+        //     }
         // "compilec89" => {
         //     let assembly = generator::gen(tree);
 
