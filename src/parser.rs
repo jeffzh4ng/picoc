@@ -475,6 +475,8 @@ fn parse_atom(tokens: &[Token]) -> Result<(Expr, &[Token]), io::Error> {
                 })?),
                 r,
             )),
+            TT::KeywordTrue => Ok((Expr::Bool(true), r)),
+            TT::KeywordFalse => Ok((Expr::Bool(false), r)),
             t => Err(io::Error::new(
                 io::ErrorKind::Other,
                 format!("token not recognizable {:?}", t),
@@ -787,7 +789,43 @@ mod test_arith {
 }
 
 #[cfg(test)]
-mod test_control {
+mod test_control_c0 {
+    use crate::lexer;
+    use std::fs;
+    const TEST_DIR: &str = "tests/fixtures/snap/statics-c0/control";
+
+    #[test]
+    fn eq() {
+        let chars = fs::read(format!("{TEST_DIR}/if.c0"))
+            .expect("file dne")
+            .iter()
+            .map(|b| *b as char)
+            .collect::<Vec<_>>();
+
+        let tokens = lexer::lex(&chars).unwrap();
+        let tree = super::parse_prg(&tokens).unwrap();
+        insta::assert_yaml_snapshot!(tree, @r###"
+        ---
+        - FuncDef:
+            alias: main
+            typ: Int
+            fp: []
+            body:
+              - IfEls:
+                  cond:
+                    Bool: true
+                  then:
+                    Return:
+                      Int: 9
+                  els:
+                    Return:
+                      Int: 10
+        "###);
+    }
+}
+
+#[cfg(test)]
+mod test_control_c89 {
     use crate::lexer;
     use std::fs;
     const TEST_DIR: &str = "tests/fixtures/snap/shared/control";
@@ -981,19 +1019,6 @@ mod test_control {
                     Return:
                       Int: 10
         "###);
-    }
-
-    #[test]
-    fn whl() {
-        let chars = fs::read(format!("{TEST_DIR}/while.c"))
-            .expect("file dne")
-            .iter()
-            .map(|b| *b as char)
-            .collect::<Vec<_>>();
-
-        let tokens = lexer::lex(&chars).unwrap();
-        let tree = super::parse_prg(&tokens).unwrap();
-        insta::assert_yaml_snapshot!(tree, @r"")
     }
 
     // #[test]

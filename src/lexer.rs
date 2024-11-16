@@ -9,7 +9,7 @@ pub struct Token { pub lexeme: String, pub typ: TT }
 #[derive(Copy, Clone, PartialEq, Serialize, Deserialize, Debug)]
 pub enum TT {
     LiteralInt, Alias, // introductions (values) RE: [0-9]+ and [a-zA-Z][a-zA-Z0-9]*
-    KeywordInt, KeywordChar, KeywordVoid, KeywordRet, KeywordIf, KeywordEls, KeywordFor, KeywordWhile, // keywords ⊂ identifiers
+    KeywordInt, KeywordChar, KeywordVoid, KeywordRet, KeywordIf, KeywordEls, KeywordFor, KeywordWhile, KeywordTrue, KeywordFalse, // keywords ⊂ identifiers
     Plus, Minus, Star, Slash, LeftAngleBracket, RightAngleBracket, Equals, Bang, Amp, Bar, // eliminations (ops)
     PuncLeftParen, PuncRightParen, PuncLeftBrace, PuncRightBrace, PuncSemiColon, PuncComma,// punctuation
 }
@@ -193,6 +193,14 @@ fn scan_id(input: &[char]) -> Result<Vec<Token>, io::Error> {
                         lexeme: f.to_string(),
                         typ: TT::KeywordRet,
                     }),
+                    "true" => Some(Token {
+                        lexeme: f.to_string(),
+                        typ: TT::KeywordTrue,
+                    }),
+                    "false" => Some(Token {
+                        lexeme: f.to_string(),
+                        typ: TT::KeywordFalse,
+                    }),
                     _ => None,
                 };
 
@@ -230,7 +238,7 @@ fn skip_ws(input: &[char]) -> &[char] {
 #[cfg(test)]
 mod test_arith {
     use std::fs;
-    const TEST_DIR: &str = "tests/fixtures/snap/arith";
+    const TEST_DIR: &str = "tests/fixtures/snap/shared/arith";
 
     #[test]
     fn lit() {
@@ -458,7 +466,7 @@ mod test_arith {
 #[cfg(test)]
 mod test_bindings {
     use std::fs;
-    const TEST_DIR: &str = "tests/fixtures/snap/bindings";
+    const TEST_DIR: &str = "tests/fixtures/snap/shared/bindings";
 
     #[test]
     fn asnmt() {
@@ -517,7 +525,7 @@ mod test_bindings {
         ---
         - lexeme: int
           typ: KeywordInt
-        - lexeme: main
+        - lexeme: h
           typ: Alias
         - lexeme: (
           typ: PuncLeftParen
@@ -527,7 +535,29 @@ mod test_bindings {
           typ: PuncLeftBrace
         - lexeme: return
           typ: KeywordRet
-        - lexeme: f
+        - lexeme: "11"
+          typ: LiteralInt
+        - lexeme: ;
+          typ: PuncSemiColon
+        - lexeme: "}"
+          typ: PuncRightBrace
+        - lexeme: int
+          typ: KeywordInt
+        - lexeme: g
+          typ: Alias
+        - lexeme: (
+          typ: PuncLeftParen
+        - lexeme: )
+          typ: PuncRightParen
+        - lexeme: "{"
+          typ: PuncLeftBrace
+        - lexeme: return
+          typ: KeywordRet
+        - lexeme: "10"
+          typ: LiteralInt
+        - lexeme: +
+          typ: Plus
+        - lexeme: h
           typ: Alias
         - lexeme: (
           typ: PuncLeftParen
@@ -565,7 +595,7 @@ mod test_bindings {
           typ: PuncRightBrace
         - lexeme: int
           typ: KeywordInt
-        - lexeme: g
+        - lexeme: main
           typ: Alias
         - lexeme: (
           typ: PuncLeftParen
@@ -575,34 +605,12 @@ mod test_bindings {
           typ: PuncLeftBrace
         - lexeme: return
           typ: KeywordRet
-        - lexeme: "10"
-          typ: LiteralInt
-        - lexeme: +
-          typ: Plus
-        - lexeme: h
+        - lexeme: f
           typ: Alias
         - lexeme: (
           typ: PuncLeftParen
         - lexeme: )
           typ: PuncRightParen
-        - lexeme: ;
-          typ: PuncSemiColon
-        - lexeme: "}"
-          typ: PuncRightBrace
-        - lexeme: int
-          typ: KeywordInt
-        - lexeme: h
-          typ: Alias
-        - lexeme: (
-          typ: PuncLeftParen
-        - lexeme: )
-          typ: PuncRightParen
-        - lexeme: "{"
-          typ: PuncLeftBrace
-        - lexeme: return
-          typ: KeywordRet
-        - lexeme: "11"
-          typ: LiteralInt
         - lexeme: ;
           typ: PuncSemiColon
         - lexeme: "}"
@@ -614,7 +622,7 @@ mod test_bindings {
 #[cfg(test)]
 mod test_control {
     use std::fs;
-    const TEST_DIR: &str = "tests/fixtures/snap/control";
+    const TEST_DIR: &str = "tests/fixtures/snap/shared/control";
 
     #[test]
     fn lit() {

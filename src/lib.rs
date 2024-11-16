@@ -53,7 +53,7 @@ common_enum! {
     #[rustfmt::skip]
     pub enum Expr {
         // ***** introductions (values) h*****
-        Int(i32), Str(String),
+        Int(i32), Bool(bool),
 
         // ***** eliminations (operators) *****
         UnaryE { op: UnaryOp, l: Box<Expr> }, BinE { op: BinOp, l: Box<Expr>, r: Box<Expr> }, LogE { op: LogOp, l: Box<Expr>, r: Box<Expr> },
