@@ -1073,28 +1073,12 @@ mod test_bindings {
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         - FuncDef:
-            alias: main
+            alias: h
             typ: Int
             fp: []
             body:
               - Return:
-                  FuncApp:
-                    alias: f
-                    ap: []
-        - FuncDef:
-            alias: f
-            typ: Int
-            fp: []
-            body:
-              - Return:
-                  BinE:
-                    op: Add
-                    l:
-                      Int: 9
-                    r:
-                      FuncApp:
-                        alias: g
-                        ap: []
+                  Int: 11
         - FuncDef:
             alias: g
             typ: Int
@@ -1110,12 +1094,28 @@ mod test_bindings {
                         alias: h
                         ap: []
         - FuncDef:
-            alias: h
+            alias: f
             typ: Int
             fp: []
             body:
               - Return:
-                  Int: 11
+                  BinE:
+                    op: Add
+                    l:
+                      Int: 9
+                    r:
+                      FuncApp:
+                        alias: g
+                        ap: []
+        - FuncDef:
+            alias: main
+            typ: Int
+            fp: []
+            body:
+              - Return:
+                  FuncApp:
+                    alias: f
+                    ap: []
         "###);
     }
 
@@ -1132,16 +1132,6 @@ mod test_bindings {
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         - FuncDef:
-            alias: main
-            typ: Int
-            fp: []
-            body:
-              - Return:
-                  FuncApp:
-                    alias: f
-                    ap:
-                      - Int: 9
-        - FuncDef:
             alias: f
             typ: Int
             fp:
@@ -1155,6 +1145,16 @@ mod test_bindings {
                       VarApp: x
                     r:
                       Int: 10
+        - FuncDef:
+            alias: main
+            typ: Int
+            fp: []
+            body:
+              - Return:
+                  FuncApp:
+                    alias: f
+                    ap:
+                      - Int: 9
         "###);
     }
 
@@ -1171,17 +1171,6 @@ mod test_bindings {
         insta::assert_yaml_snapshot!(tree, @r###"
         ---
         - FuncDef:
-            alias: main
-            typ: Int
-            fp: []
-            body:
-              - Return:
-                  FuncApp:
-                    alias: f
-                    ap:
-                      - Int: 9
-                      - Int: 10
-        - FuncDef:
             alias: f
             typ: Int
             fp:
@@ -1197,6 +1186,17 @@ mod test_bindings {
                       VarApp: x
                     r:
                       VarApp: y
+        - FuncDef:
+            alias: main
+            typ: Int
+            fp: []
+            body:
+              - Return:
+                  FuncApp:
+                    alias: f
+                    ap:
+                      - Int: 9
+                      - Int: 10
         "###);
     }
 
