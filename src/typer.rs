@@ -11,22 +11,26 @@ pub fn type_prg(prg: Prg) -> Result<Type, io::Error> {
         vnv: HashMap::new(),
     };
 
-    prg.iter().for_each(|def| match def {
-        Def::FuncDef(fd) => {
-            let ltnv = HashMap::new();
-            if let Ok(bt) = type_func(fd, &tnv, ltnv) {
-                tnv.fnv.insert(
-                    fd.alias.clone(),
-                    LambdaType {
-                        fp: fd.fp.iter().map(|(_, t)| t.clone()).collect(),
-                        body: bt,
-                    },
-                );
+    let _ = prg
+        .iter()
+        .map(|def| match def {
+            Def::FuncDef(fd) => {
+                let ltnv = HashMap::new();
+                let type_check = type_func(fd, &tnv, ltnv).and_then(|t| {
+                    tnv.fnv.insert(
+                        fd.alias.clone(),
+                        LambdaType {
+                            fp: fd.fp.iter().map(|(_, t)| t.clone()).collect(),
+                            body: t,
+                        },
+                    );
+                    Ok(())
+                });
+                type_check
             }
-        }
-        Def::VarDef(vd) => todo!(),
-    });
-    // .collect::<Result<Vec<_>, _>>()?;
+            Def::VarDef(vd) => todo!(),
+        })
+        .collect::<Result<Vec<_>, _>>()?;
 
     Ok(tnv
         .fnv
