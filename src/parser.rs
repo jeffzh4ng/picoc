@@ -192,16 +192,21 @@ fn parse_stmt(tokens: &[Token]) -> Result<(Stmt, &[Token]), io::Error> {
                 let (_, r) = eat(r, TT::PuncLeftBrace)?;
                 let (then, r) = parse_stmt(r)?;
                 let (_, r) = eat(r, TT::PuncRightBrace)?;
-                let (_, r) = eat(r, TT::KeywordEls)?;
-                let (_, r) = eat(r, TT::PuncLeftBrace)?;
-                let (els, r) = parse_stmt(r)?;
-                let (_, r) = eat(r, TT::PuncRightBrace)?;
+                let (els, r) = if let TT::KeywordEls = r[0].typ {
+                    let (_, r) = eat(r, TT::KeywordEls)?;
+                    let (_, r) = eat(r, TT::PuncLeftBrace)?;
+                    let (els, r) = parse_stmt(r)?;
+                    let (_, r) = eat(r, TT::PuncRightBrace)?;
+                    (Some(Box::new(els)), r)
+                } else {
+                    (None, r)
+                };
 
                 Ok((
                     Stmt::IfEls {
                         cond: Box::new(cond),
                         then: Box::new(then),
-                        els: Some(Box::new(els)),
+                        els,
                     },
                     r,
                 ))
@@ -820,6 +825,64 @@ mod test_control_c0 {
                   els:
                     Return:
                       Int: 10
+        "###);
+    }
+
+    #[test]
+    fn ifnoels() {
+        let chars = fs::read(format!("{TEST_DIR}/if4.c0"))
+            .expect("file dne")
+            .iter()
+            .map(|b| *b as char)
+            .collect::<Vec<_>>();
+
+        let tokens = lexer::lex(&chars).unwrap();
+        let tree = super::parse_prg(&tokens).unwrap();
+        insta::assert_yaml_snapshot!(tree, @r###"
+        ---
+        - FuncDef:
+            alias: main
+            typ: Int
+            fp: []
+            body:
+              - IfEls:
+                  cond:
+                    Bool: true
+                  then:
+                    Asnmt:
+                      alias: x
+                      typ: Int
+                      expr:
+                        Int: 8
+                  els: ~
+              - IfEls:
+                  cond:
+                    Bool: false
+                  then:
+                    Return:
+                      Int: 9
+                  els: ~
+              - IfEls:
+                  cond:
+                    Bool: false
+                  then:
+                    Return:
+                      Int: 10
+                  els: ~
+              - IfEls:
+                  cond:
+                    Bool: false
+                  then:
+                    Return:
+                      Int: 11
+                  els: ~
+              - IfEls:
+                  cond:
+                    Bool: true
+                  then:
+                    Return:
+                      Int: 12
+                  els: ~
         "###);
     }
 }
