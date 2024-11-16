@@ -795,7 +795,7 @@ mod test_control_c0 {
     const TEST_DIR: &str = "tests/fixtures/snap/statics-c0/control";
 
     #[test]
-    fn eq() {
+    fn ifels() {
         let chars = fs::read(format!("{TEST_DIR}/if.c0"))
             .expect("file dne")
             .iter()

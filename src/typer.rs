@@ -219,4 +219,35 @@ mod test_control {
         Int
         "###);
     }
+
+    #[test]
+    fn ifels_wrong() {
+        let chars = fs::read(format!("{TEST_DIR}/if2.c0"))
+            .expect("file dne")
+            .iter()
+            .map(|b| *b as char)
+            .collect::<Vec<_>>();
+
+        let tokens = lexer::lex(&chars).unwrap();
+        let tree = parser::parse_prg(&tokens).unwrap();
+        let typ = super::type_prg(tree);
+        assert!(typ.is_err())
+    }
+
+    #[test]
+    fn ifels_side_effect() {
+        let chars = fs::read(format!("{TEST_DIR}/if3.c0"))
+            .expect("file dne")
+            .iter()
+            .map(|b| *b as char)
+            .collect::<Vec<_>>();
+
+        let tokens = lexer::lex(&chars).unwrap();
+        let tree = parser::parse_prg(&tokens).unwrap();
+        let typ = super::type_prg(tree).unwrap();
+        insta::assert_yaml_snapshot!(typ, @r###"
+        ---
+        Int
+        "###);
+    }
 }
