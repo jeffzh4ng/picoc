@@ -272,3 +272,43 @@ mod test_control {
         assert!(typ.is_err())
     }
 }
+
+#[cfg(test)]
+mod test_bindings {
+    use crate::lexer;
+    use crate::parser;
+    use std::fs;
+
+    const TEST_DIR: &str = "tests/fixtures/snap/statics-c0/bindings";
+
+    #[test]
+    fn func() {
+        let chars = fs::read(format!("{TEST_DIR}/func.c0"))
+            .expect("file dne")
+            .iter()
+            .map(|b| *b as char)
+            .collect::<Vec<_>>();
+
+        let tokens = lexer::lex(&chars).unwrap();
+        let tree = parser::parse_prg(&tokens).unwrap();
+        let typ = super::type_prg(tree).unwrap();
+        insta::assert_yaml_snapshot!(typ, @r###"
+        ---
+        Int
+        "###);
+    }
+
+    #[test]
+    fn func2() {
+        let chars = fs::read(format!("{TEST_DIR}/func2.c0"))
+            .expect("file dne")
+            .iter()
+            .map(|b| *b as char)
+            .collect::<Vec<_>>();
+
+        let tokens = lexer::lex(&chars).unwrap();
+        let tree = parser::parse_prg(&tokens).unwrap();
+        let typ = super::type_prg(tree);
+        assert!(typ.is_err())
+    }
+}
