@@ -44,7 +44,7 @@ common_enum! { pub enum Val { Int(i32), Bool(bool), Str(String) } }
 
 common_enum! {
     pub enum Stmt {
-        IfEls { cond: Box<Expr>, then: Box<Stmt>, els: Box<Stmt> }, While { cond: Box<Expr>, body: Box<Stmt> }, // control
+        IfEls { cond: Box<Expr>, then: Box<Stmt>, els: Option<Box<Stmt>> }, While { cond: Box<Expr>, body: Box<Stmt> }, // control
         Asnmt(VarDef), Return(Expr), // bindings
     }
 }

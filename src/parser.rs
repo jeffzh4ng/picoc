@@ -201,7 +201,7 @@ fn parse_stmt(tokens: &[Token]) -> Result<(Stmt, &[Token]), io::Error> {
                     Stmt::IfEls {
                         cond: Box::new(cond),
                         then: Box::new(then),
-                        els: Box::new(els),
+                        els: Some(Box::new(els)),
                     },
                     r,
                 ))

@@ -91,17 +91,24 @@ pub fn type_stmt(
         Stmt::IfEls { cond, then, els } => {
             let ct = type_expr(cond, gnv, &ltnv)?;
             let tt = type_stmt(then, gnv, ltnv)?;
-            let et = type_stmt(els, gnv, ltnv)?; // todo: optional else
+            let et = els
+                .as_ref()
+                .map(|els| type_stmt(els, gnv, ltnv))
+                .transpose()?;
 
             // todo (for now):
-            // 1. tt == et
-            // 2. et is mandatory
             // 3. tt and et are Stmt, not Vec<Stmt>
             // 4. must return expression Type. not void/stmt/valid/cmd Type
-            if ct == Type::Bool && tt == et {
-                Ok(tt)
-            } else {
-                Err(io::Error::new(io::ErrorKind::Other, "type error"))
+
+            match et {
+                Some(et) => {
+                    if ct == Type::Bool && tt == et {
+                        Ok(tt)
+                    } else {
+                        Err(io::Error::new(io::ErrorKind::Other, "type error"))
+                    }
+                }
+                None => Ok(tt.clone()),
             }
         }
         Stmt::While { cond, body } => todo!(),
@@ -235,8 +242,8 @@ mod test_control {
     }
 
     #[test]
-    fn ifels_side_effect() {
-        let chars = fs::read(format!("{TEST_DIR}/if3.c0"))
+    fn ifels_multi_side_effect() {
+        let chars = fs::read(format!("{TEST_DIR}/if4.c0"))
             .expect("file dne")
             .iter()
             .map(|b| *b as char)
@@ -245,9 +252,6 @@ mod test_control {
         let tokens = lexer::lex(&chars).unwrap();
         let tree = parser::parse_prg(&tokens).unwrap();
         let typ = super::type_prg(tree).unwrap();
-        insta::assert_yaml_snapshot!(typ, @r###"
-        ---
-        Int
-        "###);
+        insta::assert_yaml_snapshot!(typ, @r"");
     }
 }
