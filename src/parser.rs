@@ -38,19 +38,17 @@ fn parse_funcdef(tokens: &[Token]) -> Result<(FuncDef, &[Token]), io::Error> {
     let (alias, r) = eat(r, TT::Alias)?;
     let (_, r) = eat(r, TT::PuncLeftParen)?;
 
-    let (mut formal_params, mut r) = (vec![], r);
-    while let Ok((fp_type, _r)) = eat(r, TT::KeywordInt) {
-        let _r = if formal_params.len() > 0 {
-            let (_, _r) = eat(_r, TT::PuncComma)?;
-            _r
-        } else {
-            _r
-        };
+    let (mut fps, mut r) = (vec![], r);
+    while let Ok((_fp_type, _r)) = eat(r, TT::KeywordInt) {
         let (alias, _r) = eat(_r, TT::Alias)?;
-        formal_params.push((alias.lexeme.to_owned(), Type::Int));
-        r = _r;
-    }
+        fps.push((alias.lexeme.to_owned(), Type::Int));
 
+        if let TT::PuncComma = _r[0].typ {
+            r = &_r[1..];
+        } else {
+            r = _r;
+        }
+    }
     let (_, r) = eat(r, TT::PuncRightParen)?;
     let (_, r) = eat(r, TT::PuncLeftBrace)?;
 
@@ -61,14 +59,11 @@ fn parse_funcdef(tokens: &[Token]) -> Result<(FuncDef, &[Token]), io::Error> {
     }
     let (_, r) = eat(r, TT::PuncRightBrace)?;
 
-    // if !matches!(stmts.last(), Some(Stmt::Return(_))) {
-    //     Err(io::Error::new(io::ErrorKind::Other, "no return"))
-    // } else { todo: is this semantic check possible when return is nested?
     Ok((
         FuncDef {
             alias: alias.lexeme.to_string(),
             typ: Type::Int,
-            fp: formal_params,
+            fp: fps,
             body: stmts,
         },
         r,
@@ -421,6 +416,7 @@ fn parse_factor(tokens: &[Token]) -> Result<(Expr, &[Token]), io::Error> {
         }
     }
 }
+
 fn parse_factor_op(tokens: &[Token]) -> Result<(BinOp, &[Token]), io::Error> {
     match tokens {
         [] => todo!(),
@@ -435,42 +431,6 @@ fn parse_factor_op(tokens: &[Token]) -> Result<(BinOp, &[Token]), io::Error> {
     }
 }
 
-// fn parse_funcapp(tokens: &[Token]) -> Result<(Expr, &[Token]), io::Error> {
-//     let (left, r) = parse_atom(tokens)?;
-
-//     match r {
-//         [] => Ok((left, r)),
-//         [f, _r @ ..] => {
-//             // not while because C doesn't have function as values: f()()()
-//             if let TT::PuncLeftParen = f.typ {
-//                 let (actual_param, r) = if !_r.is_empty() && _r[0].typ != TT::PuncRightParen {
-//                     let (actual_param, r) = parse_expr(_r)?; // single param for now
-//                     ((vec![actual_param]), r)
-//                 } else {
-//                     (vec![], _r)
-//                 };
-//                 let (_, _r) = eat(r, TT::PuncRightParen)?;
-
-//                 match left {
-//                     Expr::VarApp(alias) => Ok((
-//                         Expr::FuncApp {
-//                             alias,
-//                             ap: actual_param,
-//                         },
-//                         _r,
-//                     )),
-//                     _ => Err(io::Error::new(
-//                         io::ErrorKind::Other,
-//                         "expected alias".to_string(),
-//                     )),
-//                 }
-//             } else {
-//                 Ok((left, r))
-//             }
-//         }
-//     }
-// }
-
 fn parse_funcapp(tokens: &[Token]) -> Result<(Expr, &[Token]), io::Error> {
     let (left, r0) = parse_atom(tokens)?;
 
@@ -480,14 +440,13 @@ fn parse_funcapp(tokens: &[Token]) -> Result<(Expr, &[Token]), io::Error> {
             if let TT::PuncLeftParen = f.typ {
                 let (mut aps, mut r) = (vec![], r);
                 while let Ok((ap, _r)) = parse_expr(r) {
-                    let _r = if aps.len() > 0 {
-                        let (_, _r) = eat(_r, TT::PuncComma)?;
-                        _r
-                    } else {
-                        _r
-                    };
                     aps.push(ap);
-                    r = _r;
+
+                    if let TT::PuncComma = _r[0].typ {
+                        r = &_r[1..];
+                    } else {
+                        r = _r;
+                    }
                 }
                 let (_, r) = eat(r, TT::PuncRightParen)?;
 
@@ -1196,6 +1155,48 @@ mod test_bindings {
                       VarApp: x
                     r:
                       Int: 10
+        "###);
+    }
+
+    #[test]
+    fn formal_param_multi() {
+        let chars = fs::read(format!("{TEST_DIR}/formal_param_multi.c"))
+            .expect("file dne")
+            .iter()
+            .map(|b| *b as char)
+            .collect::<Vec<_>>();
+
+        let tokens = lexer::lex(&chars).unwrap();
+        let tree = super::parse_prg(&tokens).unwrap();
+        insta::assert_yaml_snapshot!(tree, @r###"
+        ---
+        - FuncDef:
+            alias: main
+            typ: Int
+            fp: []
+            body:
+              - Return:
+                  FuncApp:
+                    alias: f
+                    ap:
+                      - Int: 9
+                      - Int: 10
+        - FuncDef:
+            alias: f
+            typ: Int
+            fp:
+              - - x
+                - Int
+              - - y
+                - Int
+            body:
+              - Return:
+                  BinE:
+                    op: Add
+                    l:
+                      VarApp: x
+                    r:
+                      VarApp: y
         "###);
     }
 
