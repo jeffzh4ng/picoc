@@ -117,7 +117,8 @@ pub fn type_stmt(
 pub fn type_expr(e: &Expr, gtnv: &Tnv, ltnv: &HashMap<String, Type>) -> Result<Type, io::Error> {
     match e {
         // ---------------------intros (axioms)-------------------------
-        Expr::Int(_) => Ok(Type::Int), // ⊢ n : Int
+        Expr::Int(_) => Ok(Type::Int),   // ⊢ n : Int
+        Expr::Bool(_) => Ok(Type::Bool), // ⊢ b : Bool
         // ---------------------elims (rules)--------------------------
         Expr::UnaryE { op, l } => type_expr(l, gtnv, ltnv),
         Expr::BinE { op, l, r } => match op {
@@ -174,7 +175,7 @@ mod test_arith {
     use crate::parser;
     use std::fs;
 
-    const TEST_DIR: &str = "tests/fixtures/snap/statics/arith";
+    const TEST_DIR: &str = "tests/fixtures/snap/statics-c0/arith";
 
     #[test]
     fn lit() {
@@ -200,7 +201,7 @@ mod test_control {
     use crate::parser;
     use std::fs;
 
-    const TEST_DIR: &str = "tests/fixtures/snap/statics/control";
+    const TEST_DIR: &str = "tests/fixtures/snap/statics-c0/control";
 
     #[test]
     fn ifels() {
@@ -213,6 +214,9 @@ mod test_control {
         let tokens = lexer::lex(&chars).unwrap();
         let tree = parser::parse_prg(&tokens).unwrap();
         let typ = super::type_prg(tree).unwrap();
-        insta::assert_yaml_snapshot!(typ, @r"");
+        insta::assert_yaml_snapshot!(typ, @r###"
+        ---
+        Int
+        "###);
     }
 }
