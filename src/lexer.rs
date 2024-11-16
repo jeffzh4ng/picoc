@@ -11,7 +11,7 @@ pub enum TT {
     LiteralInt, Alias, // introductions (values) RE: [0-9]+ and [a-zA-Z][a-zA-Z0-9]*
     KeywordInt, KeywordChar, KeywordVoid, KeywordRet, KeywordIf, KeywordEls, KeywordFor, KeywordWhile, // keywords ⊂ identifiers
     Plus, Minus, Star, Slash, LeftAngleBracket, RightAngleBracket, Equals, Bang, Amp, Bar, // eliminations (ops)
-    PuncLeftParen, PuncRightParen, PuncLeftBrace, PuncRightBrace, PuncSemiColon, // punctuation
+    PuncLeftParen, PuncRightParen, PuncLeftBrace, PuncRightBrace, PuncSemiColon, PuncComma,// punctuation
 }
 
 //  1. variations are explicitly typed. Collapsing categories like keywords
@@ -102,6 +102,11 @@ pub fn lex(input: &[char]) -> Result<Vec<Token>, io::Error> {
             ';' => {
                 #[rustfmt::skip]
                 let t = Token { lexeme: String::from(";"), typ: TT::PuncSemiColon };
+                Ok(iter::once(t).chain(lex(r)?).collect())
+            }
+            ',' => {
+                #[rustfmt::skip]
+                let t = Token { lexeme: String::from(","), typ: TT::PuncComma };
                 Ok(iter::once(t).chain(lex(r)?).collect())
             }
             _ => Err(io::Error::new(

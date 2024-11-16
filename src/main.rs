@@ -31,6 +31,7 @@ fn main() {
         .collect::<Vec<_>>();
     let tokens = lexer::lex(&chars).unwrap();
     let tree = parser::parse_prg(&tokens).unwrap();
+    println!("picoc089-info: tree: {:?}", tree);
 
     let typ = typer::type_prg(tree).unwrap();
     println!("picoc089-info: type: {:?}", typ);

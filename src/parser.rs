@@ -34,13 +34,18 @@ pub fn parse_prg(tokens: &[Token]) -> Result<Prg, io::Error> {
 }
 
 fn parse_funcdef(tokens: &[Token]) -> Result<(FuncDef, &[Token]), io::Error> {
-    let (_, r) = eat(&tokens, TT::KeywordInt)?; // todo: return type can only be int for now
+    let (_, r) = eat(&tokens, TT::KeywordInt)?;
     let (alias, r) = eat(r, TT::Alias)?;
     let (_, r) = eat(r, TT::PuncLeftParen)?;
 
     let (mut formal_params, mut r) = (vec![], r);
-    // for now, single formal param
-    if let Ok((fp_type, _r)) = eat(r, TT::KeywordInt) {
+    while let Ok((fp_type, _r)) = eat(r, TT::KeywordInt) {
+        let _r = if formal_params.len() > 0 {
+            let (_, _r) = eat(_r, TT::PuncComma)?;
+            _r
+        } else {
+            _r
+        };
         let (alias, _r) = eat(_r, TT::Alias)?;
         formal_params.push((alias.lexeme.to_owned(), Type::Int));
         r = _r;
@@ -430,37 +435,71 @@ fn parse_factor_op(tokens: &[Token]) -> Result<(BinOp, &[Token]), io::Error> {
     }
 }
 
-fn parse_funcapp(tokens: &[Token]) -> Result<(Expr, &[Token]), io::Error> {
-    let (left, r) = parse_atom(tokens)?;
+// fn parse_funcapp(tokens: &[Token]) -> Result<(Expr, &[Token]), io::Error> {
+//     let (left, r) = parse_atom(tokens)?;
 
-    match r {
-        [] => Ok((left, r)),
-        [f, _r @ ..] => {
-            // not while because C doesn't have function as values: f()()()
+//     match r {
+//         [] => Ok((left, r)),
+//         [f, _r @ ..] => {
+//             // not while because C doesn't have function as values: f()()()
+//             if let TT::PuncLeftParen = f.typ {
+//                 let (actual_param, r) = if !_r.is_empty() && _r[0].typ != TT::PuncRightParen {
+//                     let (actual_param, r) = parse_expr(_r)?; // single param for now
+//                     ((vec![actual_param]), r)
+//                 } else {
+//                     (vec![], _r)
+//                 };
+//                 let (_, _r) = eat(r, TT::PuncRightParen)?;
+
+//                 match left {
+//                     Expr::VarApp(alias) => Ok((
+//                         Expr::FuncApp {
+//                             alias,
+//                             ap: actual_param,
+//                         },
+//                         _r,
+//                     )),
+//                     _ => Err(io::Error::new(
+//                         io::ErrorKind::Other,
+//                         "expected alias".to_string(),
+//                     )),
+//                 }
+//             } else {
+//                 Ok((left, r))
+//             }
+//         }
+//     }
+// }
+
+fn parse_funcapp(tokens: &[Token]) -> Result<(Expr, &[Token]), io::Error> {
+    let (left, r0) = parse_atom(tokens)?;
+
+    match r0 {
+        [] => Ok((left, r0)),
+        [f, r @ ..] => {
             if let TT::PuncLeftParen = f.typ {
-                let (actual_param, r) = if !_r.is_empty() && _r[0].typ != TT::PuncRightParen {
-                    let (actual_param, r) = parse_expr(_r)?; // single param for now
-                    ((vec![actual_param]), r)
-                } else {
-                    (vec![], _r)
-                };
-                let (_, _r) = eat(r, TT::PuncRightParen)?;
+                let (mut aps, mut r) = (vec![], r);
+                while let Ok((ap, _r)) = parse_expr(r) {
+                    let _r = if aps.len() > 0 {
+                        let (_, _r) = eat(_r, TT::PuncComma)?;
+                        _r
+                    } else {
+                        _r
+                    };
+                    aps.push(ap);
+                    r = _r;
+                }
+                let (_, r) = eat(r, TT::PuncRightParen)?;
 
                 match left {
-                    Expr::VarApp(alias) => Ok((
-                        Expr::FuncApp {
-                            alias,
-                            ap: actual_param,
-                        },
-                        _r,
-                    )),
+                    Expr::VarApp(alias) => Ok((Expr::FuncApp { alias, ap: aps }, r)),
                     _ => Err(io::Error::new(
                         io::ErrorKind::Other,
                         "expected alias".to_string(),
                     )),
                 }
             } else {
-                Ok((left, r))
+                Ok((left, r0))
             }
         }
     }
