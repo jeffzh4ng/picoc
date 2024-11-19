@@ -5,7 +5,7 @@ use std::{collections::HashMap, io};
 // liveness analysis -- CFG?
 // dataflow analysis -- CFG?
 
-pub fn type_prg(prg: Prg) -> Result<Type, io::Error> {
+pub fn type_prg(prg: &Prg) -> Result<Type, io::Error> {
     let mut tnv = Tnv {
         fnv: HashMap::new(),
         vnv: HashMap::new(),
@@ -194,7 +194,7 @@ mod test_arith {
 
         let tokens = lexer::lex(&chars).unwrap();
         let tree = parser::parse_prg(&tokens).unwrap();
-        let typ = super::type_prg(tree).unwrap();
+        let typ = super::type_prg(&tree).unwrap();
         insta::assert_yaml_snapshot!(typ, @r###"
         ---
         Int
@@ -220,7 +220,7 @@ mod test_control {
 
         let tokens = lexer::lex(&chars).unwrap();
         let tree = parser::parse_prg(&tokens).unwrap();
-        let typ = super::type_prg(tree).unwrap();
+        let typ = super::type_prg(&tree).unwrap();
         insta::assert_yaml_snapshot!(typ, @r###"
         ---
         Int
@@ -237,7 +237,7 @@ mod test_control {
 
         let tokens = lexer::lex(&chars).unwrap();
         let tree = parser::parse_prg(&tokens).unwrap();
-        let typ = super::type_prg(tree);
+        let typ = super::type_prg(&tree);
         assert!(typ.is_err())
     }
 
@@ -251,7 +251,7 @@ mod test_control {
 
         let tokens = lexer::lex(&chars).unwrap();
         let tree = parser::parse_prg(&tokens).unwrap();
-        let typ = super::type_prg(tree).unwrap();
+        let typ = super::type_prg(&tree).unwrap();
         insta::assert_yaml_snapshot!(typ, @r###"
         ---
         Int
@@ -268,7 +268,7 @@ mod test_control {
 
         let tokens = lexer::lex(&chars).unwrap();
         let tree = parser::parse_prg(&tokens).unwrap();
-        let typ = super::type_prg(tree);
+        let typ = super::type_prg(&tree);
         assert!(typ.is_err())
     }
 }
@@ -291,7 +291,7 @@ mod test_bindings {
 
         let tokens = lexer::lex(&chars).unwrap();
         let tree = parser::parse_prg(&tokens).unwrap();
-        let typ = super::type_prg(tree).unwrap();
+        let typ = super::type_prg(&tree).unwrap();
         insta::assert_yaml_snapshot!(typ, @r###"
         ---
         Int
@@ -308,7 +308,7 @@ mod test_bindings {
 
         let tokens = lexer::lex(&chars).unwrap();
         let tree = parser::parse_prg(&tokens).unwrap();
-        let typ = super::type_prg(tree);
+        let typ = super::type_prg(&tree);
         assert!(typ.is_err())
     }
 }

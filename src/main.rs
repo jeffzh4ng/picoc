@@ -1,4 +1,4 @@
-use picoc089::{lexer, parser, typer};
+use picoc089::{elaborator, lexer, parser, typer};
 use std::{env, fs};
 
 fn main() {
@@ -33,23 +33,26 @@ fn main() {
     let tree = parser::parse_prg(&tokens).unwrap();
     println!("picoc089-info: tree: {:?}", tree);
 
-    let typ = typer::type_prg(tree).unwrap();
+    let typ = typer::type_prg(&tree).unwrap();
     println!("picoc089-info: type: {:?}", typ);
+
+    let cfg = elaborator::elaborate(&tree).unwrap();
 
     // match strat.as_str() {
     //     "interpretc0" => {
     //         let val = evaluator::eval_prg(tree).unwrap();
     //         println!("picoc089-info: evaluated: {val}");
     //     }
-    // "compilec89" => {
-    //     let assembly = generator::gen(tree);
+    //     "compilec89" => {
+    //         // selector
+    //         // scheduler
+    //         // allocator
+    //         let assembly = generator::gen(tree);
 
-    //     let trgt = "./tmp.s";
-    //     println!("picoc089-info: generating target: {trgt}");
-    //     let mut f = fs::File::create(trgt).expect("picoc089-error: unable to create file");
-    //     f.write_all(assembly.join("\n").as_bytes())
-    //         .expect("picoc089-error: unable to write data");
-    // }
+    //         let mut f = fs::File::create("./tmp.s").expect("picoc089-error: unable to create file");
+    //         f.write_all(assembly.join("\n").as_bytes())
+    //             .expect("picoc089-error: unable to write data");
+    //     }
     //     _ => {
     //         println!("picoc089-error: unknown strategy: {:?}", strat);
     //         std::process::exit(1);
