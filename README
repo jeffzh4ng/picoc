@@ -1,4 +1,4 @@
-picoc089: aot son C89->RV32I compiler
+picoc089: aot optimizing C89->RV32I compiler
 
 goals: hackable. quakeable. -O1able.
 non-goals: ld, as, objdump, gdb
@@ -11,10 +11,10 @@ cargo run compilec89 ./path/to/file.c
 snapped sublangs (arith, control, bindings, heap)
 eyeballed typer/evaluator against c0's statics/dynamics
 smoked with dsa
+future goals: jit with c89's backend
 
 --C89
 bootstrapped with C0's frontend
-optimized with inline, unroll, cse, dce, motion, fold, peephole
-generated with rv32i
-fuzzed with csmith
+fuzzed with csmith, diffed with clang
 smoked with egos2000 (2k), xv6(10k), quake(300k), sqlite(400k)
+optimized with inline, unroll, cse, dce, motion, fold, peephole

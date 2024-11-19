@@ -1,16 +1,16 @@
-use crate::parser;
+use crate::{Prg, Stmt};
 
-pub fn gen(tree: parser::Program) -> Vec<String> {
+pub fn gen(tree: Prg) -> Vec<String> {
     let prologue = vec!["mv fp,sp".to_owned(), "addi sp,sp,208".to_owned()]; // 26 vars
 
     let program: Vec<String> = todo!();
-    // let program = tree
-    //     .main_function
-    //     .stmts
-    //     .into_iter()
-    //     .map(|s| gen_stmt(s))
-    //     .flatten()
-    //     .collect::<Vec<_>>();
+    let program = tree
+        .main_function
+        .stmts
+        .into_iter()
+        .map(|s| gen_stmt(s))
+        .flatten()
+        .collect::<Vec<_>>();
 
     let output: Vec<String> = vec![
         ".text".to_owned(),
@@ -31,15 +31,15 @@ pub fn gen(tree: parser::Program) -> Vec<String> {
     output
 }
 
-fn calc_offset(id: &parser::Id) -> u8 {
+fn calc_offset(id: String) -> u8 {
     let binding = id.0.chars().next().unwrap();
     let offset = binding as u8 - 'a' as u8;
     offset * 8
 }
 
-fn gen_asnmt(a: parser::Asnmt) -> Vec<String> {
+fn gen_asnmt(a: Asnmt) -> Vec<String> {
     match a {
-        parser::Asnmt::CreateBind {
+        Asnmt::CreateBind {
             var: id,
             body: expr,
         } => {
@@ -54,15 +54,15 @@ fn gen_asnmt(a: parser::Asnmt) -> Vec<String> {
                 "# done...".to_owned(),
             ]
         }
-        parser::Asnmt::UpdateBind { id, op, expr } => {
+        Asnmt::UpdateBind { id, op, expr } => {
             let expr = gen_expr(*expr);
             let offset = calc_offset(&id);
             let update = match op {
-                parser::BinOp::Add => "add",
-                parser::BinOp::Sub => "sub",
-                parser::BinOp::Mult => "mul",
-                parser::BinOp::Div => "div",
-                parser::BinOp::Mod => todo!(),
+                BinOp::Add => "add",
+                BinOp::Sub => "sub",
+                BinOp::Mult => "mul",
+                BinOp::Div => "div",
+                BinOp::Mod => todo!(),
             };
 
             vec![
@@ -76,17 +76,17 @@ fn gen_asnmt(a: parser::Asnmt) -> Vec<String> {
     }
 }
 
-fn gen_stmt(s: parser::Cmd) -> Vec<String> {
+fn gen_stmt(s: Stmt) -> Vec<String> {
     match s {
-        parser::Cmd::Asnmt(a) => gen_asnmt(a),
-        parser::Cmd::For {
-            asnmt,
-            cond,
-            update,
-            body,
-        } => todo!(),
-        parser::Cmd::While => todo!(),
-        parser::Cmd::Return(e) => {
+        Stmt::Asnmt(a) => gen_asnmt(a),
+        // Stmt::For {
+        //     asnmt,
+        //     cond,
+        //     update,
+        //     body,
+        // } => todo!(),
+        // Stmt::While => todo!(),
+        Stmt::Return(e) => {
             let output = vec![
                 gen_expr(e)
                     .iter()
@@ -101,8 +101,7 @@ fn gen_stmt(s: parser::Cmd) -> Vec<String> {
 
             output
         }
-        parser::Cmd::If => todo!(),
-        parser::Cmd::IfEls { cond, then, els } => {
+        Stmt::IfEls { cond, then, els } => {
             let cond_mc = gen_expr(*cond);
             let then_mc = gen_stmt(*then);
             let els_mc = gen_stmt(*els);
@@ -151,9 +150,9 @@ fn gen_stmt(s: parser::Cmd) -> Vec<String> {
     }
 }
 
-fn gen_expr(e: parser::Expr) -> Vec<String> {
+fn gen_expr(e: Expr) -> Vec<String> {
     match e {
-        parser::Expr::Var(id) => {
+        Expr::Var(id) => {
             let offset = calc_offset(&id);
             vec![
                 "# elimination of variable".to_owned(),
@@ -161,7 +160,7 @@ fn gen_expr(e: parser::Expr) -> Vec<String> {
                 "sw t0,0(sp)".to_owned(),
             ]
         }
-        parser::Expr::Int(n) => {
+        Expr::Int(n) => {
             let mut output = Vec::new();
             output.push("# 1. load".to_owned());
             output.push(format!("li t1,{n}"));
@@ -177,9 +176,9 @@ fn gen_expr(e: parser::Expr) -> Vec<String> {
 
             output
         }
-        parser::Expr::Str(_) => todo!(),
-        parser::Expr::UnaryE { op, l } => todo!(),
-        parser::Expr::BinE { op, l, r } => {
+        Expr::Str(_) => todo!(),
+        Expr::UnaryE { op, l } => todo!(),
+        Expr::BinE { op, l, r } => {
             let left_expr = gen_expr(*l);
             let right_expr = gen_expr(*r);
 
@@ -198,11 +197,11 @@ fn gen_expr(e: parser::Expr) -> Vec<String> {
 
             // 2. operate on the operands
             let instr = match op {
-                parser::BinOp::Add => "add t3,t2,t1".to_owned(),
-                parser::BinOp::Sub => "sub t3,t2,t1".to_owned(),
-                parser::BinOp::Mult => "mul t3,t2,t1".to_owned(),
-                parser::BinOp::Div => "div t3,t2,t1".to_owned(),
-                parser::BinOp::Mod => todo!(),
+                BinOp::Add => "add t3,t2,t1".to_owned(),
+                BinOp::Sub => "sub t3,t2,t1".to_owned(),
+                BinOp::Mult => "mul t3,t2,t1".to_owned(),
+                BinOp::Div => "div t3,t2,t1".to_owned(),
+                BinOp::Mod => todo!(),
             };
             output.push("# 2. operate on the operands".to_owned());
             output.push(instr);
@@ -219,7 +218,7 @@ fn gen_expr(e: parser::Expr) -> Vec<String> {
 
             output
         }
-        parser::Expr::RelE { op, l, r } => {
+        Expr::RelE { op, l, r } => {
             let left_expr = gen_expr(*l);
             let right_expr = gen_expr(*r);
 
@@ -237,31 +236,29 @@ fn gen_expr(e: parser::Expr) -> Vec<String> {
 
             // 2. operate on the operands
             let instr = match op {
-                parser::RelOp::Eq => {
-                    vec!["sub t3,t2,t1".to_owned(), "seqz t3,t3".to_owned()].join("\n")
-                }
-                parser::RelOp::Neq => vec![
+                RelOp::Eq => vec!["sub t3,t2,t1".to_owned(), "seqz t3,t3".to_owned()].join("\n"),
+                RelOp::Neq => vec![
                     "sub t3,t2,t1".to_owned(),
                     "seqz t3,t3".to_owned(),
                     "xori t3,t3,1".to_owned(),
                 ]
                 .join("\n"),
-                parser::RelOp::And => "and t3,t2,t1".to_owned(), // TODO: does riscv short circuit?
-                parser::RelOp::Or => "or t3,t2,t1".to_owned(),   // TODO: does riscv short circuit?
-                parser::RelOp::LtEq => vec![
+                RelOp::And => "and t3,t2,t1".to_owned(), // TODO: does riscv short circuit?
+                RelOp::Or => "or t3,t2,t1".to_owned(),   // TODO: does riscv short circuit?
+                RelOp::LtEq => vec![
                     // a <= b equivalent to !(b < a)
                     "slt t3,t1,t2".to_owned(),   // b < a
                     "  xori t3,t3,1".to_owned(), // !(b < a)
                 ]
                 .join("\n"),
-                parser::RelOp::Lt => "slt t3,t2,t1".to_owned(),
-                parser::RelOp::GtEq => vec![
+                RelOp::Lt => "slt t3,t2,t1".to_owned(),
+                RelOp::GtEq => vec![
                     // a >= b equivalent b <= a equivalent to !(a < b)
                     "slt t3,t2,t1".to_owned(),   // a < b
                     "  xori t3,t3,1".to_owned(), // !(a < b)
                 ]
                 .join("\n"),
-                parser::RelOp::Gt => "slt t3,t1,t2".to_owned(),
+                RelOp::Gt => "slt t3,t1,t2".to_owned(),
             };
             output.push("# 2. op(t2, t1)".to_owned());
             output.push(instr);
@@ -278,7 +275,7 @@ fn gen_expr(e: parser::Expr) -> Vec<String> {
 
             output
         }
-        parser::Expr::BitE { op, l, r } => todo!(),
-        parser::Expr::LogE { op, l, r } => todo!(),
+        Expr::BitE { op, l, r } => todo!(),
+        Expr::LogE { op, l, r } => todo!(),
     }
 }
