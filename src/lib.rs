@@ -2,10 +2,9 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 // pub mod evaluator;
-// pub mod generator;
 pub mod allocator;
-pub mod elaborator;
 pub mod lexer;
+pub mod translator;
 pub mod parser;
 pub mod selector;
 pub mod typer;
@@ -29,6 +28,9 @@ macro_rules! common_enum {
     }
 }
 
+// TODO: for loops, etc..
+type SugaredPrg = Vec<()>;
+
 // ***** prg: Vec<Defs> *****
 type Prg = Vec<Def>;
 common_enum! { pub enum Def { FuncDef(FuncDef), VarDef(VarDef) } }
@@ -48,17 +50,17 @@ common_enum! { pub enum Val { Int(i32), Bool(bool), Str(String) } }
 common_enum! {
     pub enum Stmt {
         IfEls { cond: Box<Expr>, then: Box<Stmt>, els: Option<Box<Stmt>> }, While { cond: Box<Expr>, body: Box<Stmt> }, // control
-        Asnmt(VarDef), Return(Expr), // bindings
+        Asnmt(VarDef), Return(Expr), // bindings (intros in C)
     }
 }
 
 common_enum! {
     #[rustfmt::skip]
     pub enum Expr {
-        // ***** introductions (values) h*****
+        // intros
         Int(i32), Bool(bool),
 
-        // ***** eliminations (operators) *****
+        // elims
         UnaryE { op: UnaryOp, l: Box<Expr> }, BinE { op: BinOp, l: Box<Expr>, r: Box<Expr> }, LogE { op: LogOp, l: Box<Expr>, r: Box<Expr> },
         BitE { op: BitOp, l: Box<Expr>, r: Box<Expr> }, RelE { op: RelOp, l: Box<Expr>, r: Box<Expr> },
         VarApp(String), FuncApp{ alias: String, ap: Vec<Expr> }
@@ -71,6 +73,32 @@ common_enum! { pub enum RelOp { Eq, Neq, And, Or, LtEq, Lt, GtEq, Gt } }
 common_enum! { pub enum BinOp { Add, Sub, Mult, Div, Mod } }
 common_enum! { pub enum UnaryOp { Add, Sub } }
 
-// *********************************************************************************************************************
+// trgt AST is not too different src AST,
+// since C was designed as portable assembly
 
-type TrgtPrg = Vec<String>;
+// the semantics are closer to metal:
+// - arithmetic: remains more or less the same
+// - control: conditionals and loops -> jump w/ labels
+// - bindings: vardef and varapp -> loads/stores w/ unlimited temps
+// - function: ??
+
+type TrgtPrg = Vec<TrgtStmt>;
+common_enum! {
+    pub enum TrgtStmt {
+        Jump(String), CJump(Expr, String, String), LabelDef(String), // control
+        Load, Store, // bindings
+        Seq(Vec<Box<TrgtStmt>>), Return(TrgtExpr), // functions
+    }
+}
+
+common_enum! {
+    pub enum TrgtExpr {
+        Const(i32), BinOp(TrgtBinOp, Box<TrgtExpr>, Box<TrgtExpr>), // arithmetic
+        TempUse(String), MemUse(String), LabelUse(String), // mem use if target is riscv?
+        Call, // functions
+    }
+}
+
+common_enum! { pub enum TrgtBinOp { Add, Sub, Mult, Div, Mod } }
+common_enum! { pub enum TrgtBitOp { And, Or, Xor } }
+common_enum! { pub enum TrgtRelOp { Eq, Neq, And, Or, LtEq, Lt, GtEq, Gt } }
