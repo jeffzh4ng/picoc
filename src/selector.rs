@@ -1,8 +1,8 @@
-use crate::{SDef, SExpr, SFuncDef, SPrg, SStmt, IPrg};
+use crate::{SExpr, SFuncDef, SStmt, IPrg, TQuad};
 use std::io;
 
 // peephole vs tiling
-pub fn select(src_tree: &SPrg) -> Result<IPrg, io::Error> {
+pub fn select(intrm_tree: &IPrg) -> Vec<TQuad> {
     // let _ = src_tree
     //     .iter()
     //     .map(|stmt| match stmt {

@@ -73,7 +73,7 @@ common_enum! { pub enum SRelOp { Eq, Neq, And, Or, LtEq, Lt, GtEq, Gt } }
 common_enum! { pub enum SBinOp { Add, Sub, Mult, Div, Mod } }
 common_enum! { pub enum SUnaryOp { Add, Sub } }
 
-// trgt AST is not too different src AST,
+// intermediate AST is not too different from source AST,
 // since C was designed as portable assembly
 
 // the semantics are closer to metal:
@@ -102,3 +102,76 @@ common_enum! {
 common_enum! { pub enum IBinOp { Add, Sub, Mult, Div, Mod } }
 common_enum! { pub enum IBitOp { And, Or, Xor } }
 common_enum! { pub enum IRelOp { Eq, Neq, And, Or, LtEq, Lt, GtEq, Gt } }
+
+// target quads (3AC)
+common_enum! { pub enum TQuad {
+    RegQuad(TRegOp, Temp, Temp, Temp),
+    ImmQuad(TImmOp, Temp, Temp, Imm),
+    MemQuad(TMemOp, Temp, Mem, Mem),
+}}
+
+common_enum! { pub enum TRegOp {
+    Add, Sub, // arithmetic
+    And, Or, Xor, // logicals
+    Beq, Bneq, Bge, Blt, Jal, // control
+}}
+
+common_enum! { pub enum TImmOp {
+    AddI, SubI, // arithmetic
+    AndI, OrI, XorI, // logical
+}}
+
+common_enum! { pub enum TMemOp {
+    Load, Store, // bindings
+}}
+
+type Temp = String;
+type Mem = String;
+type Label = String;
+type Imm = i32;
+
+// target register abi
+pub const RISCV_ABI: &[(&str, &str)] = &[
+    // zero register
+    ("x0", "zero"),
+    // return address
+    ("x1", "ra"),
+    // stack/frame pointers 
+    ("x2", "sp"),
+    ("x3", "gp"),
+    ("x4", "tp"),
+    // temporaries
+    ("x5", "t0"),
+    ("x6", "t1"),
+    ("x7", "t2"), 
+    // saved registers
+    ("x8", "s0"),
+    ("x9", "s1"),
+    // arguments/return values
+    ("x10", "a0"),
+    ("x11", "a1"), 
+    ("x12", "a2"),
+    ("x13", "a3"),
+    ("x14", "a4"),
+    ("x15", "a5"),
+    ("x16", "a6"),
+    ("x17", "a7"),
+    // more saved registers
+    ("x18", "s2"),
+    ("x19", "s3"),
+    ("x20", "s4"),
+    ("x21", "s5"),
+    ("x22", "s6"),
+    ("x23", "s7"),
+    ("x24", "s8"),
+    ("x25", "s9"),
+    ("x26", "s10"),
+    ("x27", "s11"),
+    // more temporaries
+    ("x28", "t3"),
+    ("x29", "t4"),
+    ("x30", "t5"),
+    ("x31", "t6"),
+    // program counter
+    ("x32", "pc"),
+];
