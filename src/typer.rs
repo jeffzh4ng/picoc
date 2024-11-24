@@ -1,4 +1,4 @@
-use crate::{SBinOp, SDef, SExpr, SFuncDef, LambdaType, SPrg, SStmt, Tnv, Type};
+use crate::{LambdaType, SBinOp, SDef, SExpr, SFuncDef, SPrg, SStmt, Tnv, Type};
 use std::{collections::HashMap, io};
 
 // todo: type checking for conditionals and bindings (funcs, vars) on AST

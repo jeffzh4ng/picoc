@@ -1,10 +1,13 @@
-use crate::{SBinOp, SDef, SExpr, SFuncDef, SPrg, SStmt, IBinOp, IExpr, IPrg, IStmt};
+use crate::{IBinOp, IExpr, IPrg, IStmt, SBinOp, SDef, SExpr, SFuncDef, SPrg, SStmt};
 
 pub fn translate(src_tree: &SPrg) -> IPrg {
-    let trgt_prg = src_tree.iter().map(|def| match def {
-        SDef::FuncDef(func_def) => translate_func_def(func_def),
-        SDef::VarDef(var_def) => todo!(),
-    }).collect::<Vec<_>>();
+    let trgt_prg = src_tree
+        .iter()
+        .map(|def| match def {
+            SDef::FuncDef(func_def) => translate_func_def(func_def),
+            SDef::VarDef(var_def) => todo!(),
+        })
+        .collect::<Vec<_>>();
 
     trgt_prg[0].clone()
 }

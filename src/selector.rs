@@ -1,4 +1,4 @@
-use crate::{SExpr, SFuncDef, SStmt, IPrg, TQuad};
+use crate::{IPrg, SExpr, SFuncDef, SStmt, TQuad};
 use std::io;
 
 // peephole vs tiling

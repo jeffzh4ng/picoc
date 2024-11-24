@@ -1,6 +1,6 @@
 use crate::{
     lexer::{Token, TT},
-    SBinOp, SDef, SExpr, SFuncDef, SPrg, SRelOp, SStmt, Type, SVarDef,
+    SBinOp, SDef, SExpr, SFuncDef, SPrg, SRelOp, SStmt, SVarDef, Type,
 };
 use std::{io, num::ParseIntError};
 

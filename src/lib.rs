@@ -4,9 +4,9 @@ use std::collections::HashMap;
 // pub mod evaluator;
 pub mod allocator;
 pub mod lexer;
-pub mod translator;
 pub mod parser;
 pub mod selector;
+pub mod translator;
 pub mod typer;
 
 #[macro_use]
@@ -136,20 +136,20 @@ pub const RISCV_ABI: &[(&str, &str)] = &[
     ("x0", "zero"),
     // return address
     ("x1", "ra"),
-    // stack/frame pointers 
+    // stack/frame pointers
     ("x2", "sp"),
     ("x3", "gp"),
     ("x4", "tp"),
     // temporaries
     ("x5", "t0"),
     ("x6", "t1"),
-    ("x7", "t2"), 
+    ("x7", "t2"),
     // saved registers
     ("x8", "s0"),
     ("x9", "s1"),
     // arguments/return values
     ("x10", "a0"),
-    ("x11", "a1"), 
+    ("x11", "a1"),
     ("x12", "a2"),
     ("x13", "a3"),
     ("x14", "a4"),

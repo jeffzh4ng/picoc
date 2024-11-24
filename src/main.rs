@@ -1,4 +1,4 @@
-use picoc089::{allocator, lexer, translator, parser, selector, typer};
+use picoc089::{allocator, lexer, parser, selector, translator, typer};
 use std::{env, fs, io::Write};
 
 fn main() {
@@ -43,8 +43,8 @@ fn main() {
         // }
         "compilec89" => {
             let trgt_tree = translator::translate(&src_tree); // tree -> ssa -> son
-            // let abstract_assembly = selector::select(&trgt_tree).unwrap(); // maximal munch -> peephole
-            // let assembly = allocator::allocate(&abstract_assembly).unwrap(); // graph coloring -> linear-scan
+                                                              // let abstract_assembly = selector::select(&trgt_tree).unwrap(); // maximal munch -> peephole
+                                                              // let assembly = allocator::allocate(&abstract_assembly).unwrap(); // graph coloring -> linear-scan
 
             // let mut f = fs::File::create("./tmp.s").expect("picoc089-error: unable to create file");
             // f.write_all(assembly.join("\n").as_bytes())
