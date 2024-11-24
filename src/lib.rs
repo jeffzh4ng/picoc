@@ -32,10 +32,10 @@ macro_rules! common_enum {
 type SugaredPrg = Vec<()>;
 
 // ***** prg: Vec<Defs> *****
-type Prg = Vec<Def>;
-common_enum! { pub enum Def { FuncDef(FuncDef), VarDef(VarDef) } }
-common_struct! { pub struct FuncDef {pub alias: String,  pub typ: Type, pub fp: Vec<(String, Type)>, pub body: Vec<Stmt> } } // fp needs Type for statics, and String for dynamics
-common_struct! { pub struct VarDef { pub alias: String, pub typ: Type, pub expr: Box<Expr> }} // UpdateBind { alias: String, op: BinOp, expr: Box<Expr> }
+type SPrg = Vec<SDef>;
+common_enum! { pub enum SDef { FuncDef(SFuncDef), VarDef(SVarDef) } }
+common_struct! { pub struct SFuncDef {pub alias: String,  pub typ: Type, pub fp: Vec<(String, Type)>, pub body: Vec<SStmt> } } // fp needs Type for statics, and String for dynamics
+common_struct! { pub struct SVarDef { pub alias: String, pub typ: Type, pub expr: Box<SExpr> }} // UpdateBind { alias: String, op: BinOp, expr: Box<Expr> }
 
 // ***** static tnv: Map<Alias, Type> *****
 common_struct! { pub struct Tnv { fnv: HashMap<String, LambdaType>, vnv: HashMap<String, Type> }}
@@ -44,34 +44,34 @@ common_enum! { pub enum Type { Int, Bool, Void } } // Cond(Type::Bool, Box<Type>
 
 // ***** dynamic vnv: Map<Alias, Val> *****
 common_struct! { pub struct Vnv { fnv: HashMap<String, LambdaVal>, vnv: HashMap<String, i32> }} // todo, -> Val
-common_struct! { pub struct LambdaVal { pub fp: Vec<String>, pub body: Vec<Stmt>} } // fp's only need types (tags) if implementing safety dynamically
+common_struct! { pub struct LambdaVal { pub fp: Vec<String>, pub body: Vec<SStmt>} } // fp's only need types (tags) if implementing safety dynamically
 common_enum! { pub enum Val { Int(i32), Bool(bool), Str(String) } }
 
 common_enum! {
-    pub enum Stmt {
-        IfEls { cond: Box<Expr>, then: Box<Stmt>, els: Option<Box<Stmt>> }, While { cond: Box<Expr>, body: Box<Stmt> }, // control
-        Asnmt(VarDef), Return(Expr), // bindings (intros in C)
+    pub enum SStmt {
+        IfEls { cond: Box<SExpr>, then: Box<SStmt>, els: Option<Box<SStmt>> }, While { cond: Box<SExpr>, body: Box<SStmt> }, // control
+        Asnmt(SVarDef), Return(SExpr), // bindings (intros in C)
     }
 }
 
 common_enum! {
     #[rustfmt::skip]
-    pub enum Expr {
+    pub enum SExpr {
         // intros
         Int(i32), Bool(bool),
 
         // elims
-        UnaryE { op: UnaryOp, l: Box<Expr> }, BinE { op: BinOp, l: Box<Expr>, r: Box<Expr> }, LogE { op: LogOp, l: Box<Expr>, r: Box<Expr> },
-        BitE { op: BitOp, l: Box<Expr>, r: Box<Expr> }, RelE { op: RelOp, l: Box<Expr>, r: Box<Expr> },
-        VarApp(String), FuncApp{ alias: String, ap: Vec<Expr> }
+        UnaryE { op: SUnaryOp, l: Box<SExpr> }, BinE { op: SBinOp, l: Box<SExpr>, r: Box<SExpr> }, LogE { op: SLogOp, l: Box<SExpr>, r: Box<SExpr> },
+        BitE { op: SBitOp, l: Box<SExpr>, r: Box<SExpr> }, RelE { op: SRelOp, l: Box<SExpr>, r: Box<SExpr> },
+        VarApp(String), FuncApp{ alias: String, ap: Vec<SExpr> }
     }
 }
 
-common_enum! { pub enum LogOp { And, Or } }
-common_enum! { pub enum BitOp { And, Or, Xor } }
-common_enum! { pub enum RelOp { Eq, Neq, And, Or, LtEq, Lt, GtEq, Gt } }
-common_enum! { pub enum BinOp { Add, Sub, Mult, Div, Mod } }
-common_enum! { pub enum UnaryOp { Add, Sub } }
+common_enum! { pub enum SLogOp { And, Or } }
+common_enum! { pub enum SBitOp { And, Or, Xor } }
+common_enum! { pub enum SRelOp { Eq, Neq, And, Or, LtEq, Lt, GtEq, Gt } }
+common_enum! { pub enum SBinOp { Add, Sub, Mult, Div, Mod } }
+common_enum! { pub enum SUnaryOp { Add, Sub } }
 
 // trgt AST is not too different src AST,
 // since C was designed as portable assembly
@@ -82,23 +82,23 @@ common_enum! { pub enum UnaryOp { Add, Sub } }
 // - bindings: vardef and varapp -> loads/stores w/ unlimited temps
 // - function: ??
 
-type TrgtPrg = Vec<TrgtStmt>;
+type IPrg = Vec<IStmt>;
 common_enum! {
-    pub enum TrgtStmt {
-        Jump(String), CJump(Expr, String, String), LabelDef(String), // control
+    pub enum IStmt {
+        Jump(String), CJump(SExpr, String, String), LabelDef(String), // control
         Load, Store, // bindings
-        Seq(Vec<Box<TrgtStmt>>), Return(TrgtExpr), // functions
+        Seq(Vec<Box<IStmt>>), Return(IExpr), // functions
     }
 }
 
 common_enum! {
-    pub enum TrgtExpr {
-        Const(i32), BinOp(TrgtBinOp, Box<TrgtExpr>, Box<TrgtExpr>), // arithmetic
+    pub enum IExpr {
+        Const(i32), BinOp(IBinOp, Box<IExpr>, Box<IExpr>), // arithmetic
         TempUse(String), MemUse(String), LabelUse(String), // mem use if target is riscv?
         Call, // functions
     }
 }
 
-common_enum! { pub enum TrgtBinOp { Add, Sub, Mult, Div, Mod } }
-common_enum! { pub enum TrgtBitOp { And, Or, Xor } }
-common_enum! { pub enum TrgtRelOp { Eq, Neq, And, Or, LtEq, Lt, GtEq, Gt } }
+common_enum! { pub enum IBinOp { Add, Sub, Mult, Div, Mod } }
+common_enum! { pub enum IBitOp { And, Or, Xor } }
+common_enum! { pub enum IRelOp { Eq, Neq, And, Or, LtEq, Lt, GtEq, Gt } }

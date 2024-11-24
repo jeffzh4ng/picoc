@@ -1,11 +1,11 @@
-use crate::{BinOp, Def, Expr, FuncDef, LambdaType, Prg, Stmt, Tnv, Type};
+use crate::{SBinOp, SDef, SExpr, SFuncDef, LambdaType, SPrg, SStmt, Tnv, Type};
 use std::{collections::HashMap, io};
 
 // todo: type checking for conditionals and bindings (funcs, vars) on AST
 // liveness analysis -- CFG?
 // dataflow analysis -- CFG?
 
-pub fn type_prg(prg: &Prg) -> Result<Type, io::Error> {
+pub fn type_prg(prg: &SPrg) -> Result<Type, io::Error> {
     let mut tnv = Tnv {
         fnv: HashMap::new(),
         vnv: HashMap::new(),
@@ -14,7 +14,7 @@ pub fn type_prg(prg: &Prg) -> Result<Type, io::Error> {
     let _ = prg
         .iter()
         .map(|def| match def {
-            Def::FuncDef(fd) => {
+            SDef::FuncDef(fd) => {
                 let ltnv = HashMap::new();
                 let type_check = type_func(fd, &tnv, ltnv).and_then(|t| {
                     tnv.fnv.insert(
@@ -28,7 +28,7 @@ pub fn type_prg(prg: &Prg) -> Result<Type, io::Error> {
                 });
                 type_check
             }
-            Def::VarDef(vd) => todo!(),
+            SDef::VarDef(vd) => todo!(),
         })
         .collect::<Result<Vec<_>, _>>()?;
 
@@ -44,7 +44,7 @@ pub fn type_prg(prg: &Prg) -> Result<Type, io::Error> {
 }
 
 pub fn type_func(
-    fd: &FuncDef,
+    fd: &SFuncDef,
     gnv: &Tnv,
     mut ltnv: HashMap<String, Type>,
 ) -> Result<Type, io::Error> {
@@ -83,12 +83,12 @@ pub fn type_func(
 }
 
 pub fn type_stmt(
-    stmt: &Stmt,
+    stmt: &SStmt,
     gnv: &Tnv,
     ltnv: &mut HashMap<String, Type>,
 ) -> Result<Type, io::Error> {
     match stmt {
-        Stmt::IfEls { cond, then, els } => {
+        SStmt::IfEls { cond, then, els } => {
             let ct = type_expr(cond, gnv, &ltnv)?;
             let tt = type_stmt(then, gnv, ltnv)?;
             let et = els
@@ -111,26 +111,26 @@ pub fn type_stmt(
                 None => Ok(tt.clone()),
             }
         }
-        Stmt::While { cond, body } => todo!(),
-        Stmt::Asnmt(vd) => {
+        SStmt::While { cond, body } => todo!(),
+        SStmt::Asnmt(vd) => {
             let et = type_expr(&vd.expr, gnv, &ltnv)?;
             ltnv.insert(vd.alias.clone(), et.clone()); // Γ [x <- T]
             Ok(et)
         }
-        Stmt::Return(expr) => type_expr(expr, gnv, &ltnv),
+        SStmt::Return(expr) => type_expr(expr, gnv, &ltnv),
     }
 }
 
-pub fn type_expr(e: &Expr, gtnv: &Tnv, ltnv: &HashMap<String, Type>) -> Result<Type, io::Error> {
+pub fn type_expr(e: &SExpr, gtnv: &Tnv, ltnv: &HashMap<String, Type>) -> Result<Type, io::Error> {
     match e {
         // ---------------------intros (axioms)-------------------------
-        Expr::Int(_) => Ok(Type::Int),   // ⊢ n : Int
-        Expr::Bool(_) => Ok(Type::Bool), // ⊢ b : Bool
+        SExpr::Int(_) => Ok(Type::Int),   // ⊢ n : Int
+        SExpr::Bool(_) => Ok(Type::Bool), // ⊢ b : Bool
         // ---------------------elims (rules)--------------------------
-        Expr::UnaryE { op, l } => type_expr(l, gtnv, ltnv),
-        Expr::BinE { op, l, r } => match op {
+        SExpr::UnaryE { op, l } => type_expr(l, gtnv, ltnv),
+        SExpr::BinE { op, l, r } => match op {
             // ignoring distinctions within types
-            BinOp::Add | BinOp::Sub | BinOp::Mult | BinOp::Div | BinOp::Mod => {
+            SBinOp::Add | SBinOp::Sub | SBinOp::Mult | SBinOp::Div | SBinOp::Mod => {
                 // ⊢ e1 : Int, ⊢ e2 : Int
                 // ------------------------ BIN_OP
                 //     ⊢ e1 + e2 : Int
@@ -140,12 +140,12 @@ pub fn type_expr(e: &Expr, gtnv: &Tnv, ltnv: &HashMap<String, Type>) -> Result<T
                 }
             } // perserves distinctions between types
         },
-        Expr::VarApp(alias) => gtnv // Γ ⊢ x: Γ(x)
+        SExpr::VarApp(alias) => gtnv // Γ ⊢ x: Γ(x)
             .vnv
             .get(alias)
             .cloned()
             .ok_or(io::Error::new(io::ErrorKind::Other, "type error")),
-        Expr::FuncApp { alias, ap } => {
+        SExpr::FuncApp { alias, ap } => {
             //    Γ ⊢ f : (T1-> T2)      Γ ⊢ e : T1, ... Γ ⊢ e : Tn
             // ------------------------------------------------------- FUNC_APP
             //             Γ ⊢ f(e1, ... en) : T2

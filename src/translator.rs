@@ -1,66 +1,66 @@
-use crate::{BinOp, Def, Expr, FuncDef, Prg, Stmt, TrgtBinOp, TrgtExpr, TrgtPrg, TrgtStmt};
+use crate::{SBinOp, SDef, SExpr, SFuncDef, SPrg, SStmt, IBinOp, IExpr, IPrg, IStmt};
 
-pub fn translate(src_tree: &Prg) -> TrgtPrg {
+pub fn translate(src_tree: &SPrg) -> IPrg {
     let trgt_prg = src_tree.iter().map(|def| match def {
-        Def::FuncDef(func_def) => translate_func_def(func_def),
-        Def::VarDef(var_def) => todo!(),
+        SDef::FuncDef(func_def) => translate_func_def(func_def),
+        SDef::VarDef(var_def) => todo!(),
     }).collect::<Vec<_>>();
 
     trgt_prg[0].clone()
 }
 
-fn translate_func_def(fd: &FuncDef) -> Vec<TrgtStmt> {
-    let label = TrgtStmt::LabelDef(fd.alias.clone());
+fn translate_func_def(fd: &SFuncDef) -> Vec<IStmt> {
+    let label = IStmt::LabelDef(fd.alias.clone());
     let translated_func_def = std::iter::once(label)
         .chain(fd.body.iter().map(|stmt| match stmt {
-            Stmt::Asnmt(defn) => todo!(),
-            Stmt::IfEls { cond, then, els } => todo!(),
-            Stmt::While { cond, body } => todo!(),
-            Stmt::Return(expr) => TrgtStmt::Return(translate_expr(expr)),
+            SStmt::Asnmt(defn) => todo!(),
+            SStmt::IfEls { cond, then, els } => todo!(),
+            SStmt::While { cond, body } => todo!(),
+            SStmt::Return(expr) => IStmt::Return(translate_expr(expr)),
         }))
         .collect::<Vec<_>>();
 
     translated_func_def
 }
 
-fn translate_expr(e: &Expr) -> TrgtExpr {
+fn translate_expr(e: &SExpr) -> IExpr {
     match e {
-        Expr::Int(n) => TrgtExpr::Const(*n),
-        Expr::Bool(b) => TrgtExpr::Const(*b as i32),
-        Expr::UnaryE { op, l } => todo!(),
-        Expr::BinE { op, l, r } => match op {
+        SExpr::Int(n) => IExpr::Const(*n),
+        SExpr::Bool(b) => IExpr::Const(*b as i32),
+        SExpr::UnaryE { op, l } => todo!(),
+        SExpr::BinE { op, l, r } => match op {
             // C language designed as portable assembly makes tree rewrites straightforward
-            BinOp::Add => TrgtExpr::BinOp(
-                TrgtBinOp::Add,
+            SBinOp::Add => IExpr::BinOp(
+                IBinOp::Add,
                 Box::new(translate_expr(l)),
                 Box::new(translate_expr(r)),
             ),
-            BinOp::Sub => TrgtExpr::BinOp(
-                TrgtBinOp::Sub,
+            SBinOp::Sub => IExpr::BinOp(
+                IBinOp::Sub,
                 Box::new(translate_expr(l)),
                 Box::new(translate_expr(r)),
             ),
-            BinOp::Mult => TrgtExpr::BinOp(
-                TrgtBinOp::Mult,
+            SBinOp::Mult => IExpr::BinOp(
+                IBinOp::Mult,
                 Box::new(translate_expr(l)),
                 Box::new(translate_expr(r)),
             ),
-            BinOp::Div => TrgtExpr::BinOp(
-                TrgtBinOp::Div,
+            SBinOp::Div => IExpr::BinOp(
+                IBinOp::Div,
                 Box::new(translate_expr(l)),
                 Box::new(translate_expr(r)),
             ),
-            BinOp::Mod => TrgtExpr::BinOp(
-                TrgtBinOp::Mod,
+            SBinOp::Mod => IExpr::BinOp(
+                IBinOp::Mod,
                 Box::new(translate_expr(l)),
                 Box::new(translate_expr(r)),
             ),
         },
-        Expr::LogE { op, l, r } => todo!(),
-        Expr::BitE { op, l, r } => todo!(),
-        Expr::RelE { op, l, r } => todo!(),
-        Expr::VarApp(alias) => TrgtExpr::TempUse(alias.clone()),
-        Expr::FuncApp { alias, ap } => todo!(),
+        SExpr::LogE { op, l, r } => todo!(),
+        SExpr::BitE { op, l, r } => todo!(),
+        SExpr::RelE { op, l, r } => todo!(),
+        SExpr::VarApp(alias) => IExpr::TempUse(alias.clone()),
+        SExpr::FuncApp { alias, ap } => todo!(),
     }
 }
 

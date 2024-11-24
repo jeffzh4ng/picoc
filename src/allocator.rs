@@ -1,7 +1,7 @@
 use std::io;
 
-use crate::TrgtPrg;
+use crate::IPrg;
 
-pub fn allocate(trgt_tree: &TrgtPrg) -> Result<TrgtPrg, io::Error> {
+pub fn allocate(trgt_tree: &IPrg) -> Result<IPrg, io::Error> {
     todo!()
 }
