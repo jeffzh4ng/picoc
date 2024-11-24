@@ -1,10 +1,6 @@
 use crate::{LambdaType, SBinOp, SDef, SExpr, SFuncDef, SPrg, SStmt, Tnv, Type};
 use std::{collections::HashMap, io};
 
-// todo: type checking for conditionals and bindings (funcs, vars) on AST
-// liveness analysis -- CFG?
-// dataflow analysis -- CFG?
-
 pub fn type_prg(prg: &SPrg) -> Result<Type, io::Error> {
     let mut tnv = Tnv {
         fnv: HashMap::new(),
@@ -117,7 +113,10 @@ pub fn type_stmt(
             ltnv.insert(vd.alias.clone(), et.clone()); // Γ [x <- T]
             Ok(et)
         }
-        SStmt::Return(expr) => type_expr(expr, gnv, &ltnv),
+        SStmt::Return(expr) => {
+            let foo = type_expr(expr, gnv, &ltnv)?;
+            Ok(foo)
+        }
     }
 }
 
@@ -140,8 +139,7 @@ pub fn type_expr(e: &SExpr, gtnv: &Tnv, ltnv: &HashMap<String, Type>) -> Result<
                 }
             } // perserves distinctions between types
         },
-        SExpr::VarApp(alias) => gtnv // Γ ⊢ x: Γ(x)
-            .vnv
+        SExpr::VarApp(alias) => ltnv // Γ ⊢ x: Γ(x)
             .get(alias)
             .cloned()
             .ok_or(io::Error::new(io::ErrorKind::Other, "type error")),
@@ -310,5 +308,23 @@ mod test_bindings {
         let tree = parser::parse_prg(&tokens).unwrap();
         let typ = super::type_prg(&tree);
         assert!(typ.is_err())
+    }
+
+    #[test]
+    fn asnmt_expr() {
+        const TEST_DIR: &str = "tests/fixtures/snap/shared/bindings";
+        let chars = fs::read(format!("{TEST_DIR}/asnmt_expr.c"))
+            .expect("file dne")
+            .iter()
+            .map(|b| *b as char)
+            .collect::<Vec<_>>();
+
+        let tokens = lexer::lex(&chars).unwrap();
+        let tree = parser::parse_prg(&tokens).unwrap();
+        let typ = super::type_prg(&tree).unwrap();
+        insta::assert_yaml_snapshot!(typ, @r###"
+        ---
+        Int
+        "###);
     }
 }
