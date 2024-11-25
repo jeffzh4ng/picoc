@@ -28,8 +28,12 @@ macro_rules! common_enum {
     }
 }
 
-// TODO: for loops, etc..
+// TODO: for loops, etc.
 type SugaredPrg = Vec<()>;
+
+// *********************************************************************************************************************
+// *********************************************** SOURCE REPRESENTATION ***********************************************
+// *********************************************************************************************************************
 
 // ***** prg: Vec<Defs> *****
 type SPrg = Vec<SDef>;
@@ -73,6 +77,13 @@ common_enum! { pub enum SRelOp { Eq, Neq, And, Or, LtEq, Lt, GtEq, Gt } }
 common_enum! { pub enum SBinOp { Add, Sub, Mult, Div, Mod } }
 common_enum! { pub enum SUnaryOp { Add, Sub } }
 
+//
+//
+//
+// *********************************************************************************************************************
+// ******************************************** INTERMEDIATE REPRESENTATION ********************************************
+// *********************************************************************************************************************
+
 // intermediate AST is not too different from source AST,
 // since C was designed as portable assembly
 
@@ -80,13 +91,13 @@ common_enum! { pub enum SUnaryOp { Add, Sub } }
 // - arithmetic: remains more or less the same
 // - control: conditionals and loops -> jump w/ labels
 // - bindings: vardef and varapp -> loads/stores w/ unlimited temps
-// - function: ??
+//                               -> functions jumps w/ labels
 
 type IPrg = Vec<IStmt>;
 common_enum! {
     pub enum IStmt {
         Jump(String), CJump(SExpr, String, String), LabelDef(String), // control
-        Load, Store, // bindings
+        Store, // bindings
         Seq(Vec<Box<IStmt>>), Return(IExpr), // functions
     }
 }
@@ -94,8 +105,8 @@ common_enum! {
 common_enum! {
     pub enum IExpr {
         Const(i32), BinOp(IBinOp, Box<IExpr>, Box<IExpr>), // arithmetic
-        TempUse(String), MemUse(String), LabelUse(String), // mem use if target is riscv?
-        Call, // functions
+        TempUse(String), Load(String), // bindings
+        Call(String, Vec<IExpr>), // functions
     }
 }
 
@@ -103,7 +114,14 @@ common_enum! { pub enum IBinOp { Add, Sub, Mult, Div, Mod } }
 common_enum! { pub enum IBitOp { And, Or, Xor } }
 common_enum! { pub enum IRelOp { Eq, Neq, And, Or, LtEq, Lt, GtEq, Gt } }
 
-// target quads (3AC)
+//
+//
+//
+// *********************************************************************************************************************
+// *********************************************** TARGET REPRESENTATION ***********************************************
+// *********************************************************************************************************************
+
+// target 3AC quads
 common_enum! { pub enum TQuad {
     RegQuad(TRegOp, Temp, Temp, Temp),
     ImmQuad(TImmOp, Temp, Temp, Imm),
@@ -125,7 +143,7 @@ common_enum! { pub enum TMemOp {
     Load, Store, // bindings
 }}
 
-type Temp = String;
+type Temp = usize;
 type Mem = String;
 type Label = String;
 type Imm = i32;

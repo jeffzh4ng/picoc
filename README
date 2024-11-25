@@ -1,7 +1,7 @@
 picoc: aot optimizing C89->RV32I compiler
 
 goals: hackable. quakeable. -O1able.
-non-goals: ld, as, objdump, gdb
+non-goals: as, ld, objdump, gdb
 
 usage:
 cargo run interpretc0 ./path/to/file.c0
@@ -13,7 +13,7 @@ eyeballed typer/evaluator against c0's statics/dynamics
 smoked with dsa
 todo: jit with C89's backend
 
---C89
+--C89->RV32I
 bootstrapped with C0's frontend
 fuzzed with csmith, diffed with clang
 optimized with inline, unroll, cse, dce, motion, fold, peephole

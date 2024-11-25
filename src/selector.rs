@@ -1,40 +1,84 @@
-use crate::{IPrg, SExpr, SFuncDef, SStmt, TQuad};
-use std::io;
+use crate::{IBinOp, IExpr, IPrg, IStmt, TImmOp, TQuad, TRegOp, Temp};
 
-// peephole vs tiling
-pub fn select(intrm_tree: &IPrg) -> Vec<TQuad> {
-    // let _ = src_tree
-    //     .iter()
-    //     .map(|stmt| match stmt {
-    //         Def::FuncDef(func_def) => todo!(),
-    //         Def::VarDef(var_def) => todo!(),
-    //     })
-    //     .collect();
+static mut TEMP_COUNTER: usize = 0;
 
-    todo!()
-}
-
-fn select_func_def(fd: &SFuncDef) -> Result<(), io::Error> {
-    let _ = fd.body.iter().map(|stmt| match stmt {
-        SStmt::Asnmt(defn) => todo!(),
-        SStmt::IfEls { cond, then, els } => todo!(),
-        SStmt::While { cond, body } => todo!(),
-        SStmt::Return(expr) => todo!(),
-    });
-    todo!()
-}
-
-fn select_expr(e: &SExpr) -> Result<(), io::Error> {
-    match e {
-        SExpr::Int(n) => todo!(),
-        SExpr::Bool(_) => todo!(),
-        SExpr::UnaryE { op, l } => todo!(),
-        SExpr::BinE { op, l, r } => todo!(),
-        SExpr::LogE { op, l, r } => todo!(),
-        SExpr::BitE { op, l, r } => todo!(),
-        SExpr::RelE { op, l, r } => todo!(),
-        SExpr::VarApp(_) => todo!(),
-        SExpr::FuncApp { alias, ap } => todo!(),
+pub fn fresh_temp() -> Temp {
+    unsafe {
+        let temp = TEMP_COUNTER;
+        TEMP_COUNTER += 1;
+        temp
     }
+}
+
+pub fn select(prg: &IPrg) -> Vec<TQuad> {
     todo!()
+}
+
+fn select_stmt(s: &IStmt) -> Vec<TQuad> {
+    match s {
+        IStmt::Jump(_) => todo!(),
+        IStmt::CJump(sexpr, _, _) => todo!(),
+        IStmt::LabelDef(_) => todo!(),
+        IStmt::Store => todo!(),
+        IStmt::Seq(vec) => todo!(),
+        IStmt::Return(iexpr) => {
+            let t = fresh_temp();
+            let foo = select_expr(t, iexpr);
+            todo!()
+        }
+    }
+}
+
+// when flatening the tree to linear 3AC quads
+// we refer to recursive computations via temps
+fn select_expr(d: Temp, e: &IExpr) -> Vec<TQuad> {
+    match e {
+        IExpr::Const(n) => vec![TQuad::ImmQuad(TImmOp::AddI, d, 0, *n)],
+        IExpr::BinOp(op, l, r) => {
+            let op = match op {
+                IBinOp::Add => TRegOp::Add,
+                IBinOp::Sub => TRegOp::Sub,
+                IBinOp::Mult => todo!(), // RV32M
+                IBinOp::Div => todo!(),  // RV32M
+                IBinOp::Mod => todo!(),  // RV32M
+            };
+
+            let (ltemp, rtemp) = (fresh_temp(), fresh_temp());
+            let (lq, rq) = (select_expr(ltemp, l), select_expr(rtemp, r));
+            let instr = vec![TQuad::RegQuad(op, d, ltemp, rtemp)];
+
+            lq.into_iter().chain(rq).chain(instr).collect()
+        }
+        IExpr::TempUse(_) => todo!(),
+        IExpr::Load(_) => todo!(),
+        IExpr::Call(_, vec) => todo!(),
+    }
+}
+
+#[cfg(test)]
+mod test_arithmetic {
+    use crate::lexer;
+    use crate::parser;
+    use crate::translator;
+    use crate::typer;
+    use std::fs;
+
+    const TEST_DIR: &str = "tests/fixtures/snap/shared/arith";
+
+    #[test]
+    fn add() {
+        let chars = fs::read(format!("{TEST_DIR}/add.c"))
+            .expect("file dne")
+            .iter()
+            .map(|b| *b as char)
+            .collect::<Vec<_>>();
+
+        let tokens = lexer::lex(&chars).unwrap();
+        let src_tree = parser::parse_prg(&tokens).unwrap();
+        let _ = typer::type_prg(&src_tree).unwrap();
+        let trgt_tree = translator::translate(&src_tree);
+        let abs_as = super::select(&trgt_tree);
+
+        insta::assert_yaml_snapshot!(trgt_tree, @r"");
+    }
 }

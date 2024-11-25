@@ -14,16 +14,21 @@ pub fn translate(src_tree: &SPrg) -> IPrg {
 
 fn translate_func_def(fd: &SFuncDef) -> Vec<IStmt> {
     let label = IStmt::LabelDef(fd.alias.clone());
-    let translated_func_def = std::iter::once(label)
-        .chain(fd.body.iter().map(|stmt| match stmt {
-            SStmt::Asnmt(defn) => todo!(),
+    let stmts = fd
+        .body
+        .iter()
+        .map(|stmt| match stmt {
+            SStmt::Asnmt(vd) => todo!(),
             SStmt::IfEls { cond, then, els } => todo!(),
             SStmt::While { cond, body } => todo!(),
-            SStmt::Return(expr) => IStmt::Return(translate_expr(expr)),
-        }))
+            SStmt::Return(expr) => Box::new(IStmt::Return(translate_expr(expr))),
+        })
         .collect::<Vec<_>>();
 
-    translated_func_def
+    let fd = IStmt::Seq(stmts);
+    let labeled_fd = std::iter::once(label).chain(vec![fd]).collect::<Vec<_>>();
+
+    labeled_fd
 }
 
 fn translate_expr(e: &SExpr) -> IExpr {
@@ -92,11 +97,38 @@ mod test_arithmetic {
         insta::assert_yaml_snapshot!(trgt_tree, @r###"
         ---
         - LabelDef: main
-        - Return:
-            BinOp:
-              - Add
-              - Const: 9
-              - Const: 10
+        - Seq:
+            - Return:
+                BinOp:
+                  - Add
+                  - Const: 9
+                  - Const: 10
         "###);
     }
 }
+
+// #[cfg(test)]
+// mod test_bindings {
+//     use crate::lexer;
+//     use crate::parser;
+//     use crate::typer;
+//     use std::fs;
+
+//     const TEST_DIR: &str = "tests/fixtures/snap/shared/bindings";
+
+//     #[test]
+//     fn formal_param() {
+//         let chars = fs::read(format!("{TEST_DIR}/formal_param.c"))
+//             .expect("file dne")
+//             .iter()
+//             .map(|b| *b as char)
+//             .collect::<Vec<_>>();
+
+//         let tokens = lexer::lex(&chars).unwrap();
+//         let src_tree = parser::parse_prg(&tokens).unwrap();
+//         let _ = typer::type_prg(&src_tree).unwrap();
+//         let trgt_tree = super::translate(&src_tree);
+
+//         insta::assert_yaml_snapshot!(trgt_tree, @r"");
+//     }
+// }
