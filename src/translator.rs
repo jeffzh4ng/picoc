@@ -1,4 +1,4 @@
-use crate::{IBinOp, IExpr, IPrg, IStmt, SBinOp, SDef, SExpr, SFuncDef, SPrg, SStmt};
+use crate::{IBinOp, IExpr, IPrg, IStmt, Label, SBinOp, SDef, SExpr, SFuncDef, SPrg, SStmt, Temp};
 
 pub fn translate(src_tree: &SPrg) -> IPrg {
     let trgt_prg = src_tree
@@ -13,16 +13,22 @@ pub fn translate(src_tree: &SPrg) -> IPrg {
 }
 
 fn translate_func_def(fd: &SFuncDef) -> Vec<IStmt> {
-    let label = IStmt::LabelDef(fd.alias.clone());
+    let label = IStmt::LabelDef(Label::User(fd.alias.clone()));
+    // todo: formal params
     let stmts = fd
         .body
         .iter()
-        .map(|stmt| match stmt {
-            SStmt::Asnmt(vd) => todo!(),
+        .map(|s_stmt| match s_stmt {
+            SStmt::Asnmt(vd) => {
+                let expr = translate_expr(&vd.expr);
+                let temp = Temp::User(vd.alias.clone());
+                IStmt::Compute(temp, expr)
+            }
             SStmt::IfEls { cond, then, els } => todo!(),
             SStmt::While { cond, body } => todo!(),
-            SStmt::Return(expr) => Box::new(IStmt::Return(translate_expr(expr))),
+            SStmt::Return(expr) => IStmt::Return(translate_expr(expr)),
         })
+        .map(|i_stmt| Box::new(i_stmt))
         .collect::<Vec<_>>();
 
     let fd = IStmt::Seq(stmts);
@@ -67,7 +73,7 @@ fn translate_expr(e: &SExpr) -> IExpr {
         SExpr::LogE { op, l, r } => todo!(),
         SExpr::BitE { op, l, r } => todo!(),
         SExpr::RelE { op, l, r } => todo!(),
-        SExpr::VarApp(alias) => IExpr::TempUse(alias.clone()),
+        SExpr::VarApp(alias) => IExpr::TempUse(Temp::User(alias.clone())),
         SExpr::FuncApp { alias, ap } => todo!(),
     }
 }
@@ -96,7 +102,8 @@ mod test_arithmetic {
 
         insta::assert_yaml_snapshot!(trgt_tree, @r###"
         ---
-        - LabelDef: main
+        - LabelDef:
+            User: main
         - Seq:
             - Return:
                 BinOp:
@@ -107,28 +114,39 @@ mod test_arithmetic {
     }
 }
 
-// #[cfg(test)]
-// mod test_bindings {
-//     use crate::lexer;
-//     use crate::parser;
-//     use crate::typer;
-//     use std::fs;
+#[cfg(test)]
+mod test_bindings {
+    use crate::lexer;
+    use crate::parser;
+    use crate::typer;
+    use std::fs;
 
-//     const TEST_DIR: &str = "tests/fixtures/snap/shared/bindings";
+    const TEST_DIR: &str = "tests/fixtures/snap/shared/bindings";
 
-//     #[test]
-//     fn formal_param() {
-//         let chars = fs::read(format!("{TEST_DIR}/formal_param.c"))
-//             .expect("file dne")
-//             .iter()
-//             .map(|b| *b as char)
-//             .collect::<Vec<_>>();
+    #[test]
+    fn asnmt() {
+        let chars = fs::read(format!("{TEST_DIR}/asnmt.c"))
+            .expect("file dne")
+            .iter()
+            .map(|b| *b as char)
+            .collect::<Vec<_>>();
 
-//         let tokens = lexer::lex(&chars).unwrap();
-//         let src_tree = parser::parse_prg(&tokens).unwrap();
-//         let _ = typer::type_prg(&src_tree).unwrap();
-//         let trgt_tree = super::translate(&src_tree);
+        let tokens = lexer::lex(&chars).unwrap();
+        let src_tree = parser::parse_prg(&tokens).unwrap();
+        let _ = typer::type_prg(&src_tree).unwrap();
+        let trgt_tree = super::translate(&src_tree);
 
-//         insta::assert_yaml_snapshot!(trgt_tree, @r"");
-//     }
-// }
+        insta::assert_yaml_snapshot!(trgt_tree, @r###"
+        ---
+        - LabelDef:
+            User: main
+        - Seq:
+            - Compute:
+                - User: x
+                - Const: 8
+            - Return:
+                TempUse:
+                  User: x
+        "###);
+    }
+}

@@ -5,7 +5,7 @@ use std::collections::HashMap;
 pub mod allocator;
 pub mod lexer;
 pub mod parser;
-pub mod selector;
+// pub mod selector;
 pub mod translator;
 pub mod typer;
 
@@ -96,23 +96,54 @@ common_enum! { pub enum SUnaryOp { Add, Sub } }
 type IPrg = Vec<IStmt>;
 common_enum! {
     pub enum IStmt {
-        Jump(String), CJump(SExpr, String, String), LabelDef(String), // control
-        Store, // bindings
+        Jump(Label), CJump(SExpr, Label, Label), LabelDef(Label), // control
+        Compute(Temp, IExpr), Load(Temp, Mem), Store(Mem, Temp), // bindings
         Seq(Vec<Box<IStmt>>), Return(IExpr), // functions
     }
 }
 
 common_enum! {
     pub enum IExpr {
-        Const(i32), BinOp(IBinOp, Box<IExpr>, Box<IExpr>), // arithmetic
-        TempUse(String), Load(String), // bindings
-        Call(String, Vec<IExpr>), // functions
+        Const(i32), BinOp(IBinOp, Box<IExpr>, Box<IExpr>), // arithmetic``
+        TempUse(Temp), // bindings.
+        Call(Label, Vec<IExpr>), // functions
     }
 }
 
 common_enum! { pub enum IBinOp { Add, Sub, Mult, Div, Mod } }
 common_enum! { pub enum IBitOp { And, Or, Xor } }
 common_enum! { pub enum IRelOp { Eq, Neq, And, Or, LtEq, Lt, GtEq, Gt } }
+
+//
+//
+//
+// *********************************************************************************************************************
+// ****************************************** INTERMEDIATE/TARGET REFERENCES *******************************************
+// *********************************************************************************************************************
+
+type Imm = i32;
+common_enum! { pub enum Temp { User(String), Machine(usize) } }
+common_enum! { pub enum Mem { String } }
+common_enum! { pub enum Label { User(String), Machine(usize) } }
+
+static mut TEMP_COUNTER: usize = 0;
+static mut LABEL_COUNTER: usize = 0;
+
+pub fn fresh_temp() -> Temp {
+    unsafe {
+        let temp = TEMP_COUNTER;
+        TEMP_COUNTER += 1;
+        Temp::Machine(temp)
+    }
+}
+
+pub fn fresh_label() -> Label {
+    unsafe {
+        let label = LABEL_COUNTER;
+        LABEL_COUNTER += 1;
+        Label::Machine(label)
+    }
+}
 
 //
 //
@@ -142,11 +173,6 @@ common_enum! { pub enum TImmOp {
 common_enum! { pub enum TMemOp {
     Load, Store, // bindings
 }}
-
-type Temp = usize;
-type Mem = String;
-type Label = String;
-type Imm = i32;
 
 // target register abi
 pub const RISCV_ABI: &[(&str, &str)] = &[

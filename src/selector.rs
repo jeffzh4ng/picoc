@@ -1,15 +1,5 @@
 use crate::{IBinOp, IExpr, IPrg, IStmt, TImmOp, TQuad, TRegOp, Temp};
 
-static mut TEMP_COUNTER: usize = 0;
-
-pub fn fresh_temp() -> Temp {
-    unsafe {
-        let temp = TEMP_COUNTER;
-        TEMP_COUNTER += 1;
-        temp
-    }
-}
-
 pub fn select(prg: &IPrg) -> Vec<TQuad> {
     todo!()
 }
@@ -19,7 +9,8 @@ fn select_stmt(s: &IStmt) -> Vec<TQuad> {
         IStmt::Jump(_) => todo!(),
         IStmt::CJump(sexpr, _, _) => todo!(),
         IStmt::LabelDef(_) => todo!(),
-        IStmt::Store => todo!(),
+        IStmt::Load(_, _) => todo!(),
+        IStmt::Store(_, _) => todo!(),
         IStmt::Seq(vec) => todo!(),
         IStmt::Return(iexpr) => {
             let t = fresh_temp();
@@ -50,7 +41,6 @@ fn select_expr(d: Temp, e: &IExpr) -> Vec<TQuad> {
             lq.into_iter().chain(rq).chain(instr).collect()
         }
         IExpr::TempUse(_) => todo!(),
-        IExpr::Load(_) => todo!(),
         IExpr::Call(_, vec) => todo!(),
     }
 }
