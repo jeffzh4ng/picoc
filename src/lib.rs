@@ -5,7 +5,7 @@ use std::collections::HashMap;
 pub mod allocator;
 pub mod lexer;
 pub mod parser;
-// pub mod selector;
+pub mod selector;
 pub mod translator;
 pub mod typer;
 
@@ -126,7 +126,7 @@ common_enum! { pub enum IRelOp { Eq, Neq, And, Or, LtEq, Lt, GtEq, Gt } }
 // *********************************************************************************************************************
 
 type Imm = i32;
-common_enum! { pub enum Temp { User(String), Machine(usize) } }
+common_enum! { pub enum Temp { User(String), Machine(usize), Reg(String) } }
 common_enum! { pub enum Mem { String } }
 common_enum! { pub enum Label { User(String), Machine(usize) } }
 
@@ -149,6 +149,83 @@ pub fn fresh_label() -> Label {
     }
 }
 
+// target register abi
+pub struct RiscvAbi {
+    pub zero: &'static str,
+    pub ra: &'static str, // return addres
+    pub sp: &'static str, // stack pointer
+    pub gp: &'static str, // global pointer
+    pub tp: &'static str, // frame pointer
+    // temporaries
+    pub t0: &'static str,
+    pub t1: &'static str,
+    pub t2: &'static str,
+    // saved registers
+    pub s0: &'static str,
+    pub s1: &'static str,
+    // argument/return registers
+    pub a0: &'static str,
+    pub a1: &'static str,
+    pub a2: &'static str,
+    pub a3: &'static str,
+    pub a4: &'static str,
+    pub a5: &'static str,
+    pub a6: &'static str,
+    pub a7: &'static str,
+    // more saved registers
+    pub s2: &'static str,
+    pub s3: &'static str,
+    pub s4: &'static str,
+    pub s5: &'static str,
+    pub s6: &'static str,
+    pub s7: &'static str,
+    pub s8: &'static str,
+    pub s9: &'static str,
+    pub s10: &'static str,
+    pub s11: &'static str,
+    pub t3: &'static str,
+    pub t4: &'static str,
+    pub t5: &'static str,
+    pub t6: &'static str,
+    pub pc: &'static str,
+}
+
+pub const RISCV_ABI: RiscvAbi = RiscvAbi {
+    zero: "zero", // x0
+    ra: "ra",     // x1
+    sp: "sp",     // x2
+    gp: "gp",     // x3
+    tp: "tp",     // x4
+    t0: "t0",     // x5
+    t1: "t1",     // x6
+    t2: "t2",     // x7
+    s0: "s0",     // x8
+    s1: "s1",     // x9
+    a0: "a0",     // x10
+    a1: "a1",     // x11
+    a2: "a2",     // x12
+    a3: "a3",     // x13
+    a4: "a4",     // x14
+    a5: "a5",     // x15
+    a6: "a6",     // x16
+    a7: "a7",     // x17
+    s2: "s2",     // x18
+    s3: "s3",     // x19
+    s4: "s4",     // x20
+    s5: "s5",     // x21
+    s6: "s6",     // x22
+    s7: "s7",     // x23
+    s8: "s8",     // x24
+    s9: "s9",     // x25
+    s10: "s10",   // x26
+    s11: "s11",   // x27
+    t3: "t3",     // x28
+    t4: "t4",     // x29
+    t5: "t5",     // x30
+    t6: "t6",     // x31
+    pc: "pc",     // x32
+};
+
 //
 //
 //
@@ -158,9 +235,9 @@ pub fn fresh_label() -> Label {
 
 // target 3AC quads
 common_enum! { pub enum TQuad {
-    RegQuad(TRegOp, Temp, Temp, Temp),
-    ImmQuad(TImmOp, Temp, Temp, Imm),
-    MemQuad(TMemOp, Temp, Mem, Mem),
+    Reg(TRegOp, Temp, Temp, Temp),
+    Imm(TImmOp, Temp, Temp, Imm),
+    Mem(TMemOp, Temp, Mem, Mem),
 }}
 
 common_enum! { pub enum TRegOp {
@@ -177,49 +254,3 @@ common_enum! { pub enum TImmOp {
 common_enum! { pub enum TMemOp {
     Load, Store, // bindings
 }}
-
-// target register abi
-pub const RISCV_ABI: &[(&str, &str)] = &[
-    // zero register
-    ("x0", "zero"),
-    // return address
-    ("x1", "ra"),
-    // stack/frame pointers
-    ("x2", "sp"),
-    ("x3", "gp"),
-    ("x4", "tp"),
-    // temporaries
-    ("x5", "t0"),
-    ("x6", "t1"),
-    ("x7", "t2"),
-    // saved registers
-    ("x8", "s0"),
-    ("x9", "s1"),
-    // arguments/return values
-    ("x10", "a0"),
-    ("x11", "a1"),
-    ("x12", "a2"),
-    ("x13", "a3"),
-    ("x14", "a4"),
-    ("x15", "a5"),
-    ("x16", "a6"),
-    ("x17", "a7"),
-    // more saved registers
-    ("x18", "s2"),
-    ("x19", "s3"),
-    ("x20", "s4"),
-    ("x21", "s5"),
-    ("x22", "s6"),
-    ("x23", "s7"),
-    ("x24", "s8"),
-    ("x25", "s9"),
-    ("x26", "s10"),
-    ("x27", "s11"),
-    // more temporaries
-    ("x28", "t3"),
-    ("x29", "t4"),
-    ("x30", "t5"),
-    ("x31", "t6"),
-    // program counter
-    ("x32", "pc"),
-];

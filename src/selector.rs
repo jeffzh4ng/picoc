@@ -1,21 +1,32 @@
-use crate::{IBinOp, IExpr, IPrg, IStmt, TImmOp, TQuad, TRegOp, Temp};
+use crate::{fresh_temp, IBinOp, IExpr, IPrg, IStmt, TImmOp, TQuad, TRegOp, Temp, RISCV_ABI};
 
 pub fn select(prg: &IPrg) -> Vec<TQuad> {
-    todo!()
+    let trgt_prg = prg.iter().flat_map(|stmt| select_stmt(stmt)).collect();
+    trgt_prg
 }
 
 fn select_stmt(s: &IStmt) -> Vec<TQuad> {
     match s {
         IStmt::Jump(_) => todo!(),
         IStmt::CJump(sexpr, _, _) => todo!(),
-        IStmt::LabelDef(_) => todo!(),
+        IStmt::LabelDef(l) => {
+            // tile funcdef vs label? todo
+            vec![]
+        }
+        IStmt::Compute(temp, iexpr) => todo!(),
         IStmt::Load(_, _) => todo!(),
         IStmt::Store(_, _) => todo!(),
-        IStmt::Seq(vec) => todo!(),
+        IStmt::Seq(stmts) => stmts.iter().flat_map(|stmt| select_stmt(stmt)).collect(),
         IStmt::Return(iexpr) => {
             let t = fresh_temp();
-            let foo = select_expr(t, iexpr);
-            todo!()
+            let expr_instrs = select_expr(t.clone(), iexpr);
+            let ret_instr = vec![TQuad::Imm(
+                TImmOp::AddI,
+                Temp::Reg(RISCV_ABI.ra.to_string()),
+                t,
+                0,
+            )];
+            expr_instrs.into_iter().chain(ret_instr).collect()
         }
     }
 }
@@ -24,7 +35,12 @@ fn select_stmt(s: &IStmt) -> Vec<TQuad> {
 // we refer to recursive computations via temps
 fn select_expr(d: Temp, e: &IExpr) -> Vec<TQuad> {
     match e {
-        IExpr::Const(n) => vec![TQuad::ImmQuad(TImmOp::AddI, d, 0, *n)],
+        IExpr::Const(n) => vec![TQuad::Imm(
+            TImmOp::AddI,
+            d,
+            Temp::Reg(RISCV_ABI.zero.to_string()),
+            *n,
+        )],
         IExpr::BinOp(op, l, r) => {
             let op = match op {
                 IBinOp::Add => TRegOp::Add,
@@ -35,8 +51,8 @@ fn select_expr(d: Temp, e: &IExpr) -> Vec<TQuad> {
             };
 
             let (ltemp, rtemp) = (fresh_temp(), fresh_temp());
-            let (lq, rq) = (select_expr(ltemp, l), select_expr(rtemp, r));
-            let instr = vec![TQuad::RegQuad(op, d, ltemp, rtemp)];
+            let (lq, rq) = (select_expr(ltemp.clone(), l), select_expr(rtemp.clone(), r));
+            let instr = vec![TQuad::Reg(op, d, ltemp, rtemp)];
 
             lq.into_iter().chain(rq).chain(instr).collect()
         }
@@ -69,6 +85,28 @@ mod test_arithmetic {
         let trgt_tree = translator::translate(&src_tree);
         let abs_as = super::select(&trgt_tree);
 
-        insta::assert_yaml_snapshot!(trgt_tree, @r"");
+        insta::assert_yaml_snapshot!(abs_as, @r###"
+        ---
+        - Imm:
+            - AddI
+            - Machine: 1
+            - Reg: zero
+            - 9
+        - Imm:
+            - AddI
+            - Machine: 2
+            - Reg: zero
+            - 10
+        - Reg:
+            - Add
+            - Machine: 0
+            - Machine: 1
+            - Machine: 2
+        - Imm:
+            - AddI
+            - Reg: ra
+            - Machine: 0
+            - 0
+        "###);
     }
 }

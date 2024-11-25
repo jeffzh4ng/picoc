@@ -1,7 +1,7 @@
 use crate::{IBinOp, IExpr, IPrg, IStmt, Label, SBinOp, SDef, SExpr, SFuncDef, SPrg, SStmt, Temp};
 
 pub fn translate(src_tree: &SPrg) -> IPrg {
-    let trgt_prg = src_tree
+    let intrm_prg = src_tree
         .iter()
         .flat_map(|def| match def {
             SDef::FuncDef(func_def) => translate_func_def(func_def),
@@ -9,11 +9,12 @@ pub fn translate(src_tree: &SPrg) -> IPrg {
         })
         .collect::<Vec<_>>();
 
-    trgt_prg
+    intrm_prg
 }
 
 fn translate_func_def(fd: &SFuncDef) -> Vec<IStmt> {
     let label = IStmt::LabelDef(Label::User(fd.alias.clone()));
+
     // todo: formal params
     let stmts = fd
         .body
@@ -82,7 +83,7 @@ fn translate_expr(e: &SExpr) -> IExpr {
 }
 
 #[cfg(test)]
-mod test_arithmetic {
+mod test_arith {
     use crate::lexer;
     use crate::parser;
     use crate::typer;
