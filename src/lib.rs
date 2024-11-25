@@ -28,18 +28,9 @@ macro_rules! common_enum {
     }
 }
 
-// TODO: for loops, etc.
-type SugaredPrg = Vec<()>;
-
 // *********************************************************************************************************************
-// *********************************************** SOURCE REPRESENTATION ***********************************************
+// ************************************************ SOURCE ENVIRONMENTS ************************************************
 // *********************************************************************************************************************
-
-// ***** prg: Vec<Defs> *****
-type SPrg = Vec<SDef>;
-common_enum! { pub enum SDef { FuncDef(SFuncDef), VarDef(SVarDef) } }
-common_struct! { pub struct SFuncDef {pub alias: String,  pub typ: Type, pub fps: Vec<(String, Type)>, pub body: Vec<SStmt> } } // fp needs Type for statics, and String for dynamics
-common_struct! { pub struct SVarDef { pub alias: String, pub typ: Type, pub expr: Box<SExpr> }} // UpdateBind { alias: String, op: BinOp, expr: Box<Expr> }
 
 // ***** static tnv: Map<Alias, Type> *****
 common_struct! { pub struct Tnv { fnv: HashMap<String, LambdaType>, vnv: HashMap<String, Type> }}
@@ -50,6 +41,19 @@ common_enum! { pub enum Type { Int, Bool, Void } } // Cond(Type::Bool, Box<Type>
 common_struct! { pub struct Vnv { fnv: HashMap<String, LambdaVal>, vnv: HashMap<String, i32> }} // todo, -> Val
 common_struct! { pub struct LambdaVal { pub fp: Vec<String>, pub body: Vec<SStmt>} } // fp's only need types (tags) if implementing safety dynamically
 common_enum! { pub enum Val { Int(i32), Bool(bool), Str(String) } }
+
+// *********************************************************************************************************************
+// *********************************************** SOURCE REPRESENTATION ***********************************************
+// *********************************************************************************************************************
+
+// TODO: for loops, etc.
+type SugaredPrg = Vec<()>;
+
+// ***** prg: Vec<Defs> *****
+type SPrg = Vec<SDef>;
+common_enum! { pub enum SDef { FuncDef(SFuncDef), VarDef(SVarDef) } }
+common_struct! { pub struct SFuncDef {pub alias: String,  pub typ: Type, pub fps: Vec<(String, Type)>, pub body: Vec<SStmt> } } // fp needs Type for statics, and String for dynamics
+common_struct! { pub struct SVarDef { pub alias: String, pub typ: Type, pub expr: Box<SExpr> }} // UpdateBind { alias: String, op: BinOp, expr: Box<Expr> }
 
 common_enum! {
     pub enum SStmt {
