@@ -63,7 +63,7 @@ fn parse_funcdef(tokens: &[Token]) -> Result<(SFuncDef, &[Token]), io::Error> {
         SFuncDef {
             alias: alias.lexeme.to_string(),
             typ: Type::Int,
-            fp: fps,
+            fps,
             body: stmts,
         },
         r,
@@ -456,7 +456,7 @@ fn parse_funcapp(tokens: &[Token]) -> Result<(SExpr, &[Token]), io::Error> {
                 let (_, r) = eat(r, TT::PuncRightParen)?;
 
                 match left {
-                    SExpr::VarApp(alias) => Ok((SExpr::FuncApp { alias, ap: aps }, r)),
+                    SExpr::VarApp(alias) => Ok((SExpr::FuncApp { alias, aps }, r)),
                     _ => Err(io::Error::new(
                         io::ErrorKind::Other,
                         "expected alias".to_string(),
@@ -512,7 +512,7 @@ mod test_arith {
         - FuncDef:
             alias: main
             typ: Int
-            fp: []
+            fps: []
             body:
               - Return:
                   Int: 8
@@ -534,7 +534,7 @@ mod test_arith {
         - FuncDef:
             alias: main
             typ: Int
-            fp: []
+            fps: []
             body:
               - Return:
                   BinE:
@@ -561,7 +561,7 @@ mod test_arith {
         - FuncDef:
             alias: main
             typ: Int
-            fp: []
+            fps: []
             body:
               - Return:
                   BinE:
@@ -593,7 +593,7 @@ mod test_arith {
         - FuncDef:
             alias: main
             typ: Int
-            fp: []
+            fps: []
             body:
               - Return:
                   BinE:
@@ -620,7 +620,7 @@ mod test_arith {
         - FuncDef:
             alias: main
             typ: Int
-            fp: []
+            fps: []
             body:
               - Return:
                   BinE:
@@ -647,7 +647,7 @@ mod test_arith {
         - FuncDef:
             alias: main
             typ: Int
-            fp: []
+            fps: []
             body:
               - Return:
                   BinE:
@@ -674,7 +674,7 @@ mod test_arith {
         - FuncDef:
             alias: main
             typ: Int
-            fp: []
+            fps: []
             body:
               - Return:
                   BinE:
@@ -706,7 +706,7 @@ mod test_arith {
         - FuncDef:
             alias: main
             typ: Int
-            fp: []
+            fps: []
             body:
               - Return:
                   BinE:
@@ -738,7 +738,7 @@ mod test_arith {
         - FuncDef:
             alias: main
             typ: Int
-            fp: []
+            fps: []
             body:
               - Return:
                   BinE:
@@ -770,7 +770,7 @@ mod test_arith {
         - FuncDef:
             alias: main
             typ: Int
-            fp: []
+            fps: []
             body:
               - Return:
                   BinE:
@@ -814,7 +814,7 @@ mod test_control_c0 {
         - FuncDef:
             alias: main
             typ: Int
-            fp: []
+            fps: []
             body:
               - IfEls:
                   cond:
@@ -843,7 +843,7 @@ mod test_control_c0 {
         - FuncDef:
             alias: main
             typ: Int
-            fp: []
+            fps: []
             body:
               - IfEls:
                   cond:
@@ -908,7 +908,7 @@ mod test_control_c89 {
         - FuncDef:
             alias: main
             typ: Int
-            fp: []
+            fps: []
             body:
               - Return:
                   RelE:
@@ -935,7 +935,7 @@ mod test_control_c89 {
         - FuncDef:
             alias: main
             typ: Int
-            fp: []
+            fps: []
             body:
               - Return:
                   RelE:
@@ -962,7 +962,7 @@ mod test_control_c89 {
         - FuncDef:
             alias: main
             typ: Int
-            fp: []
+            fps: []
             body:
               - Return:
                   RelE:
@@ -989,7 +989,7 @@ mod test_control_c89 {
         - FuncDef:
             alias: main
             typ: Int
-            fp: []
+            fps: []
             body:
               - Return:
                   RelE:
@@ -1016,7 +1016,7 @@ mod test_control_c89 {
         - FuncDef:
             alias: main
             typ: Int
-            fp: []
+            fps: []
             body:
               - Return:
                   RelE:
@@ -1043,7 +1043,7 @@ mod test_control_c89 {
         - FuncDef:
             alias: main
             typ: Int
-            fp: []
+            fps: []
             body:
               - Return:
                   RelE:
@@ -1070,7 +1070,7 @@ mod test_control_c89 {
         - FuncDef:
             alias: main
             typ: Int
-            fp: []
+            fps: []
             body:
               - IfEls:
                   cond:
@@ -1163,14 +1163,14 @@ mod test_bindings {
         - FuncDef:
             alias: h
             typ: Int
-            fp: []
+            fps: []
             body:
               - Return:
                   Int: 11
         - FuncDef:
             alias: g
             typ: Int
-            fp: []
+            fps: []
             body:
               - Return:
                   BinE:
@@ -1180,11 +1180,11 @@ mod test_bindings {
                     r:
                       FuncApp:
                         alias: h
-                        ap: []
+                        aps: []
         - FuncDef:
             alias: f
             typ: Int
-            fp: []
+            fps: []
             body:
               - Return:
                   BinE:
@@ -1194,16 +1194,16 @@ mod test_bindings {
                     r:
                       FuncApp:
                         alias: g
-                        ap: []
+                        aps: []
         - FuncDef:
             alias: main
             typ: Int
-            fp: []
+            fps: []
             body:
               - Return:
                   FuncApp:
                     alias: f
-                    ap: []
+                    aps: []
         "###);
     }
 
@@ -1222,7 +1222,7 @@ mod test_bindings {
         - FuncDef:
             alias: f
             typ: Int
-            fp:
+            fps:
               - - x
                 - Int
             body:
@@ -1236,12 +1236,12 @@ mod test_bindings {
         - FuncDef:
             alias: main
             typ: Int
-            fp: []
+            fps: []
             body:
               - Return:
                   FuncApp:
                     alias: f
-                    ap:
+                    aps:
                       - Int: 9
         "###);
     }
@@ -1261,7 +1261,7 @@ mod test_bindings {
         - FuncDef:
             alias: f
             typ: Int
-            fp:
+            fps:
               - - x
                 - Int
               - - y
@@ -1277,12 +1277,12 @@ mod test_bindings {
         - FuncDef:
             alias: main
             typ: Int
-            fp: []
+            fps: []
             body:
               - Return:
                   FuncApp:
                     alias: f
-                    ap:
+                    aps:
                       - Int: 9
                       - Int: 10
         "###);
@@ -1303,7 +1303,7 @@ mod test_bindings {
         - FuncDef:
             alias: main
             typ: Int
-            fp: []
+            fps: []
             body:
               - Asnmt:
                   alias: x

@@ -74,7 +74,7 @@ fn translate_expr(e: &SExpr) -> IExpr {
         SExpr::BitE { op, l, r } => todo!(),
         SExpr::RelE { op, l, r } => todo!(),
         SExpr::VarApp(alias) => IExpr::TempUse(Temp::User(alias.clone())),
-        SExpr::FuncApp { alias, ap } => {
+        SExpr::FuncApp { alias, aps: ap } => {
             let aps = ap.iter().map(|e| translate_expr(e)).collect::<Vec<_>>();
             IExpr::Call(Label::User(alias.clone()), aps)
         }
@@ -213,19 +213,19 @@ mod test_functions {
         "###);
     }
 
-    // #[test]
-    // fn formal_param() {
-    //     let chars = fs::read(format!("{TEST_DIR}/formal_param.c"))
-    //         .expect("file dne")
-    //         .iter()
-    //         .map(|b| *b as char)
-    //         .collect::<Vec<_>>();
+    #[test]
+    fn formal_param() {
+        let chars = fs::read(format!("{TEST_DIR}/formal_param.c"))
+            .expect("file dne")
+            .iter()
+            .map(|b| *b as char)
+            .collect::<Vec<_>>();
 
-    //     let tokens = lexer::lex(&chars).unwrap();
-    //     let src_tree = parser::parse_prg(&tokens).unwrap();
-    //     let _ = typer::type_prg(&src_tree).unwrap();
-    //     let trgt_tree = super::translate(&src_tree);
+        let tokens = lexer::lex(&chars).unwrap();
+        let src_tree = parser::parse_prg(&tokens).unwrap();
+        let _ = typer::type_prg(&src_tree).unwrap();
+        let trgt_tree = super::translate(&src_tree);
 
-    //     insta::assert_yaml_snapshot!(trgt_tree, @r"");
-    // }
+        insta::assert_yaml_snapshot!(trgt_tree, @r"");
+    }
 }

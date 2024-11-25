@@ -38,7 +38,7 @@ type SugaredPrg = Vec<()>;
 // ***** prg: Vec<Defs> *****
 type SPrg = Vec<SDef>;
 common_enum! { pub enum SDef { FuncDef(SFuncDef), VarDef(SVarDef) } }
-common_struct! { pub struct SFuncDef {pub alias: String,  pub typ: Type, pub fp: Vec<(String, Type)>, pub body: Vec<SStmt> } } // fp needs Type for statics, and String for dynamics
+common_struct! { pub struct SFuncDef {pub alias: String,  pub typ: Type, pub fps: Vec<(String, Type)>, pub body: Vec<SStmt> } } // fp needs Type for statics, and String for dynamics
 common_struct! { pub struct SVarDef { pub alias: String, pub typ: Type, pub expr: Box<SExpr> }} // UpdateBind { alias: String, op: BinOp, expr: Box<Expr> }
 
 // ***** static tnv: Map<Alias, Type> *****
@@ -67,7 +67,7 @@ common_enum! {
         // elims
         UnaryE { op: SUnaryOp, l: Box<SExpr> }, BinE { op: SBinOp, l: Box<SExpr>, r: Box<SExpr> }, LogE { op: SLogOp, l: Box<SExpr>, r: Box<SExpr> },
         BitE { op: SBitOp, l: Box<SExpr>, r: Box<SExpr> }, RelE { op: SRelOp, l: Box<SExpr>, r: Box<SExpr> },
-        VarApp(String), FuncApp{ alias: String, ap: Vec<SExpr> }
+        VarApp(String), FuncApp{ alias: String, aps: Vec<SExpr> }
     }
 }
 
@@ -105,7 +105,7 @@ common_enum! {
 common_enum! {
     pub enum IExpr {
         Const(i32), BinOp(IBinOp, Box<IExpr>, Box<IExpr>), // arithmetic``
-        TempUse(Temp), // bindings.
+        TempUse(Temp), // bindings
         Call(Label, Vec<IExpr>), // functions
     }
 }

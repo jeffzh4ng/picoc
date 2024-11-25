@@ -16,7 +16,7 @@ pub fn type_prg(prg: &SPrg) -> Result<Type, io::Error> {
                     tnv.fnv.insert(
                         fd.alias.clone(),
                         LambdaType {
-                            fp: fd.fp.iter().map(|(_, t)| t.clone()).collect(),
+                            fp: fd.fps.iter().map(|(_, t)| t.clone()).collect(),
                             body: t,
                         },
                     );
@@ -48,7 +48,7 @@ pub fn type_func(
     // -------------------------------------------------------
     //    Γ ⊢ (lambda e1:T1 ... en:Tn B) : (T1 * ... * Tn -> T2)
 
-    let _ = fd.fp.iter().for_each(|(a, t)| {
+    let _ = fd.fps.iter().for_each(|(a, t)| {
         ltnv.insert(a.clone(), t.clone()); // Γ [e1 <- T1], ... [en <- Tn]
     });
 
@@ -143,7 +143,7 @@ pub fn type_expr(e: &SExpr, gtnv: &Tnv, ltnv: &HashMap<String, Type>) -> Result<
             .get(alias)
             .cloned()
             .ok_or(io::Error::new(io::ErrorKind::Other, "type error")),
-        SExpr::FuncApp { alias, ap } => {
+        SExpr::FuncApp { alias, aps: ap } => {
             //    Γ ⊢ f : (T1-> T2)      Γ ⊢ e : T1, ... Γ ⊢ e : Tn
             // ------------------------------------------------------- FUNC_APP
             //             Γ ⊢ f(e1, ... en) : T2

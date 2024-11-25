@@ -1,4 +1,4 @@
-use picoc089::{lexer, parser, selector, translator, typer};
+use picoc089::{lexer, parser, translator, typer};
 use std::{env, fs};
 
 fn main() {
@@ -41,8 +41,8 @@ fn main() {
         // }
         "compilec89" => {
             let trgt_tree = translator::translate(&src_tree); // tree -> ssa -> son
-            let abs_as = selector::select(&trgt_tree); // maximal munch -> peephole
-                                                       //   let assembly = allocator::allocate(&abstract_assembly).unwrap(); // graph coloring -> linear-scan
+                                                              // let abs_as = selector::select(&trgt_tree); // maximal munch -> peephole
+                                                              //   let assembly = allocator::allocate(&abstract_assembly).unwrap(); // graph coloring -> linear-scan
 
             // let mut f = fs::File::create("./tmp.s").expect("picoc-error: unable to create file");
             // f.write_all(assembly.join("\n").as_bytes())
