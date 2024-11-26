@@ -13,7 +13,7 @@ pub fn translate(src_tree: &SPrg) -> IPrg {
 }
 
 fn translate_func_def(fd: &SFuncDef) -> Vec<IStmt> {
-    let label = IStmt::LabelDef(Label::User(fd.alias.clone()));
+    let label = IStmt::LabelDef(Label::UserLabel(fd.alias.clone()));
 
     // todo: formal params
     let stmts = fd
@@ -22,7 +22,7 @@ fn translate_func_def(fd: &SFuncDef) -> Vec<IStmt> {
         .map(|s_stmt| match s_stmt {
             SStmt::Asnmt(vd) => {
                 let expr = translate_expr(&vd.expr);
-                let temp = Temp::User(vd.alias.clone());
+                let temp = Temp::UserTemp(vd.alias.clone());
                 IStmt::Compute(temp, expr)
                 // ************************************* ??????????????zsd
             }
@@ -75,10 +75,10 @@ fn translate_expr(e: &SExpr) -> IExpr {
         SExpr::LogE { op, l, r } => todo!(),
         SExpr::BitE { op, l, r } => todo!(),
         SExpr::RelE { op, l, r } => todo!(),
-        SExpr::VarApp(alias) => IExpr::TempUse(Temp::User(alias.clone())),
+        SExpr::VarApp(alias) => IExpr::TempUse(Temp::UserTemp(alias.clone())),
         SExpr::FuncApp { alias, aps: ap } => {
             let aps = ap.iter().map(|e| translate_expr(e)).collect::<Vec<_>>();
-            IExpr::Call(Label::User(alias.clone()), aps)
+            IExpr::Call(Label::UserLabel(alias.clone()), aps)
         }
     }
 }
@@ -108,7 +108,7 @@ mod test_arith {
         insta::assert_yaml_snapshot!(trgt_tree, @r###"
         ---
         - LabelDef:
-            User: main
+            UserLabel: main
         - Seq:
             - Return:
                 BinOp:
@@ -144,14 +144,14 @@ mod test_bindings {
         insta::assert_yaml_snapshot!(trgt_tree, @r###"
         ---
         - LabelDef:
-            User: main
+            UserLabel: main
         - Seq:
             - Compute:
-                - User: x
+                - UserTemp: x
                 - Const: 8
             - Return:
                 TempUse:
-                  User: x
+                  UserTemp: x
         "###);
     }
 }
@@ -181,36 +181,36 @@ mod test_functions {
         insta::assert_yaml_snapshot!(trgt_tree, @r###"
         ---
         - LabelDef:
-            User: h
+            UserLabel: h
         - Seq:
             - Return:
                 Const: 11
         - LabelDef:
-            User: g
+            UserLabel: g
         - Seq:
             - Return:
                 BinOp:
                   - Add
                   - Const: 10
                   - Call:
-                      - User: h
+                      - UserLabel: h
                       - []
         - LabelDef:
-            User: f
+            UserLabel: f
         - Seq:
             - Return:
                 BinOp:
                   - Add
                   - Const: 9
                   - Call:
-                      - User: g
+                      - UserLabel: g
                       - []
         - LabelDef:
-            User: main
+            UserLabel: main
         - Seq:
             - Return:
                 Call:
-                  - User: f
+                  - UserLabel: f
                   - []
         "###);
     }

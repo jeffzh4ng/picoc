@@ -162,23 +162,23 @@ mod test_arith {
             - 16
         - Imm:
             - AddI
-            - Machine: 1
+            - MachineTemp: 1
             - UtilReg: Z
             - 9
         - Imm:
             - AddI
-            - Machine: 2
+            - MachineTemp: 2
             - UtilReg: Z
             - 10
         - Reg:
             - Add
-            - Machine: 0
-            - Machine: 1
-            - Machine: 2
+            - MachineTemp: 0
+            - MachineTemp: 1
+            - MachineTemp: 2
         - Imm:
             - AddI
             - UtilReg: Ra
-            - Machine: 0
+            - MachineTemp: 0
             - 0
         - Mem:
             - Load

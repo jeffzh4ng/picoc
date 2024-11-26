@@ -136,8 +136,8 @@ common_enum! { pub enum IRelOp { Eq, Neq, And, Or, LtEq, Lt, GtEq, Gt } }
 // addresses with as and ld.
 
 type Imm = i32;
-common_enum! { pub enum Temp { User(String), Machine(usize), UtilReg(RiscvUtilReg) } } // only util regs in abstract assembly
-common_enum! { pub enum Label { User(String), Machine(usize) } }
+common_enum! { pub enum Temp { UserTemp(String), MachineTemp(usize), UtilReg(RiscvUtilReg) } } // only util regs in abstract assembly
+common_enum! { pub enum Label { UserLabel(String), MachineLabel(usize) } }
 
 static mut TEMP_COUNTER: usize = 0;
 static mut LABEL_COUNTER: usize = 0;
@@ -146,7 +146,7 @@ pub fn fresh_temp() -> Temp {
     unsafe {
         let temp = TEMP_COUNTER;
         TEMP_COUNTER += 1;
-        Temp::Machine(temp)
+        Temp::MachineTemp(temp)
     }
 }
 
@@ -154,7 +154,7 @@ pub fn fresh_label() -> Label {
     unsafe {
         let label = LABEL_COUNTER;
         LABEL_COUNTER += 1;
-        Label::Machine(label)
+        Label::MachineLabel(label)
     }
 }
 
