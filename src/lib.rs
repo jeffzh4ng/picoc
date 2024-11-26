@@ -49,7 +49,9 @@ common_enum! { pub enum Val { Int(i32), Bool(bool), Str(String) } }
 // TODO: for loops, etc.
 type SugaredPrg = Vec<()>;
 
-// ***** prg: Vec<Defs> *****
+// picoc's source representation is a forest of ASTS
+// since variable and function are not values
+
 type SPrg = Vec<SDef>;
 common_enum! { pub enum SDef { FuncDef(SFuncDef), VarDef(SVarDef) } }
 common_struct! { pub struct SFuncDef {pub alias: String,  pub typ: Type, pub fps: Vec<(String, Type)>, pub body: Vec<SStmt> } } // fp needs Type for statics, and String for dynamics
@@ -88,20 +90,19 @@ common_enum! { pub enum SUnaryOp { Add, Sub } }
 // ******************************************** INTERMEDIATE REPRESENTATION ********************************************
 // *********************************************************************************************************************
 
-// intermediate AST is not too different from source AST,
-// since C was designed as portable assembly
+// IAST not too different from SAST since C was designed as
+// portable assembly. the semantics do change however, with
+// less structure that a high level language gives like C gives you
 
-// the semantics are closer to metal:
-// - arithmetic: remains more or less the same
-// - control: conditionals and loops -> jump w/ labels
-// - bindings: vardef and varapp -> loads/stores w/ unlimited temps
-//                               -> functions jumps w/ labels
+// - arithmetic: remains the same
+// - control/functions: -> jump w/ labels
+// - bindings: -> loads/stores w/ unlimited temps
 
 type IPrg = Vec<IStmt>;
 common_enum! {
     pub enum IStmt {
         Jump(Label), CJump(SExpr, Label, Label), LabelDef(Label), // control
-        Compute(Temp, IExpr), Load(Temp, Mem), Store(Mem, Temp), // bindings
+        Compute(Temp, IExpr), Load(Temp, RiscvUtilReg), Store(RiscvUtilReg, Temp), // bindings
         Seq(Vec<Box<IStmt>>), Return(IExpr), // functions
     }
 }
@@ -125,9 +126,17 @@ common_enum! { pub enum IRelOp { Eq, Neq, And, Or, LtEq, Lt, GtEq, Gt } }
 // ****************************************** INTERMEDIATE/TARGET REFERENCES *******************************************
 // *********************************************************************************************************************
 
+// picoc lowers the representation by flattening
+// intermediate ASTs -> target 3AC quads.
+
+// referencing data requires temps, and referencing
+// code requires labels, since order is no longer
+// explicitly encoded (trees vs linear). references
+// are still symbolic, and are patched with virtual
+// addresses with as and ld.
+
 type Imm = i32;
-common_enum! { pub enum Temp { User(String), Machine(usize), Reg(String) } }
-common_enum! { pub enum Mem { String } }
+common_enum! { pub enum Temp { User(String), Machine(usize), UtilReg(RiscvUtilReg) } } // only util regs in abstract assembly
 common_enum! { pub enum Label { User(String), Machine(usize) } }
 
 static mut TEMP_COUNTER: usize = 0;
@@ -149,82 +158,20 @@ pub fn fresh_label() -> Label {
     }
 }
 
-// target register abi
-pub struct RiscvAbi {
-    pub zero: &'static str,
-    pub ra: &'static str, // return addres
-    pub sp: &'static str, // stack pointer
-    pub gp: &'static str, // global pointer
-    pub tp: &'static str, // frame pointer
-    // temporaries
-    pub t0: &'static str,
-    pub t1: &'static str,
-    pub t2: &'static str,
-    // saved registers
-    pub s0: &'static str,
-    pub s1: &'static str,
-    // argument/return registers
-    pub a0: &'static str,
-    pub a1: &'static str,
-    pub a2: &'static str,
-    pub a3: &'static str,
-    pub a4: &'static str,
-    pub a5: &'static str,
-    pub a6: &'static str,
-    pub a7: &'static str,
-    // more saved registers
-    pub s2: &'static str,
-    pub s3: &'static str,
-    pub s4: &'static str,
-    pub s5: &'static str,
-    pub s6: &'static str,
-    pub s7: &'static str,
-    pub s8: &'static str,
-    pub s9: &'static str,
-    pub s10: &'static str,
-    pub s11: &'static str,
-    pub t3: &'static str,
-    pub t4: &'static str,
-    pub t5: &'static str,
-    pub t6: &'static str,
-    pub pc: &'static str,
+common_enum! { pub enum RiscvUtilReg { Z, Ra, Sp, Gp, Tp, Fp, Pc } }
+impl From<RiscvUtilReg> for RscvReg {
+    fn from(ptr: RiscvUtilReg) -> Self {
+        match ptr {
+            RiscvUtilReg::Z => RscvReg::Z,
+            RiscvUtilReg::Ra => RscvReg::Ra,
+            RiscvUtilReg::Sp => RscvReg::Sp,
+            RiscvUtilReg::Gp => RscvReg::Gp,
+            RiscvUtilReg::Tp => RscvReg::Tp,
+            RiscvUtilReg::Fp => RscvReg::S0,
+            RiscvUtilReg::Pc => RscvReg::Pc,
+        }
+    }
 }
-
-pub const RISCV_ABI: RiscvAbi = RiscvAbi {
-    zero: "zero", // x0
-    ra: "ra",     // x1
-    sp: "sp",     // x2
-    gp: "gp",     // x3
-    tp: "tp",     // x4
-    t0: "t0",     // x5
-    t1: "t1",     // x6
-    t2: "t2",     // x7
-    s0: "s0",     // x8
-    s1: "s1",     // x9
-    a0: "a0",     // x10
-    a1: "a1",     // x11
-    a2: "a2",     // x12
-    a3: "a3",     // x13
-    a4: "a4",     // x14
-    a5: "a5",     // x15
-    a6: "a6",     // x16
-    a7: "a7",     // x17
-    s2: "s2",     // x18
-    s3: "s3",     // x19
-    s4: "s4",     // x20
-    s5: "s5",     // x21
-    s6: "s6",     // x22
-    s7: "s7",     // x23
-    s8: "s8",     // x24
-    s9: "s9",     // x25
-    s10: "s10",   // x26
-    s11: "s11",   // x27
-    t3: "t3",     // x28
-    t4: "t4",     // x29
-    t5: "t5",     // x30
-    t6: "t6",     // x31
-    pc: "pc",     // x32
-};
 
 //
 //
@@ -234,23 +181,26 @@ pub const RISCV_ABI: RiscvAbi = RiscvAbi {
 // *********************************************************************************************************************
 
 // target 3AC quads
-common_enum! { pub enum TQuad {
-    Reg(TRegOp, Temp, Temp, Temp),
-    Imm(TImmOp, Temp, Temp, Imm),
-    Mem(TMemOp, Temp, Mem, Mem),
-}}
+common_enum! {
+    pub enum TQuad {
+        Reg(TRegOp, Temp, Temp, Temp),
+        Imm(TImmOp, Temp, Temp, Imm),
+        Mem(TMemOp, Temp, usize, RiscvUtilReg),
+    }
+}
 
-common_enum! { pub enum TRegOp {
-    Add, Sub, // arithmetic
-    And, Or, Xor, // logicals
-    Beq, Bneq, Bge, Blt, Jal, // control
-}}
+common_enum! { pub enum TRegOp { Add, Sub, And, Or, Xor, Beq, Bneq, Bge, Blt, Jal } }
+common_enum! { pub enum TImmOp { AddI, SubI, AndI, OrI, XorI } }
+common_enum! { pub enum TMemOp { Load, Store } }
 
-common_enum! { pub enum TImmOp {
-    AddI, SubI, // arithmetic
-    AndI, OrI, XorI, // logical
-}}
-
-common_enum! { pub enum TMemOp {
-    Load, Store, // bindings
-}}
+common_enum! {
+    pub enum RscvReg {
+        Z, Ra, Sp, Gp, Tp, // pointers
+        T0, T1, T2, // temporaries
+        S0, S1, // saved registers
+        A0, A1, A2, A3, A4, A5, A6, A7, // argument registers
+        S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, // more saved registers
+        T3, T4, T5, T6, // more temporaries
+        Pc, // program counter
+    }
+}

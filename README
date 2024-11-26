@@ -17,3 +17,4 @@ todo: jit with C89's backend
 bootstrapped with C0's frontend
 fuzzed with csmith, diffed with clang
 optimized with inline, unroll, cse, dce, motion, fold, peephole
+todo: support RISC-V modularity
