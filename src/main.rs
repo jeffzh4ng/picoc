@@ -1,4 +1,4 @@
-use picoc089::{lexer, parser, translator, typer};
+use picoc089::{allocator, lexer, parser, selector, translator, typer, OptLevel};
 use std::{env, fs};
 
 fn main() {
@@ -10,7 +10,7 @@ fn main() {
     ⠀⠀⣼⣆⠀⠀⠀⠀⣰⣧⠀⠀
     ⠀⣼⣿⣿⣆⠀⠀⣰⣿⣿⣧⠀
     ⠾⠟⠿⠿⠿⠧⠼⠿⠿⠿⠻⠷
-    picoc: aot optimizing C89 compiler
+    picoc: aot optimizing C89->RV32I compiler
     "
     );
 
@@ -21,6 +21,15 @@ fn main() {
         .nth(2)
         .expect("picoc-error: no source file given");
     println!("picoc-info: received source: {src}");
+
+    let opt: OptLevel = env::args()
+        .nth(3)
+        .expect("picoc-error: no optimization level given")
+        .parse::<u8>()
+        .expect("picoc-error: invalid optimization level given (invalid number)")
+        .try_into()
+        .expect("picoc-error: invalid optimization level given (invalid level)");
+    println!("picoc-info: received optimization level: {:?}", opt);
 
     let chars = fs::read(src)
         .expect("picoc-error: file dne`")
@@ -40,9 +49,9 @@ fn main() {
         //     println!("picoc-info: evaluated: {val}");
         // }
         "compilec89" => {
-            let trgt_tree = translator::translate(&src_tree); // tree -> ssa -> son
-                                                              // let abs_as = selector::select(&trgt_tree); // maximal munch -> peephole
-                                                              //   let assembly = allocator::allocate(&abstract_assembly).unwrap(); // graph coloring -> linear-scan
+            let trgt_tree = translator::translate(&src_tree);
+            let abs_as = selector::select(&trgt_tree);
+            let assembly = allocator::allocate(&abs_as, opt).unwrap();
 
             // let mut f = fs::File::create("./tmp.s").expect("picoc-error: unable to create file");
             // f.write_all(assembly.join("\n").as_bytes())
