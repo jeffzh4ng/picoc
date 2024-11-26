@@ -54,11 +54,34 @@ fn select_stmt(s: &IStmt) -> Vec<TQuad> {
                 t,
                 0,
             )];
-            // epilogue
-            // 1. restore ra register
-            // 2. shrink stack
-            // 3. return
-            expr_instrs.into_iter().chain(ret_instr).collect()
+            let epilogue = vec![
+                // restore ra
+                TQuad::Mem(
+                    TMemOp::Load,
+                    Temp::UtilReg(RiscvUtilReg::Ra),
+                    12,
+                    RiscvUtilReg::Sp,
+                ),
+                // restore fp
+                TQuad::Mem(
+                    TMemOp::Load,
+                    Temp::UtilReg(RiscvUtilReg::Fp),
+                    8,
+                    RiscvUtilReg::Sp,
+                ),
+                // shrink stack
+                TQuad::Imm(
+                    TImmOp::AddI,
+                    Temp::UtilReg(RiscvUtilReg::Sp),
+                    Temp::UtilReg(RiscvUtilReg::Sp),
+                    16,
+                ),
+            ];
+            expr_instrs
+                .into_iter()
+                .chain(ret_instr)
+                .chain(epilogue)
+                .collect()
         }
     }
 }
@@ -157,6 +180,21 @@ mod test_arith {
             - UtilReg: Ra
             - Machine: 0
             - 0
+        - Mem:
+            - Load
+            - UtilReg: Ra
+            - 12
+            - Sp
+        - Mem:
+            - Load
+            - UtilReg: Fp
+            - 8
+            - Sp
+        - Imm:
+            - AddI
+            - UtilReg: Sp
+            - UtilReg: Sp
+            - 16
         "###);
     }
 }
