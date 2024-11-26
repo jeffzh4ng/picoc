@@ -1,4 +1,6 @@
-use crate::{fresh_temp, IBinOp, IExpr, IPrg, IStmt, TImmOp, TQuad, TRegOp, Temp, RISCV_ABI};
+use crate::{
+    fresh_temp, IBinOp, IExpr, IPrg, IStmt, RiscvUtilReg, TImmOp, TMemOp, TQuad, TRegOp, Temp,
+};
 
 pub fn select(prg: &IPrg) -> Vec<TQuad> {
     let trgt_prg = prg.iter().flat_map(|stmt| select_stmt(stmt)).collect();
@@ -9,10 +11,36 @@ fn select_stmt(s: &IStmt) -> Vec<TQuad> {
     match s {
         IStmt::Jump(_) => todo!(),
         IStmt::CJump(sexpr, _, _) => todo!(),
-        IStmt::LabelDef(l) => {
-            // tile funcdef vs label? todo
-            vec![]
-        }
+        IStmt::LabelDef(l) => vec![
+            // allocate 4 words
+            TQuad::Imm(
+                TImmOp::AddI,
+                Temp::UtilReg(RiscvUtilReg::Sp),
+                Temp::UtilReg(RiscvUtilReg::Sp),
+                -16,
+            ),
+            // save ra
+            TQuad::Mem(
+                TMemOp::Store,
+                Temp::UtilReg(RiscvUtilReg::Ra),
+                12,
+                RiscvUtilReg::Sp,
+            ),
+            // save fp (s0)
+            TQuad::Mem(
+                TMemOp::Store,
+                Temp::UtilReg(RiscvUtilReg::Fp),
+                8,
+                RiscvUtilReg::Sp,
+            ),
+            // setup fp
+            TQuad::Imm(
+                TImmOp::AddI,
+                Temp::UtilReg(RiscvUtilReg::Fp),
+                Temp::UtilReg(RiscvUtilReg::Sp),
+                16,
+            ),
+        ],
         IStmt::Compute(temp, iexpr) => todo!(),
         IStmt::Load(_, _) => todo!(),
         IStmt::Store(_, _) => todo!(),
@@ -22,23 +50,25 @@ fn select_stmt(s: &IStmt) -> Vec<TQuad> {
             let expr_instrs = select_expr(t.clone(), iexpr);
             let ret_instr = vec![TQuad::Imm(
                 TImmOp::AddI,
-                Temp::Reg(RISCV_ABI.ra.to_string()),
+                Temp::UtilReg(RiscvUtilReg::Ra),
                 t,
                 0,
             )];
+            // epilogue
+            // 1. restore ra register
+            // 2. shrink stack
+            // 3. return
             expr_instrs.into_iter().chain(ret_instr).collect()
         }
     }
 }
 
-// when flatening the tree to linear 3AC quads
-// we refer to recursive computations via temps
 fn select_expr(d: Temp, e: &IExpr) -> Vec<TQuad> {
     match e {
         IExpr::Const(n) => vec![TQuad::Imm(
             TImmOp::AddI,
             d,
-            Temp::Reg(RISCV_ABI.zero.to_string()),
+            Temp::UtilReg(RiscvUtilReg::Z),
             *n,
         )],
         IExpr::BinOp(op, l, r) => {
@@ -62,7 +92,7 @@ fn select_expr(d: Temp, e: &IExpr) -> Vec<TQuad> {
 }
 
 #[cfg(test)]
-mod test_arithmetic {
+mod test_arith {
     use crate::lexer;
     use crate::parser;
     use crate::translator;
@@ -89,13 +119,33 @@ mod test_arithmetic {
         ---
         - Imm:
             - AddI
+            - UtilReg: Sp
+            - UtilReg: Sp
+            - -16
+        - Mem:
+            - Store
+            - UtilReg: Ra
+            - 12
+            - Sp
+        - Mem:
+            - Store
+            - UtilReg: Fp
+            - 8
+            - Sp
+        - Imm:
+            - AddI
+            - UtilReg: Fp
+            - UtilReg: Sp
+            - 16
+        - Imm:
+            - AddI
             - Machine: 1
-            - Reg: zero
+            - UtilReg: Z
             - 9
         - Imm:
             - AddI
             - Machine: 2
-            - Reg: zero
+            - UtilReg: Z
             - 10
         - Reg:
             - Add
@@ -104,7 +154,7 @@ mod test_arithmetic {
             - Machine: 2
         - Imm:
             - AddI
-            - Reg: ra
+            - UtilReg: Ra
             - Machine: 0
             - 0
         "###);
