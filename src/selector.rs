@@ -1,5 +1,6 @@
 use crate::{
-    fresh_temp, IBinOp, IExpr, IPrg, IStmt, RiscvUtilReg, TImmOp, TMemOp, TQuad, TRegOp, Temp,
+    fresh_temp, IBinOp, IExpr, IPrg, IStmt, PseudoOp, RiscvUtilReg, TImmOp, TMemOp, TQuad, TRegOp,
+    Temp,
 };
 
 pub fn select(prg: &IPrg) -> Vec<TQuad> {
@@ -76,6 +77,8 @@ fn select_stmt(s: &IStmt) -> Vec<TQuad> {
                     Temp::UtilReg(RiscvUtilReg::Sp),
                     16,
                 ),
+                // ret
+                TQuad::Pseudo(PseudoOp::Ret),
             ];
             expr_instrs
                 .into_iter()
@@ -195,6 +198,7 @@ mod test_arith {
             - UtilReg: Sp
             - UtilReg: Sp
             - 16
+        - Pseudo: Ret
         "###);
     }
 }

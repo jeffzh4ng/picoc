@@ -107,6 +107,10 @@ common_enum! {
     }
 }
 
+// do i need
+// - compute?
+// - seq if i have return?
+
 common_enum! {
     pub enum IExpr {
         Const(i32), BinOp(IBinOp, Box<IExpr>, Box<IExpr>), // arithmetic``
@@ -186,12 +190,14 @@ common_enum! {
         Reg(TRegOp, Temp, Temp, Temp),
         Imm(TImmOp, Temp, Temp, Imm),
         Mem(TMemOp, Temp, usize, RiscvUtilReg),
+        Pseudo(PseudoOp),
     }
 }
 
 common_enum! { pub enum TRegOp { Add, Sub, And, Or, Xor, Beq, Bneq, Bge, Blt, Jal } }
 common_enum! { pub enum TImmOp { AddI, SubI, AndI, OrI, XorI } }
 common_enum! { pub enum TMemOp { Load, Store } }
+common_enum! { pub enum PseudoOp { Ret } }
 
 common_enum! {
     pub enum RscvReg {
