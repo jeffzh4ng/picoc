@@ -29,10 +29,10 @@ macro_rules! common_enum {
 }
 
 common_enum! { pub enum OptLevel { O0, O1, O2 } }
-impl TryFrom<u8> for OptLevel {
+impl TryFrom<u32> for OptLevel {
     type Error = &'static str;
 
-    fn try_from(opt: u8) -> Result<Self, Self::Error> {
+    fn try_from(opt: u32) -> Result<Self, Self::Error> {
         match opt {
             0 => Ok(OptLevel::O0),
             1 => Ok(OptLevel::O1),
@@ -116,7 +116,7 @@ type IPrg = Vec<IStmt>;
 common_enum! {
     pub enum IStmt {
         Jump(Label), CJump(SExpr, Label, Label), LabelDef(Label), // control
-        Compute(Temp, IExpr), Load(Temp, RiscvUtilReg), Store(RiscvUtilReg, Temp), // bindings
+        Compute(Temp, IExpr), Load(Temp, RiscvPointerReg), Store(RiscvPointerReg, Temp), // bindings
         Seq(Vec<Box<IStmt>>), Return(IExpr), // functions
     }
 }
@@ -154,7 +154,7 @@ common_enum! { pub enum IRelOp { Eq, Neq, And, Or, LtEq, Lt, GtEq, Gt } }
 // addresses with as and ld.
 
 type Imm = i32;
-common_enum! { pub enum Temp { UserTemp(String), MachineTemp(usize), UtilReg(RiscvUtilReg) } } // only util regs in abstract assembly
+common_enum! { pub enum Temp { UserTemp(String), MachineTemp(usize), PointerReg(RiscvPointerReg) } } // only util regs in abstract assembly
 common_enum! { pub enum Label { UserLabel(String), MachineLabel(usize) } }
 
 static mut TEMP_COUNTER: usize = 0;
@@ -176,17 +176,33 @@ pub fn fresh_label() -> Label {
     }
 }
 
-common_enum! { pub enum RiscvUtilReg { Z, Ra, Sp, Gp, Tp, Fp, Pc } }
-impl From<RiscvUtilReg> for RscvReg {
-    fn from(ptr: RiscvUtilReg) -> Self {
+common_enum! { pub enum RiscvPointerReg { Z, Ra, Sp, Gp, Tp, Fp, A0, Pc } }
+impl From<RiscvPointerReg> for RscvReg {
+    fn from(ptr: RiscvPointerReg) -> Self {
         match ptr {
-            RiscvUtilReg::Z => RscvReg::Z,
-            RiscvUtilReg::Ra => RscvReg::Ra,
-            RiscvUtilReg::Sp => RscvReg::Sp,
-            RiscvUtilReg::Gp => RscvReg::Gp,
-            RiscvUtilReg::Tp => RscvReg::Tp,
-            RiscvUtilReg::Fp => RscvReg::S0,
-            RiscvUtilReg::Pc => RscvReg::Pc,
+            RiscvPointerReg::Z => RscvReg::Z,
+            RiscvPointerReg::Ra => RscvReg::Ra,
+            RiscvPointerReg::Sp => RscvReg::Sp,
+            RiscvPointerReg::Gp => RscvReg::Gp,
+            RiscvPointerReg::Tp => RscvReg::Tp,
+            RiscvPointerReg::Fp => RscvReg::S0,
+            RiscvPointerReg::A0 => RscvReg::A0,
+            RiscvPointerReg::Pc => RscvReg::Pc,
+        }
+    }
+}
+
+impl ToString for RiscvPointerReg {
+    fn to_string(&self) -> String {
+        match self {
+            RiscvPointerReg::Z => "zero".to_string(),
+            RiscvPointerReg::Ra => "ra".to_string(),
+            RiscvPointerReg::Sp => "sp".to_string(),
+            RiscvPointerReg::Gp => "gp".to_string(),
+            RiscvPointerReg::Tp => "tp".to_string(),
+            RiscvPointerReg::Fp => "fp".to_string(),
+            RiscvPointerReg::A0 => "a0".to_string(),
+            RiscvPointerReg::Pc => "pc".to_string(),
         }
     }
 }
@@ -203,7 +219,7 @@ common_enum! {
     pub enum TQuad {
         Reg(TRegOp, Temp, Temp, Temp),
         Imm(TImmOp, Temp, Temp, Imm),
-        Mem(TMemOp, Temp, usize, RiscvUtilReg),
+        Mem(TMemOp, Temp, usize, RiscvPointerReg),
         Pseudo(PseudoOp),
     }
 }
@@ -212,6 +228,52 @@ common_enum! { pub enum TRegOp { Add, Sub, And, Or, Xor, Beq, Bneq, Bge, Blt, Ja
 common_enum! { pub enum TImmOp { AddI, SubI, AndI, OrI, XorI } }
 common_enum! { pub enum TMemOp { Load, Store } }
 common_enum! { pub enum PseudoOp { Ret } }
+
+impl ToString for TRegOp {
+    fn to_string(&self) -> String {
+        match self {
+            TRegOp::Add => "add".to_string(),
+            TRegOp::Sub => "sub".to_string(),
+            TRegOp::And => "and".to_string(),
+            TRegOp::Or => "or".to_string(),
+            TRegOp::Xor => "xor".to_string(),
+            TRegOp::Beq => "beq".to_string(),
+            TRegOp::Bneq => "bne".to_string(),
+            TRegOp::Bge => "bge".to_string(),
+            TRegOp::Blt => "blt".to_string(),
+            TRegOp::Jal => "jal".to_string(),
+        }
+    }
+}
+
+impl ToString for TImmOp {
+    fn to_string(&self) -> String {
+        match self {
+            TImmOp::AddI => "addi".to_string(),
+            TImmOp::SubI => "subi".to_string(),
+            TImmOp::AndI => "andi".to_string(),
+            TImmOp::OrI => "ori".to_string(),
+            TImmOp::XorI => "xori".to_string(),
+        }
+    }
+}
+
+impl ToString for TMemOp {
+    fn to_string(&self) -> String {
+        match self {
+            TMemOp::Load => "lw".to_string(),
+            TMemOp::Store => "sw".to_string(),
+        }
+    }
+}
+
+impl ToString for PseudoOp {
+    fn to_string(&self) -> String {
+        match self {
+            PseudoOp::Ret => "ret".to_string(),
+        }
+    }
+}
 
 common_enum! {
     pub enum RscvReg {

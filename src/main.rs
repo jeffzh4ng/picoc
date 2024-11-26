@@ -1,5 +1,5 @@
 use picoc089::{allocator, lexer, parser, selector, translator, typer, OptLevel};
-use std::{env, fs};
+use std::{env, fs, io::Write};
 
 fn main() {
     println!(
@@ -25,7 +25,10 @@ fn main() {
     let opt: OptLevel = env::args()
         .nth(3)
         .expect("picoc-error: no optimization level given")
-        .parse::<u8>()
+        .chars()
+        .nth(1)
+        .expect("picoc-error: optimization level must be at least 1 character")
+        .to_digit(10)
         .expect("picoc-error: invalid optimization level given (invalid number)")
         .try_into()
         .expect("picoc-error: invalid optimization level given (invalid level)");
@@ -37,11 +40,12 @@ fn main() {
         .map(|b| *b as char)
         .collect::<Vec<_>>();
     let tokens = lexer::lex(&chars).unwrap();
+    println!("picoc-info: lexed");
     let src_tree = parser::parse_prg(&tokens).unwrap(); // recursive descent -> pratt parsing
-    println!("picoc-info: tree: {:?}", src_tree);
+    println!("picoc-info: parsed");
 
     let typ = typer::type_prg(&src_tree).unwrap();
-    println!("picoc-info: type: {:?}", typ);
+    println!("picoc-info: typed");
 
     match strat.as_str() {
         // "interpretc0" => {
@@ -50,12 +54,16 @@ fn main() {
         // }
         "compilec89" => {
             let trgt_tree = translator::translate(&src_tree);
-            let abs_as = selector::select(&trgt_tree);
-            let assembly = allocator::allocate(&abs_as, opt).unwrap();
+            println!("picoc-info: translated",);
 
-            // let mut f = fs::File::create("./tmp.s").expect("picoc-error: unable to create file");
-            // f.write_all(assembly.join("\n").as_bytes())
-            //     .expect("picoc-error: unable to write data");
+            let abs_as = selector::select(&trgt_tree);
+            println!("picoc-info: selected");
+            let assembly = allocator::allocate(&abs_as, opt);
+            println!("picoc-info: emitted");
+
+            let mut f = fs::File::create("./tmp.s").expect("picoc-error: unable to create file");
+            f.write_all(assembly.join("\n").as_bytes())
+                .expect("picoc-error: unable to write data");
         }
         _ => {
             println!("picoc-error: unknown strategy: {:?}", strat);

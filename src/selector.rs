@@ -1,6 +1,6 @@
 use crate::{
-    fresh_temp, IBinOp, IExpr, IPrg, IStmt, PseudoOp, RiscvUtilReg, TImmOp, TMemOp, TQuad, TRegOp,
-    Temp,
+    fresh_temp, IBinOp, IExpr, IPrg, IStmt, PseudoOp, RiscvPointerReg, TImmOp, TMemOp, TQuad,
+    TRegOp, Temp,
 };
 
 pub fn select(prg: &IPrg) -> Vec<TQuad> {
@@ -16,29 +16,29 @@ fn select_stmt(s: &IStmt) -> Vec<TQuad> {
             // allocate 4 words
             TQuad::Imm(
                 TImmOp::AddI,
-                Temp::UtilReg(RiscvUtilReg::Sp),
-                Temp::UtilReg(RiscvUtilReg::Sp),
+                Temp::PointerReg(RiscvPointerReg::Sp),
+                Temp::PointerReg(RiscvPointerReg::Sp),
                 -16,
             ),
             // save ra
             TQuad::Mem(
                 TMemOp::Store,
-                Temp::UtilReg(RiscvUtilReg::Ra),
+                Temp::PointerReg(RiscvPointerReg::Ra),
                 12,
-                RiscvUtilReg::Sp,
+                RiscvPointerReg::Sp,
             ),
             // save fp (s0)
             TQuad::Mem(
                 TMemOp::Store,
-                Temp::UtilReg(RiscvUtilReg::Fp),
+                Temp::PointerReg(RiscvPointerReg::Fp),
                 8,
-                RiscvUtilReg::Sp,
+                RiscvPointerReg::Sp,
             ),
             // setup fp
             TQuad::Imm(
                 TImmOp::AddI,
-                Temp::UtilReg(RiscvUtilReg::Fp),
-                Temp::UtilReg(RiscvUtilReg::Sp),
+                Temp::PointerReg(RiscvPointerReg::Fp),
+                Temp::PointerReg(RiscvPointerReg::Sp),
                 16,
             ),
         ],
@@ -51,7 +51,7 @@ fn select_stmt(s: &IStmt) -> Vec<TQuad> {
             let expr_instrs = select_expr(t.clone(), iexpr);
             let ret_instr = vec![TQuad::Imm(
                 TImmOp::AddI,
-                Temp::UtilReg(RiscvUtilReg::Ra),
+                Temp::PointerReg(RiscvPointerReg::A0),
                 t,
                 0,
             )];
@@ -59,22 +59,22 @@ fn select_stmt(s: &IStmt) -> Vec<TQuad> {
                 // restore ra
                 TQuad::Mem(
                     TMemOp::Load,
-                    Temp::UtilReg(RiscvUtilReg::Ra),
+                    Temp::PointerReg(RiscvPointerReg::Ra),
                     12,
-                    RiscvUtilReg::Sp,
+                    RiscvPointerReg::Sp,
                 ),
                 // restore fp
                 TQuad::Mem(
                     TMemOp::Load,
-                    Temp::UtilReg(RiscvUtilReg::Fp),
+                    Temp::PointerReg(RiscvPointerReg::Fp),
                     8,
-                    RiscvUtilReg::Sp,
+                    RiscvPointerReg::Sp,
                 ),
                 // shrink stack
                 TQuad::Imm(
                     TImmOp::AddI,
-                    Temp::UtilReg(RiscvUtilReg::Sp),
-                    Temp::UtilReg(RiscvUtilReg::Sp),
+                    Temp::PointerReg(RiscvPointerReg::Sp),
+                    Temp::PointerReg(RiscvPointerReg::Sp),
                     16,
                 ),
                 // ret
@@ -94,7 +94,7 @@ fn select_expr(d: Temp, e: &IExpr) -> Vec<TQuad> {
         IExpr::Const(n) => vec![TQuad::Imm(
             TImmOp::AddI,
             d,
-            Temp::UtilReg(RiscvUtilReg::Z),
+            Temp::PointerReg(RiscvPointerReg::Z),
             *n,
         )],
         IExpr::BinOp(op, l, r) => {
@@ -145,33 +145,33 @@ mod test_arith {
         ---
         - Imm:
             - AddI
-            - UtilReg: Sp
-            - UtilReg: Sp
+            - PointerReg: Sp
+            - PointerReg: Sp
             - -16
         - Mem:
             - Store
-            - UtilReg: Ra
+            - PointerReg: Ra
             - 12
             - Sp
         - Mem:
             - Store
-            - UtilReg: Fp
+            - PointerReg: Fp
             - 8
             - Sp
         - Imm:
             - AddI
-            - UtilReg: Fp
-            - UtilReg: Sp
+            - PointerReg: Fp
+            - PointerReg: Sp
             - 16
         - Imm:
             - AddI
             - MachineTemp: 1
-            - UtilReg: Z
+            - PointerReg: Z
             - 9
         - Imm:
             - AddI
             - MachineTemp: 2
-            - UtilReg: Z
+            - PointerReg: Z
             - 10
         - Reg:
             - Add
@@ -180,23 +180,23 @@ mod test_arith {
             - MachineTemp: 2
         - Imm:
             - AddI
-            - UtilReg: Ra
+            - PointerReg: Ra
             - MachineTemp: 0
             - 0
         - Mem:
             - Load
-            - UtilReg: Ra
+            - PointerReg: Ra
             - 12
             - Sp
         - Mem:
             - Load
-            - UtilReg: Fp
+            - PointerReg: Fp
             - 8
             - Sp
         - Imm:
             - AddI
-            - UtilReg: Sp
-            - UtilReg: Sp
+            - PointerReg: Sp
+            - PointerReg: Sp
             - 16
         - Pseudo: Ret
         "###);
