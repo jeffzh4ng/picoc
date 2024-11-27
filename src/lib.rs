@@ -236,7 +236,7 @@ common_enum! {
 common_enum! { pub enum TRegOp { Add, Sub, And, Or, Xor, Beq, Bneq, Bge, Blt, Jal } }
 common_enum! { pub enum TImmOp { AddI, SubI, AndI, OrI, XorI } }
 common_enum! { pub enum TMemOp { Load, Store } }
-common_enum! { pub enum PseudoOp { Ret } }
+common_enum! { pub enum PseudoOp { Call(Label), Ret } }
 
 impl ToString for TRegOp {
     fn to_string(&self) -> String {
@@ -279,6 +279,7 @@ impl ToString for TMemOp {
 impl ToString for PseudoOp {
     fn to_string(&self) -> String {
         match self {
+            PseudoOp::Call(l) => format!("call {}", l.to_string()),
             PseudoOp::Ret => "ret".to_string(),
         }
     }

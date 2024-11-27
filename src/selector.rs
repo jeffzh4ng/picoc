@@ -114,7 +114,12 @@ fn select_expr(d: Temp, e: &IExpr) -> Vec<TQuad> {
             lq.into_iter().chain(rq).chain(instr).collect()
         }
         IExpr::TempUse(_) => todo!(),
-        IExpr::Call(_, vec) => todo!(),
+        IExpr::Call(l, aps) => {
+            vec![
+                TQuad::Pseudo(PseudoOp::Call(l.clone())),
+                TQuad::Imm(TImmOp::AddI, d, Temp::PointerReg(RiscvPointerReg::A0), 0),
+            ]
+        }
     }
 }
 

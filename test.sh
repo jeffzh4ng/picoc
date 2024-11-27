@@ -52,27 +52,27 @@ assert "./tests/fixtures/snap/shared/arith/sub_associative.c"
 # assert "./tests/fixtures/legal/arithmetic_precedence/mult_add_precedence_multi.c"
 
 # --- control flow ---
-# assert "./tests/fixtures/legal/control_flow/eq_true.c"
-# assert "./tests/fixtures/legal/control_flow/eq_false.c"
-# assert "./tests/fixtures/legal/control_flow/neq_true.c"
-# assert "./tests/fixtures/legal/control_flow/neq_false.c"
+# assert "./tests/fixtures/snap/shared/control/eq_true.c"
+# assert "./tests/fixtures/snap/shared/control/eq_false.c"
+# assert "./tests/fixtures/snap/shared/control/neq_true.c"
+# assert "./tests/fixtures/snap/shared/control/neq_false.c"
 
-# assert "./tests/fixtures/legal/control_flow/and_true.c"
-# assert "./tests/fixtures/legal/control_flow/or_true.c"
-# assert "./tests/fixtures/legal/control_flow/and_false.c"
-# assert "./tests/fixtures/legal/control_flow/or_false.c"
+# assert "./tests/fixtures/snap/shared/control/and_true.c"
+# assert "./tests/fixtures/snap/shared/control/or_true.c"
+# assert "./tests/fixtures/snap/shared/control/and_false.c"
+# assert "./tests/fixtures/snap/shared/control/or_false.c"
 
-# assert "./tests/fixtures/legal/control_flow/lt_true.c"
-# assert "./tests/fixtures/legal/control_flow/lteq_true.c"
-# assert "./tests/fixtures/legal/control_flow/lteq2_true.c"
-# assert "./tests/fixtures/legal/control_flow/gt_true.c"
-# assert "./tests/fixtures/legal/control_flow/gteq_true.c"
-# assert "./tests/fixtures/legal/control_flow/gteq2_true.c"
+# assert "./tests/fixtures/snap/shared/control/lt_true.c"
+# assert "./tests/fixtures/snap/shared/control/lteq_true.c"
+# assert "./tests/fixtures/snap/shared/control/lteq2_true.c"
+# assert "./tests/fixtures/snap/shared/control/gt_true.c"
+# assert "./tests/fixtures/snap/shared/control/gteq_true.c"
+# assert "./tests/fixtures/snap/shared/control/gteq2_true.c"
 
-# assert "./tests/fixtures/legal/control_flow/ifels_then.c"
-# assert "./tests/fixtures/legal/control_flow/ifels_els.c"
+# assert "./tests/fixtures/snap/shared/control/ifels_then.c"
+# assert "./tests/fixtures/snap/shared/control/ifels_els.c"
 
-# assert "./tests/fixtures/legal/control_flow/for.c"
+# assert "./tests/fixtures/snap/shared/control/for.c"
 
 # --- bindings ---
 # assert "./tests/fixtures/legal/data_flow/asnmt.c"
@@ -84,6 +84,7 @@ assert "./tests/fixtures/snap/shared/arith/sub_associative.c"
 # assert "./tests/fixtures/legal/data_flow/asnmt_update_dec.c"
 
 # -- functions
+assert "./tests/fixtures/snap/shared/bindings/composition.c"
 
 ## --- heap ---
 # -- malloc/free
