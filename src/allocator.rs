@@ -14,7 +14,7 @@ const POP_LEFT_T1: &str = "lw t1, 0(sp) # t1 <- pop\naddi sp,sp,8 # shrink stack
 const PUSH_T2: &str = "addi sp,sp,-8 # grow stack\nsw t2, 0(sp) # push t2 ->\n";
 
 fn allocate_1ac(abs_as: &[TQuad]) -> Vec<String> {
-    abs_as
+    let instrs = abs_as
         .iter()
         .flat_map(|quad| match quad {
             TQuad::Reg(treg_op, dt, lt, rt) => {
@@ -33,7 +33,7 @@ fn allocate_1ac(abs_as: &[TQuad]) -> Vec<String> {
                 (Temp::MachineTemp(_), Temp::MachineTemp(_)) => todo!(),
                 (Temp::MachineTemp(_), Temp::PointerReg(pr)) => {
                     vec![
-                        format!("{} t2, {}", timm_op.to_string(), pr.to_string()),
+                        format!("{} t2, {}, {}", timm_op.to_string(), pr.to_string(), imm),
                         PUSH_T2.to_owned(), // push b/c we're using t0
                     ]
                 }
@@ -45,11 +45,11 @@ fn allocate_1ac(abs_as: &[TQuad]) -> Vec<String> {
                     ] // no push b/c we're using pr
                 }
                 (Temp::PointerReg(dpr), Temp::PointerReg(lpr)) => vec![format!(
-                    "{} {}, {}({})",
+                    "{} {}, {}, {}",
                     timm_op.to_string(),
                     dpr.to_string(),
+                    lpr.to_string(),
                     imm,
-                    lpr.to_string()
                 )],
             },
             TQuad::Mem(tmem_op, temp, offset, base) => match temp {
@@ -66,7 +66,22 @@ fn allocate_1ac(abs_as: &[TQuad]) -> Vec<String> {
                 }
             },
             TQuad::Pseudo(pseudo_op) => vec![pseudo_op.to_string()],
+            TQuad::Label(l) => vec![format!("{}:", l.to_string())],
         })
+        .collect::<Vec<_>>();
+
+    let prg_prologue = vec![
+        ".text".to_owned(),
+        ".globl main".to_owned(),
+        ".section .text".to_owned(),
+    ];
+
+    let prg_epilogue = vec!["\n".to_owned()];
+
+    prg_prologue
+        .into_iter()
+        .chain(instrs)
+        .chain(prg_epilogue)
         .collect()
 }
 
@@ -97,13 +112,17 @@ mod test_arith {
         let assembly = super::allocate(&abs_as, super::OptLevel::O0);
         insta::assert_yaml_snapshot!(assembly, @r###"
         ---
-        - "addi sp, -16(sp)"
+        - ".text"
+        - ".globl main"
+        - ".section .text"
+        - "main:"
+        - "addi sp, sp, -16"
         - "sw ra, 12(sp)"
         - "sw fp, 8(sp)"
-        - "addi fp, 16(sp)"
-        - "addi t2, zero"
+        - "addi fp, sp, 16"
+        - "addi t2, zero, 9"
         - "addi sp,sp,-8 # grow stack\nsw t2, 0(sp) # push t2 ->\n"
-        - "addi t2, zero"
+        - "addi t2, zero, 10"
         - "addi sp,sp,-8 # grow stack\nsw t2, 0(sp) # push t2 ->\n"
         - "lw t0, 0(sp) # t0 <- pop\naddi sp,sp,8 # shrink stack"
         - "lw t1, 0(sp) # t1 <- pop\naddi sp,sp,8 # shrink stack"
@@ -113,8 +132,9 @@ mod test_arith {
         - "addi a0, t0, 0"
         - "lw ra, 12(sp)"
         - "lw fp, 8(sp)"
-        - "addi sp, 16(sp)"
+        - "addi sp, sp, 16"
         - ret
+        - "\n"
         "###);
     }
 }

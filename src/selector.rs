@@ -13,6 +13,7 @@ fn select_stmt(s: &IStmt) -> Vec<TQuad> {
         IStmt::Jump(_) => todo!(),
         IStmt::CJump(sexpr, _, _) => todo!(),
         IStmt::LabelDef(l) => vec![
+            TQuad::Label(l.clone()),
             // allocate 4 words
             TQuad::Imm(
                 TImmOp::AddI,

@@ -156,6 +156,14 @@ common_enum! { pub enum IRelOp { Eq, Neq, And, Or, LtEq, Lt, GtEq, Gt } }
 type Imm = i32;
 common_enum! { pub enum Temp { UserTemp(String), MachineTemp(usize), PointerReg(RiscvPointerReg) } } // only util regs in abstract assembly
 common_enum! { pub enum Label { UserLabel(String), MachineLabel(usize) } }
+impl ToString for Label {
+    fn to_string(&self) -> String {
+        match self {
+            Label::UserLabel(l) => l.clone(),
+            Label::MachineLabel(l) => todo!(),
+        }
+    }
+}
 
 static mut TEMP_COUNTER: usize = 0;
 static mut LABEL_COUNTER: usize = 0;
@@ -221,6 +229,7 @@ common_enum! {
         Imm(TImmOp, Temp, Temp, Imm),
         Mem(TMemOp, Temp, usize, RiscvPointerReg),
         Pseudo(PseudoOp),
+        Label(Label),
     }
 }
 
