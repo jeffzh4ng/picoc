@@ -12,50 +12,47 @@ fn select_stmt(s: &IStmt) -> Vec<TQuad> {
     match s {
         IStmt::Jump(_) => todo!(),
         IStmt::CJump(sexpr, _, _) => todo!(),
-        IStmt::LabelDef(l) => vec![
-            TQuad::Label(l.clone()),
-            // allocate 4 words
-            TQuad::Imm(
-                TImmOp::AddI,
-                Temp::PointerReg(RiscvPointerReg::Sp),
-                Temp::PointerReg(RiscvPointerReg::Sp),
-                -16,
-            ),
-            // save ra
-            TQuad::Mem(
-                TMemOp::Store,
-                Temp::PointerReg(RiscvPointerReg::Ra),
-                12,
-                RiscvPointerReg::Sp,
-            ),
-            // save fp (s0)
-            TQuad::Mem(
-                TMemOp::Store,
-                Temp::PointerReg(RiscvPointerReg::Fp),
-                8,
-                RiscvPointerReg::Sp,
-            ),
-            // setup fp
-            TQuad::Imm(
-                TImmOp::AddI,
-                Temp::PointerReg(RiscvPointerReg::Fp),
-                Temp::PointerReg(RiscvPointerReg::Sp),
-                16,
-            ),
-        ],
         IStmt::Compute(temp, iexpr) => todo!(),
         IStmt::Load(_, _) => todo!(),
         IStmt::Store(_, _) => todo!(),
-        IStmt::Seq(stmts) => stmts.iter().flat_map(|stmt| select_stmt(stmt)).collect(),
-        IStmt::Return(iexpr) => {
-            let t = fresh_temp();
-            let expr_instrs = select_expr(t.clone(), iexpr);
-            let ret_instr = vec![TQuad::Imm(
-                TImmOp::AddI,
-                Temp::PointerReg(RiscvPointerReg::A0),
-                t,
-                0,
-            )];
+        IStmt::Seq(l, stmts) => {
+            let prologue = vec![
+                TQuad::Label(l.clone()),
+                // allocate 4 words
+                TQuad::Imm(
+                    TImmOp::AddI,
+                    Temp::PointerReg(RiscvPointerReg::Sp),
+                    Temp::PointerReg(RiscvPointerReg::Sp),
+                    -16,
+                ),
+                // save caller's ra
+                TQuad::Mem(
+                    TMemOp::Store,
+                    Temp::PointerReg(RiscvPointerReg::Ra),
+                    12,
+                    RiscvPointerReg::Sp,
+                ),
+                // save caller's fp (s0)
+                TQuad::Mem(
+                    TMemOp::Store,
+                    Temp::PointerReg(RiscvPointerReg::Fp),
+                    8,
+                    RiscvPointerReg::Sp,
+                ),
+                // setup callee's fp
+                TQuad::Imm(
+                    TImmOp::AddI,
+                    Temp::PointerReg(RiscvPointerReg::Fp),
+                    Temp::PointerReg(RiscvPointerReg::Sp),
+                    16,
+                ),
+            ];
+
+            let body = stmts
+                .iter()
+                .flat_map(|stmt| select_stmt(stmt))
+                .collect::<Vec<_>>();
+
             let epilogue = vec![
                 // restore ra
                 TQuad::Mem(
@@ -71,7 +68,7 @@ fn select_stmt(s: &IStmt) -> Vec<TQuad> {
                     8,
                     RiscvPointerReg::Sp,
                 ),
-                // shrink stack
+                // deallocate 4 words
                 TQuad::Imm(
                     TImmOp::AddI,
                     Temp::PointerReg(RiscvPointerReg::Sp),
@@ -81,11 +78,20 @@ fn select_stmt(s: &IStmt) -> Vec<TQuad> {
                 // ret
                 TQuad::Pseudo(PseudoOp::Ret),
             ];
-            expr_instrs
-                .into_iter()
-                .chain(ret_instr)
-                .chain(epilogue)
-                .collect()
+
+            prologue.into_iter().chain(body).chain(epilogue).collect()
+        }
+        IStmt::Return(iexpr) => {
+            let t = fresh_temp();
+            let expr_instrs = select_expr(t.clone(), iexpr);
+            let ret_instr = vec![TQuad::Imm(
+                TImmOp::AddI,
+                Temp::PointerReg(RiscvPointerReg::A0),
+                t,
+                0,
+            )];
+
+            expr_instrs.into_iter().chain(ret_instr).collect()
         }
     }
 }
@@ -115,10 +121,29 @@ fn select_expr(d: Temp, e: &IExpr) -> Vec<TQuad> {
         }
         IExpr::TempUse(_) => todo!(),
         IExpr::Call(l, aps) => {
-            vec![
-                TQuad::Pseudo(PseudoOp::Call(l.clone())),
-                TQuad::Imm(TImmOp::AddI, d, Temp::PointerReg(RiscvPointerReg::A0), 0),
-            ]
+            if aps.len() > 7 {
+                panic!("todo: more than 7 args not supported");
+            }
+
+            let aps = aps.iter().enumerate().map(|(i, a)| match i {
+                0 => select_expr(Temp::PointerReg(RiscvPointerReg::A0), a),
+                1 => select_expr(Temp::PointerReg(RiscvPointerReg::A1), a),
+                2 => select_expr(Temp::PointerReg(RiscvPointerReg::A2), a),
+                3 => select_expr(Temp::PointerReg(RiscvPointerReg::A3), a),
+                4 => select_expr(Temp::PointerReg(RiscvPointerReg::A4), a),
+                5 => select_expr(Temp::PointerReg(RiscvPointerReg::A5), a),
+                6 => select_expr(Temp::PointerReg(RiscvPointerReg::A6), a),
+                7 => select_expr(Temp::PointerReg(RiscvPointerReg::A7), a),
+                _ => unreachable!(),
+            });
+
+            aps.into_iter()
+                .flatten()
+                .chain(vec![
+                    TQuad::Pseudo(PseudoOp::Call(l.clone())),
+                    TQuad::Imm(TImmOp::AddI, d, Temp::PointerReg(RiscvPointerReg::A0), 0),
+                ])
+                .collect()
         }
     }
 }

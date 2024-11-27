@@ -3,7 +3,7 @@ use crate::{IBinOp, IExpr, IPrg, IStmt, Label, SBinOp, SDef, SExpr, SFuncDef, SP
 pub fn translate(src_tree: &SPrg) -> IPrg {
     let intrm_prg = src_tree
         .iter()
-        .flat_map(|def| match def {
+        .map(|def| match def {
             SDef::FuncDef(func_def) => translate_func_def(func_def),
             SDef::VarDef(var_def) => todo!(),
         })
@@ -12,11 +12,11 @@ pub fn translate(src_tree: &SPrg) -> IPrg {
     intrm_prg
 }
 
-fn translate_func_def(fd: &SFuncDef) -> Vec<IStmt> {
-    let label = IStmt::LabelDef(Label::UserLabel(fd.alias.clone()));
+fn translate_func_def(fd: &SFuncDef) -> IStmt {
+    let label = Label::UserLabel(fd.alias.clone());
 
     // todo: formal params
-    let stmts = fd
+    let body = fd
         .body
         .iter()
         .map(|s_stmt| match s_stmt {
@@ -33,10 +33,8 @@ fn translate_func_def(fd: &SFuncDef) -> Vec<IStmt> {
         .map(|i_stmt| Box::new(i_stmt))
         .collect::<Vec<_>>();
 
-    let fd = IStmt::Seq(stmts);
-    let labeled_fd = std::iter::once(label).chain(vec![fd]).collect::<Vec<_>>();
-
-    labeled_fd
+    let fd = IStmt::Seq(label, body);
+    fd
 }
 
 fn translate_expr(e: &SExpr) -> IExpr {
@@ -107,14 +105,13 @@ mod test_arith {
 
         insta::assert_yaml_snapshot!(trgt_tree, @r###"
         ---
-        - LabelDef:
-            UserLabel: main
         - Seq:
-            - Return:
-                BinOp:
-                  - Add
-                  - Const: 9
-                  - Const: 10
+            - UserLabel: main
+            - - Return:
+                  BinOp:
+                    - Add
+                    - Const: 9
+                    - Const: 10
         "###);
     }
 }
@@ -143,15 +140,14 @@ mod test_bindings {
 
         insta::assert_yaml_snapshot!(trgt_tree, @r###"
         ---
-        - LabelDef:
-            UserLabel: main
         - Seq:
-            - Compute:
-                - UserTemp: x
-                - Const: 8
-            - Return:
-                TempUse:
-                  UserTemp: x
+            - UserLabel: main
+            - - Compute:
+                  - UserTemp: x
+                  - Const: 8
+              - Return:
+                  TempUse:
+                    UserTemp: x
         "###);
     }
 }
@@ -180,54 +176,50 @@ mod test_functions {
 
         insta::assert_yaml_snapshot!(trgt_tree, @r###"
         ---
-        - LabelDef:
-            UserLabel: h
         - Seq:
-            - Return:
-                Const: 11
-        - LabelDef:
-            UserLabel: g
+            - UserLabel: h
+            - - Return:
+                  Const: 11
         - Seq:
-            - Return:
-                BinOp:
-                  - Add
-                  - Const: 10
-                  - Call:
-                      - UserLabel: h
-                      - []
-        - LabelDef:
-            UserLabel: f
+            - UserLabel: g
+            - - Return:
+                  BinOp:
+                    - Add
+                    - Const: 10
+                    - Call:
+                        - UserLabel: h
+                        - []
         - Seq:
-            - Return:
-                BinOp:
-                  - Add
-                  - Const: 9
-                  - Call:
-                      - UserLabel: g
-                      - []
-        - LabelDef:
-            UserLabel: main
+            - UserLabel: f
+            - - Return:
+                  BinOp:
+                    - Add
+                    - Const: 9
+                    - Call:
+                        - UserLabel: g
+                        - []
         - Seq:
-            - Return:
-                Call:
-                  - UserLabel: f
-                  - []
+            - UserLabel: main
+            - - Return:
+                  Call:
+                    - UserLabel: f
+                    - []
         "###);
     }
 
-    // #[test]
-    // fn formal_param() {
-    //     let chars = fs::read(format!("{TEST_DIR}/formal_param.c"))
-    //         .expect("file dne")
-    //         .iter()
-    //         .map(|b| *b as char)
-    //         .collect::<Vec<_>>();
+    #[test]
+    fn formal_param() {
+        let chars = fs::read(format!("{TEST_DIR}/formal_param.c"))
+            .expect("file dne")
+            .iter()
+            .map(|b| *b as char)
+            .collect::<Vec<_>>();
 
-    //     let tokens = lexer::lex(&chars).unwrap();
-    //     let src_tree = parser::parse_prg(&tokens).unwrap();
-    //     let _ = typer::type_prg(&src_tree).unwrap();
-    //     let trgt_tree = super::translate(&src_tree);
+        let tokens = lexer::lex(&chars).unwrap();
+        let src_tree = parser::parse_prg(&tokens).unwrap();
+        let _ = typer::type_prg(&src_tree).unwrap();
+        let trgt_tree = super::translate(&src_tree);
 
-    //     insta::assert_yaml_snapshot!(trgt_tree, @r"");
-    // }
+        insta::assert_yaml_snapshot!(trgt_tree, @r"");
+    }
 }

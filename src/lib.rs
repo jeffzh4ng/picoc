@@ -115,9 +115,10 @@ common_enum! { pub enum SUnaryOp { Add, Sub } }
 type IPrg = Vec<IStmt>;
 common_enum! {
     pub enum IStmt {
-        Jump(Label), CJump(SExpr, Label, Label), LabelDef(Label), // control
+        Jump(Label), CJump(SExpr, Label, Label), // control
         Compute(Temp, IExpr), Load(Temp, RiscvPointerReg), Store(RiscvPointerReg, Temp), // bindings
-        Seq(Vec<Box<IStmt>>), Return(IExpr), // functions
+        Seq(Label, Vec<Box<IStmt>>), Return(IExpr), // functions
+        // todo: maybe rename seq to func if not used for conditionals
     }
 }
 
@@ -184,7 +185,7 @@ pub fn fresh_label() -> Label {
     }
 }
 
-common_enum! { pub enum RiscvPointerReg { Z, Ra, Sp, Gp, Tp, Fp, A0, Pc } }
+common_enum! { pub enum RiscvPointerReg { Z, Ra, Sp, Gp, Tp, Fp, A0, A1, A2, A3, A4, A5, A6, A7, Pc } }
 impl From<RiscvPointerReg> for RscvReg {
     fn from(ptr: RiscvPointerReg) -> Self {
         match ptr {
@@ -195,6 +196,13 @@ impl From<RiscvPointerReg> for RscvReg {
             RiscvPointerReg::Tp => RscvReg::Tp,
             RiscvPointerReg::Fp => RscvReg::S0,
             RiscvPointerReg::A0 => RscvReg::A0,
+            RiscvPointerReg::A1 => RscvReg::A1,
+            RiscvPointerReg::A2 => RscvReg::A2,
+            RiscvPointerReg::A3 => RscvReg::A3,
+            RiscvPointerReg::A4 => RscvReg::A4,
+            RiscvPointerReg::A5 => RscvReg::A5,
+            RiscvPointerReg::A6 => RscvReg::A6,
+            RiscvPointerReg::A7 => RscvReg::A7,
             RiscvPointerReg::Pc => RscvReg::Pc,
         }
     }
@@ -210,6 +218,13 @@ impl ToString for RiscvPointerReg {
             RiscvPointerReg::Tp => "tp".to_string(),
             RiscvPointerReg::Fp => "fp".to_string(),
             RiscvPointerReg::A0 => "a0".to_string(),
+            RiscvPointerReg::A1 => "a1".to_string(),
+            RiscvPointerReg::A2 => "a2".to_string(),
+            RiscvPointerReg::A3 => "a3".to_string(),
+            RiscvPointerReg::A4 => "a4".to_string(),
+            RiscvPointerReg::A5 => "a5".to_string(),
+            RiscvPointerReg::A6 => "a6".to_string(),
+            RiscvPointerReg::A7 => "a7".to_string(),
             RiscvPointerReg::Pc => "pc".to_string(),
         }
     }

@@ -85,7 +85,7 @@ assert "./tests/fixtures/snap/shared/arith/sub_associative.c"
 
 # -- functions
 assert "./tests/fixtures/snap/shared/bindings/composition.c"
-
+# assert "./tests/fixtures/snap/shared/bindings/formal_param.c"
 ## --- heap ---
 # -- malloc/free
 # -- pointer/deref
