@@ -1,20 +1,10 @@
 picoc: aot optimizing C89->RV32I compiler
 
-goals: hackable. quakeable. -O1able.
-non-goals: as, ld, objdump, gdb
+goals(0.1.1): hackable. quakeable. -O1able.
+goals(0.1.2): jitable. ldable. -O2able.
+non-goals: objdump, gdb
+support: riscv, llvm, wasm
 
 usage:
 cargo run interpretc0 ./path/to/file.c0
 cargo run compilec89 ./path/to/file.c
-
---C0
-snapped sublangs (arith, control, bindings, heap)
-eyeballed typer/evaluator against c0's statics/dynamics
-smoked with dsa
-todo: jit with C89's backend
-
---C89->RV32I
-bootstrapped with C0's frontend
-fuzzed with csmith, diffed with clang
-optimized with inline, unroll, cse, dce, motion, fold, peephole
-todo: support RISC-V modularity
