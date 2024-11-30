@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::{collections::HashMap, rc::Rc};
 
 // pub mod evaluator;
 pub mod allocator;
@@ -60,9 +60,74 @@ common_enum! { pub enum Val { Int(i32), Bool(bool), Str(String) } }
 // *********************************************** SOURCE REPRESENTATION ***********************************************
 // *********************************************************************************************************************
 
+// ==============================================
+// GRAPH
+// ==============================================
+
+// design 1: sum (polymorphic simulating type) of products (data) with impl (behavior)
+// 1. enum Node { FooNode(FooNode)} struct FooNode { inputs: Vec<Rc<Node>>, outputs: Vec<Rc<Node>> }
+// 2. impl Node { fn inputs(&self) -> &Vec<Rc<Self>> { match self { FooNode(foo_node) => &foo_node.inputs, } } }
+// -> smells: requires lots of matching to reveal the same data and perform same behavior.
+//            loc = shared behavior (600loc) * variants (45) = 27000loc (non-monomorphized)
+//            types and data are decoupled
+
+// design 2: generics (polymorphic simulating type) with trait bounds (behavior)
+// trait Node { fn inputs(&self) -> Vec<Rc<dyn Node>> { todo!() }}
+// struct StartNode<N: Node> { inputs: Vec<Rc<N>> }
+// impl<N: Node> Node for StartNode<N> { fn inputs(&self) -> Vec<Rc<dyn Node>> { todo!()  }}
+// fn foo<T: Node>(n: T) -> () { } <-- the level of resolution on n is too high. no way to match on n for data-specific behavior.
+//                                     -> generics with trait bounds is ok for homogenous data, not heterogeneous.
+
+// design 3: trait objects
+// similar to design 1 but shared behavior is moved to trait
+// trait Node {
+//     // which one????????????
+//     fn inputs(&self) -> Vec<NodeVariant>;
+//     fn inputstwo(&self) -> Vec<Rc<dyn Node>>;
+// }
+
+// design 4. back to sum of products with different coarse-graining.
+// heterogeneity with op product (like typescript's kind pattern)
+// data reuse with data sum
+struct Node {
+    op: Op,
+    inputs: Vec<Rc<Node>>,
+    outputs: Vec<Rc<Node>>,
+}
+
+#[derive(Clone)]
+enum Op {
+    // TODO: use this sum of product syntax in other areas
+    StartNode,
+    ReturnNode,
+    ConstantNode { value: i32 },
+}
+
+impl Node {
+    fn foo(&self) -> () {
+        match self.op {
+            Op::StartNode => todo!(),
+            Op::ReturnNode => todo!(),
+            Op::ConstantNode { value } => todo!(),
+        }
+        todo!()
+    }
+
+    fn inputs(&self) -> &[Rc<Node>] {
+        &self.inputs
+    }
+
+    fn outputs(&self) -> &[Rc<Node>] {
+        &self.outputs
+    }
+}
+
 // TODO: for loops, etc.
 type SugaredPrg = Vec<()>;
 
+// ==============================================
+// TREE
+// ==============================================
 // picoc's source representation is a forest of ASTS
 // since variable and function are not values
 

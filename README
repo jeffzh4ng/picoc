@@ -3,7 +3,7 @@ picoc: aot optimizing C89->RV32I compiler
 goals(0.1.1): hackable. quakeable. -O1able.
 goals(0.1.2): jitable. ldable. -O2able.
 non-goals: objdump, gdb
-support: riscv, llvm, wasm
+support: riscv, llvm
 
 usage:
 cargo run interpretc0 ./path/to/file.c0
