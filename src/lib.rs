@@ -74,7 +74,7 @@ common_enum! { pub enum Val { Int(i32), Bool(bool), Str(String) } }
 // heterogeneity with Op product type (like typescript's kind pattern), data reuse with Node sum type
 
 // struct Node { op: Op, inputs: Vec<Rc<Node>>, outputs: Vec<Rc<Node>> }
-// enum Op { ee, ReturnNode { ctrl: Option<Rc<Node>>, expr: Option<Rc<Node>> }, ConstantNode { value: i32 } }
+// enum Op { StartNode, ReturnNode { ctrl: Option<Rc<Node>>, expr: Option<Rc<Node>> }, ConstantNode { value: i32 } }
 // -> you can't match on Op because you need data on Node
 // impl Node { fn foo(&self) -> () {
 //   match self.op { Op::StartNode => todo!(), Op::ReturnNode { ctrl, expr } => todo!(), Op::ConstantNode { value } => todo!(), }

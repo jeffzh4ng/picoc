@@ -26,7 +26,16 @@ fn eat(tokens: &[Token], tt: TT) -> Result<(&Token, &[Token]), io::Error> {
 // todo: return type should be ReturnNode?
 pub fn parse_prg(tokens: &[Token]) -> Result<Rc<dyn Node>, io::Error> {
     let start = Rc::new(StartNode::new()); // todo: static? for now we thread.
-    let (stmt, r) = parse_stmt(start, tokens)?;
+    let r = tokens;
+    let (_, r) = eat(r, TT::KeywordInt)?;
+    let (_, r) = eat(r, TT::Alias)?;
+    let (_, r) = eat(r, TT::PuncLeftParen)?;
+    let (_, r) = eat(r, TT::PuncRightParen)?;
+
+    let (_, r) = eat(r, TT::PuncLeftBrace)?;
+    let (stmt, r) = parse_stmt(start.clone(), r)?;
+    let (_, r) = eat(r, TT::PuncRightBrace)?;
+
     if r.len() == 0 {
         Ok(stmt.clone())
     } else {

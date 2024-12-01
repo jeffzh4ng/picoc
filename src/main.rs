@@ -46,6 +46,7 @@ fn main() {
 
     let src_graph = parser_son::parse_prg(&tokens).unwrap();
     println!("picoc-info: parsed son");
+    // println!("{:?}", src_graph); // todo: graphviz??
 
     let typ = typer::type_prg(&src_tree).unwrap();
     println!("picoc-info: typed");
