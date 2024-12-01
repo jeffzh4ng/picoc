@@ -48,6 +48,8 @@ fn select_stmt(s: &IStmt) -> Vec<TQuad> {
                 ),
             ];
 
+            let fps: Vec<TQuad> = vec![];
+
             let body = stmts
                 .iter()
                 .flat_map(|stmt| select_stmt(stmt))
@@ -121,8 +123,8 @@ fn select_expr(d: Temp, e: &IExpr) -> Vec<TQuad> {
         }
         IExpr::TempUse(_) => todo!(),
         IExpr::Call(l, aps) => {
-            if aps.len() > 7 {
-                panic!("todo: more than 7 args not supported");
+            if aps.len() > 8 {
+                panic!("todo: more than 8 args not supported");
             }
 
             let aps = aps.iter().enumerate().map(|(i, a)| match i {
