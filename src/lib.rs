@@ -74,7 +74,7 @@ common_enum! { pub enum Val { Int(i32), Bool(bool), Str(String) } }
 // heterogeneity with Op product type (like typescript's kind pattern), data reuse with Node sum type
 
 // struct Node { op: Op, inputs: Vec<Rc<Node>>, outputs: Vec<Rc<Node>> }
-// enum Op { StartNode, ReturnNode { ctrl: Option<Rc<Node>>, expr: Option<Rc<Node>> }, ConstantNode { value: i32 } }
+// enum Op { ee, ReturnNode { ctrl: Option<Rc<Node>>, expr: Option<Rc<Node>> }, ConstantNode { value: i32 } }
 // -> you can't match on Op because you need data on Node
 // impl Node { fn foo(&self) -> () {
 //   match self.op { Op::StartNode => todo!(), Op::ReturnNode { ctrl, expr } => todo!(), Op::ConstantNode { value } => todo!(), }
@@ -99,33 +99,95 @@ common_enum! { pub enum Val { Int(i32), Bool(bool), Str(String) } }
 // trait objects actually couple data and behavior,
 // but only the behavior is inherited in rust.
 // not as useful as trad oop
-trait Node {
-    // fn inputs(&self) -> Vec<NodeVariant>;
-    fn inputstwo(&self) -> Vec<Rc<dyn Node>>;
+// FIXME: no static mut
+static mut ID: i128 = 0;
+
+pub fn fresh_id() -> i128 {
+    unsafe {
+        ID += 1;
+        ID
+    }
 }
 
-struct StartNode {
+pub trait Node {
+    fn inputs(&self) -> &[Rc<dyn Node>];
+}
+
+pub struct StartNode {
+    id: i128,
     inputs: Vec<Rc<dyn Node>>,
     outputs: Vec<Rc<dyn Node>>,
 }
 
-struct ReturnNode {
+impl Node for StartNode {
+    fn inputs(&self) -> &[Rc<dyn Node>] {
+        &self.inputs
+    }
+}
+
+impl StartNode {
+    pub fn new() -> Self {
+        Self {
+            id: fresh_id(),
+            inputs: vec![],
+            outputs: vec![],
+        }
+    }
+}
+
+pub struct ReturnNode {
+    id: i128,
     inputs: Vec<Rc<dyn Node>>,
     outputs: Vec<Rc<dyn Node>>,
 }
+
+impl Node for ReturnNode {
+    fn inputs(&self) -> &[Rc<dyn Node>] {
+        &self.inputs
+    }
+}
+
 impl ReturnNode {
-    fn ctrl(&self) -> Option<Rc<dyn Node>> {
-        self.inputs.get(0).cloned()
+    // todo: type ctrlnode and datanode?
+    pub fn new(ctrl: Rc<dyn Node>, expr: Rc<dyn Node>) -> Self {
+        Self {
+            id: fresh_id(),
+            inputs: vec![ctrl, expr],
+            outputs: vec![],
+        }
     }
-    fn expr(&self) -> Option<Rc<dyn Node>> {
-        self.inputs.get(1).cloned()
+
+    fn ctrl(&self) -> Rc<dyn Node> {
+        self.inputs.get(0).cloned().unwrap() // todo: change vec to array?
+    }
+
+    fn expr(&self) -> Rc<dyn Node> {
+        self.inputs.get(1).cloned().unwrap() // todo: change vec to array?
     }
 }
 
-struct ConstantNode {
+pub struct ConstantNode {
+    id: i128,
     value: i32,
     inputs: Vec<Rc<dyn Node>>,
     outputs: Vec<Rc<dyn Node>>,
+}
+
+impl Node for ConstantNode {
+    fn inputs(&self) -> &[Rc<dyn Node>] {
+        &self.inputs
+    }
+}
+
+impl ConstantNode {
+    pub fn new(start: Rc<dyn Node>, value: i32) -> Self {
+        Self {
+            id: fresh_id(),
+            value,
+            inputs: vec![start], // edge is not semantic. needed to enable graph walk.
+            outputs: vec![],
+        }
+    }
 }
 
 // TODO: for loops, etc.
@@ -237,6 +299,7 @@ impl ToString for Label {
     }
 }
 
+// FIXME: no static mut
 static mut TEMP_COUNTER: usize = 0;
 static mut LABEL_COUNTER: usize = 0;
 
