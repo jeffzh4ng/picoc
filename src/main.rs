@@ -1,4 +1,4 @@
-use picoc089::{allocator, lexer, parser, selector, translator, typer, OptLevel};
+use picoc089::{allocator, lexer, parser, parser_son, selector, translator, typer, OptLevel};
 use std::{env, fs, io::Write};
 
 fn main() {
@@ -43,6 +43,9 @@ fn main() {
     println!("picoc-info: lexed");
     let src_tree = parser::parse_prg(&tokens).unwrap(); // recursive descent -> pratt parsing
     println!("picoc-info: parsed");
+
+    let src_graph = parser_son::parse_prg(&tokens).unwrap();
+    println!("picoc-info: parsed son");
 
     let typ = typer::type_prg(&src_tree).unwrap();
     println!("picoc-info: typed");
