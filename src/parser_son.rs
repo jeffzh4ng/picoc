@@ -109,6 +109,10 @@ mod test_arith {
 
         let tokens = lexer::lex(&chars).unwrap();
         let tree = super::parse_prg(&tokens).unwrap();
-        insta::assert_debug_snapshot!(tree, @r"");
+        insta::assert_debug_snapshot!(tree, @r###"
+        StartNode
+        ConstantNode(8)
+        ReturnNode
+        "###);
     }
 }

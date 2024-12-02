@@ -114,11 +114,12 @@ pub fn fresh_id() -> i128 {
 
 pub trait Node {
     fn inputs(&self) -> &[Rc<dyn Node>];
+    fn print(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result;
 }
 
 impl Debug for dyn Node {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Node")
+        self.print(f)
     }
 }
 
@@ -131,6 +132,10 @@ pub struct StartNode {
 impl Node for StartNode {
     fn inputs(&self) -> &[Rc<dyn Node>] {
         &self.inputs
+    }
+
+    fn print(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f, "StartNode")
     }
 }
 
@@ -153,6 +158,11 @@ pub struct ReturnNode {
 impl Node for ReturnNode {
     fn inputs(&self) -> &[Rc<dyn Node>] {
         &self.inputs
+    }
+
+    fn print(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.inputs.iter().for_each(|n| n.print(f).unwrap()); // FIXME; no unwrap
+        writeln!(f, "ReturnNode")
     }
 }
 
@@ -185,6 +195,10 @@ pub struct ConstantNode {
 impl Node for ConstantNode {
     fn inputs(&self) -> &[Rc<dyn Node>] {
         &self.inputs
+    }
+
+    fn print(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f, "ConstantNode({})", self.value)
     }
 }
 
