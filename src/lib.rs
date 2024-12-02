@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, rc::Rc};
+use std::collections::HashMap;
+use std::fmt::{self, Debug};
+use std::rc::Rc;
 
 // pub mod evaluator;
 pub mod allocator;
@@ -99,6 +101,7 @@ common_enum! { pub enum Val { Int(i32), Bool(bool), Str(String) } }
 // trait objects actually couple data and behavior,
 // but only the behavior is inherited in rust.
 // not as useful as trad oop
+
 // FIXME: no static mut
 static mut ID: i128 = 0;
 
@@ -111,6 +114,12 @@ pub fn fresh_id() -> i128 {
 
 pub trait Node {
     fn inputs(&self) -> &[Rc<dyn Node>];
+}
+
+impl Debug for dyn Node {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Node")
+    }
 }
 
 pub struct StartNode {

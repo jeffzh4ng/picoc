@@ -1,5 +1,7 @@
 use picoc089::{allocator, lexer, parser, parser_son, selector, translator, typer, OptLevel};
-use std::{env, fs, io::Write};
+use std::env;
+use std::fs;
+use std::io::Write;
 
 fn main() {
     println!(
@@ -46,7 +48,7 @@ fn main() {
 
     let src_graph = parser_son::parse_prg(&tokens).unwrap();
     println!("picoc-info: parsed son");
-    // println!("{:?}", src_graph); // todo: graphviz??
+    println!("son graph: {:?}", src_graph);
 
     let typ = typer::type_prg(&src_tree).unwrap();
     println!("picoc-info: typed");

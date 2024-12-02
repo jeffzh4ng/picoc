@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
-use std::{io, iter};
+use std::io;
+use std::iter;
 
 #[rustfmt::skip]
 #[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]

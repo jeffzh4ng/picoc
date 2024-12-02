@@ -1,5 +1,6 @@
 use crate::{LambdaType, SBinOp, SDef, SExpr, SFuncDef, SPrg, SStmt, Tnv, Type};
-use std::{collections::HashMap, io};
+use std::collections::HashMap;
+use std::io;
 
 pub fn type_prg(prg: &SPrg) -> Result<Type, io::Error> {
     let mut tnv = Tnv {

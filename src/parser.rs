@@ -2,7 +2,8 @@ use crate::{
     lexer::{Token, TT},
     SBinOp, SDef, SExpr, SFuncDef, SPrg, SRelOp, SStmt, SVarDef, Type,
 };
-use std::{io, num::ParseIntError};
+use std::io;
+use std::num::ParseIntError;
 
 fn eat(tokens: &[Token], tt: TT) -> Result<(&Token, &[Token]), io::Error> {
     match tokens {

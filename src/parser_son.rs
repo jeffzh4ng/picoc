@@ -2,7 +2,8 @@ use crate::{
     lexer::{Token, TT},
     ConstantNode, Node, ReturnNode, StartNode,
 };
-use std::{io, rc::Rc};
+use std::io;
+use std::rc::Rc;
 
 fn eat(tokens: &[Token], tt: TT) -> Result<(&Token, &[Token]), io::Error> {
     match tokens {
@@ -88,5 +89,26 @@ fn parse_expr(
                 format!("expected: {:?} got: {:?}", TT::LiteralInt, t),
             )),
         },
+    }
+}
+
+#[cfg(test)]
+mod test_arith {
+    use crate::lexer;
+    use std::fs;
+
+    const TEST_DIR: &str = "tests/fixtures/snap/shared/arith";
+
+    #[test]
+    fn lit() {
+        let chars = fs::read(format!("{TEST_DIR}/lit.c"))
+            .expect("file dne")
+            .iter()
+            .map(|b| *b as char)
+            .collect::<Vec<_>>();
+
+        let tokens = lexer::lex(&chars).unwrap();
+        let tree = super::parse_prg(&tokens).unwrap();
+        insta::assert_debug_snapshot!(tree, @r"");
     }
 }
