@@ -1,4 +1,4 @@
-use picoc089::{allocator, lexer, parser, parser_son, selector, translator, typer, OptLevel};
+use picoc089::{allocator, lexer, parser_ast, parser, selector, translator, typer, OptLevel};
 use std::env;
 use std::fs;
 use std::io::Write;
@@ -12,7 +12,7 @@ fn main() {
     ⠀⠀⣼⣆⠀⠀⠀⠀⣰⣧⠀⠀
     ⠀⣼⣿⣿⣆⠀⠀⣰⣿⣿⣧⠀
     ⠾⠟⠿⠿⠿⠧⠼⠿⠿⠿⠻⠷
-    picoc: aot optimizing C89->RV32I compiler
+    picoc: aot son-optimizing C89->{{RV32I, LLVM}} compiler
     "
     );
 
@@ -24,7 +24,7 @@ fn main() {
         .expect("picoc-error: no source file given");
     println!("picoc-info: received source: {src}");
 
-    let opt: OptLevel = env::args()
+    let opt = env::args()
         .nth(3)
         .expect("picoc-error: no optimization level given")
         .chars()
@@ -43,10 +43,10 @@ fn main() {
         .collect::<Vec<_>>();
     let tokens = lexer::lex(&chars).unwrap();
     println!("picoc-info: lexed");
-    let src_tree = parser::parse_prg(&tokens).unwrap(); // recursive descent -> pratt parsing
+    let src_tree = parser_ast::parse_prg(&tokens).unwrap(); // recursive descent -> pratt parsing
     println!("picoc-info: parsed");
 
-    let src_graph = parser_son::parse_prg(&tokens).unwrap();
+    let src_graph = parser::parse_prg(&tokens).unwrap();
     println!("picoc-info: parsed son");
     println!("son graph: {:?}", src_graph);
 

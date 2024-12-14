@@ -7,10 +7,11 @@ use std::rc::Rc;
 pub mod allocator;
 pub mod lexer;
 pub mod parser;
-pub mod parser_son;
+pub mod parser_ast;
 pub mod selector;
 pub mod translator;
 pub mod typer;
+pub mod visualizer;
 
 #[macro_use]
 macro_rules! common_struct {
@@ -95,12 +96,18 @@ common_enum! { pub enum Val { Int(i32), Bool(bool), Str(String) } }
 //                                            generics with trait bounds is ok for homogenous data, not heterogeneous.
 
 // ==============================================
-// GRAPH
+// GRAPH: undirected, non-weighted.
 // ==============================================
 // design 4: trait objects: heterogeneous data
 // trait objects actually couple data and behavior,
 // but only the behavior is inherited in rust.
 // not as useful as trad oop
+
+// v.neighbors() --> w1, w2, ..., wn
+// - struct-oriented for now. only defining one subset E ⊆ (VxV).
+// - thus, undirected edges are partially defined on each side of the edge.
+//   -> v.inputs()  --> w1, w2, ..., wn are use-def pairs
+//   -> v.outputs() --> w1, w2, ..., wn are def-use pairs
 
 // FIXME: no static mut
 static mut ID: i128 = 0;
@@ -113,7 +120,7 @@ pub fn fresh_id() -> i128 {
 }
 
 pub trait Node {
-    fn inputs(&self) -> &[Rc<dyn Node>];
+    fn use_defs(&self) -> &[Rc<dyn Node>];
     fn print(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result;
 }
 
@@ -125,13 +132,13 @@ impl Debug for dyn Node {
 
 pub struct StartNode {
     id: i128,
-    inputs: Vec<Rc<dyn Node>>,
-    outputs: Vec<Rc<dyn Node>>,
+    use_defs: Vec<Rc<dyn Node>>,
+    def_uses: Vec<Rc<dyn Node>>,
 }
 
 impl Node for StartNode {
-    fn inputs(&self) -> &[Rc<dyn Node>] {
-        &self.inputs
+    fn use_defs(&self) -> &[Rc<dyn Node>] {
+        &self.use_defs
     }
 
     fn print(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -143,25 +150,25 @@ impl StartNode {
     pub fn new() -> Self {
         Self {
             id: fresh_id(),
-            inputs: vec![],
-            outputs: vec![],
+            use_defs: vec![],
+            def_uses: vec![],
         }
     }
 }
 
 pub struct ReturnNode {
     id: i128,
-    inputs: Vec<Rc<dyn Node>>,
-    outputs: Vec<Rc<dyn Node>>,
+    use_def: Vec<Rc<dyn Node>>,
+    def_use: Vec<Rc<dyn Node>>,
 }
 
 impl Node for ReturnNode {
-    fn inputs(&self) -> &[Rc<dyn Node>] {
-        &self.inputs
+    fn use_defs(&self) -> &[Rc<dyn Node>] {
+        &self.use_def
     }
 
     fn print(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.inputs.iter().for_each(|n| n.print(f).unwrap()); // FIXME; no unwrap
+        self.use_def.iter().for_each(|n| n.print(f).unwrap()); // FIXME; no unwrap
         writeln!(f, "ReturnNode")
     }
 }
@@ -171,30 +178,30 @@ impl ReturnNode {
     pub fn new(ctrl: Rc<dyn Node>, expr: Rc<dyn Node>) -> Self {
         Self {
             id: fresh_id(),
-            inputs: vec![ctrl, expr],
-            outputs: vec![],
+            use_def: vec![ctrl, expr],
+            def_use: vec![],
         }
     }
 
-    fn ctrl(&self) -> Rc<dyn Node> {
-        self.inputs.get(0).cloned().unwrap() // todo: change vec to array?
+    fn ctrl(&self) -> &Rc<dyn Node> {
+        self.use_def.get(0).unwrap() // todo: change vec to array?
     }
 
-    fn expr(&self) -> Rc<dyn Node> {
-        self.inputs.get(1).cloned().unwrap() // todo: change vec to array?
+    fn expr(&self) -> &Rc<dyn Node> {
+        self.use_def.get(1).unwrap() // todo: change vec to array?
     }
 }
 
 pub struct ConstantNode {
     id: i128,
     value: i32,
-    inputs: Vec<Rc<dyn Node>>,
-    outputs: Vec<Rc<dyn Node>>,
+    use_def: Vec<Rc<dyn Node>>,
+    def_use: Vec<Rc<dyn Node>>,
 }
 
 impl Node for ConstantNode {
-    fn inputs(&self) -> &[Rc<dyn Node>] {
-        &self.inputs
+    fn use_defs(&self) -> &[Rc<dyn Node>] {
+        &self.use_def
     }
 
     fn print(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -207,8 +214,8 @@ impl ConstantNode {
         Self {
             id: fresh_id(),
             value,
-            inputs: vec![start], // edge is not semantic. needed to enable graph walk.
-            outputs: vec![],
+            use_def: vec![start], // edge is not semantic. needed to enable graph walk.
+            def_use: vec![],
         }
     }
 }
@@ -308,7 +315,7 @@ common_enum! { pub enum IRelOp { Eq, Neq, And, Or, LtEq, Lt, GtEq, Gt } }
 // code requires labels, since order is no longer
 // explicitly encoded (trees vs linear). references
 // are still symbolic, and are patched with virtual
-// addresses with as and ld.
+// addresses via as and ld.
 
 type Imm = i32;
 common_enum! { pub enum Temp { UserTemp(String), MachineTemp(usize), PointerReg(RiscvPointerReg) } } // only util regs in abstract assembly

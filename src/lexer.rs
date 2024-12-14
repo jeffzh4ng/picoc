@@ -2,6 +2,10 @@ use serde::{Deserialize, Serialize};
 use std::io;
 use std::iter;
 
+// todo. remove allocations.
+// iterate on slices and iterators.
+// todo: change to iterative
+
 #[rustfmt::skip]
 #[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]
 pub struct Token { pub lexeme: String, pub typ: TT }

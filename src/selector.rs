@@ -153,7 +153,7 @@ fn select_expr(d: Temp, e: &IExpr) -> Vec<TQuad> {
 #[cfg(test)]
 mod test_arith {
     use crate::lexer;
-    use crate::parser;
+    use crate::parser_ast;
     use crate::translator;
     use crate::typer;
     use std::fs;
@@ -169,7 +169,7 @@ mod test_arith {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars).unwrap();
-        let src_tree = parser::parse_prg(&tokens).unwrap();
+        let src_tree = parser_ast::parse_prg(&tokens).unwrap();
         let _ = typer::type_prg(&src_tree).unwrap();
         let trgt_tree = translator::translate(&src_tree);
         let abs_as = super::select(&trgt_tree);

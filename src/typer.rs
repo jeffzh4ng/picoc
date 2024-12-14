@@ -178,7 +178,7 @@ pub fn type_expr(e: &SExpr, gtnv: &Tnv, ltnv: &HashMap<String, Type>) -> Result<
 #[cfg(test)]
 mod test_arith {
     use crate::lexer;
-    use crate::parser;
+    use crate::parser_ast;
     use std::fs;
 
     const TEST_DIR: &str = "tests/fixtures/snap/statics-c0/arith";
@@ -192,7 +192,7 @@ mod test_arith {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars).unwrap();
-        let tree = parser::parse_prg(&tokens).unwrap();
+        let tree = parser_ast::parse_prg(&tokens).unwrap();
         let typ = super::type_prg(&tree).unwrap();
         insta::assert_yaml_snapshot!(typ, @r###"
         ---
@@ -204,7 +204,7 @@ mod test_arith {
 #[cfg(test)]
 mod test_control {
     use crate::lexer;
-    use crate::parser;
+    use crate::parser_ast;
     use std::fs;
 
     const TEST_DIR: &str = "tests/fixtures/snap/statics-c0/control";
@@ -218,7 +218,7 @@ mod test_control {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars).unwrap();
-        let tree = parser::parse_prg(&tokens).unwrap();
+        let tree = parser_ast::parse_prg(&tokens).unwrap();
         let typ = super::type_prg(&tree).unwrap();
         insta::assert_yaml_snapshot!(typ, @r###"
         ---
@@ -235,7 +235,7 @@ mod test_control {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars).unwrap();
-        let tree = parser::parse_prg(&tokens).unwrap();
+        let tree = parser_ast::parse_prg(&tokens).unwrap();
         let typ = super::type_prg(&tree);
         assert!(typ.is_err())
     }
@@ -249,7 +249,7 @@ mod test_control {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars).unwrap();
-        let tree = parser::parse_prg(&tokens).unwrap();
+        let tree = parser_ast::parse_prg(&tokens).unwrap();
         let typ = super::type_prg(&tree).unwrap();
         insta::assert_yaml_snapshot!(typ, @r###"
         ---
@@ -266,7 +266,7 @@ mod test_control {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars).unwrap();
-        let tree = parser::parse_prg(&tokens).unwrap();
+        let tree = parser_ast::parse_prg(&tokens).unwrap();
         let typ = super::type_prg(&tree);
         assert!(typ.is_err())
     }
@@ -275,7 +275,7 @@ mod test_control {
 #[cfg(test)]
 mod test_bindings {
     use crate::lexer;
-    use crate::parser;
+    use crate::parser_ast;
     use std::fs;
 
     const TEST_DIR: &str = "tests/fixtures/snap/statics-c0/bindings";
@@ -289,7 +289,7 @@ mod test_bindings {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars).unwrap();
-        let tree = parser::parse_prg(&tokens).unwrap();
+        let tree = parser_ast::parse_prg(&tokens).unwrap();
         let typ = super::type_prg(&tree).unwrap();
         insta::assert_yaml_snapshot!(typ, @r###"
         ---
@@ -306,7 +306,7 @@ mod test_bindings {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars).unwrap();
-        let tree = parser::parse_prg(&tokens).unwrap();
+        let tree = parser_ast::parse_prg(&tokens).unwrap();
         let typ = super::type_prg(&tree);
         assert!(typ.is_err())
     }
@@ -321,7 +321,7 @@ mod test_bindings {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars).unwrap();
-        let tree = parser::parse_prg(&tokens).unwrap();
+        let tree = parser_ast::parse_prg(&tokens).unwrap();
         let typ = super::type_prg(&tree).unwrap();
         insta::assert_yaml_snapshot!(typ, @r###"
         ---

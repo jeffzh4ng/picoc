@@ -84,7 +84,7 @@ fn translate_expr(e: &SExpr) -> IExpr {
 #[cfg(test)]
 mod test_arith {
     use crate::lexer;
-    use crate::parser;
+    use crate::parser_ast;
     use crate::typer;
     use std::fs;
 
@@ -99,7 +99,7 @@ mod test_arith {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars).unwrap();
-        let src_tree = parser::parse_prg(&tokens).unwrap();
+        let src_tree = parser_ast::parse_prg(&tokens).unwrap();
         let _ = typer::type_prg(&src_tree).unwrap();
         let trgt_tree = super::translate(&src_tree);
 
@@ -119,7 +119,7 @@ mod test_arith {
 #[cfg(test)]
 mod test_bindings {
     use crate::lexer;
-    use crate::parser;
+    use crate::parser_ast;
     use crate::typer;
     use std::fs;
 
@@ -134,7 +134,7 @@ mod test_bindings {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars).unwrap();
-        let src_tree = parser::parse_prg(&tokens).unwrap();
+        let src_tree = parser_ast::parse_prg(&tokens).unwrap();
         let _ = typer::type_prg(&src_tree).unwrap();
         let trgt_tree = super::translate(&src_tree);
 
@@ -155,7 +155,7 @@ mod test_bindings {
 #[cfg(test)]
 mod test_functions {
     use crate::lexer;
-    use crate::parser;
+    use crate::parser_ast;
     use crate::typer;
     use std::fs;
 
@@ -170,7 +170,7 @@ mod test_functions {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars).unwrap();
-        let src_tree = parser::parse_prg(&tokens).unwrap();
+        let src_tree = parser_ast::parse_prg(&tokens).unwrap();
         let _ = typer::type_prg(&src_tree).unwrap();
         let trgt_tree = super::translate(&src_tree);
 
@@ -216,7 +216,7 @@ mod test_functions {
             .collect::<Vec<_>>();
 
         let tokens = lexer::lex(&chars).unwrap();
-        let src_tree = parser::parse_prg(&tokens).unwrap();
+        let src_tree = parser_ast::parse_prg(&tokens).unwrap();
         let _ = typer::type_prg(&src_tree).unwrap();
         let trgt_tree = super::translate(&src_tree);
 

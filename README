@@ -1,10 +1,5 @@
-picoc: aot optimizing C89->RV32I compiler
+picoc: aot son-optimizing C89->{RV32I,LLVM} compiler
+usage: cargo run compilec89 ./path/to/file.c
 
-goals(0.1.1): hackable. quakeable. -O1able.
-goals(0.1.2): jitable. ldable. -O2able.
-non-goals: objdump, gdb
-support: riscv, llvm
-
-usage:
-cargo run interpretc0 ./path/to/file.c0
-cargo run compilec89 ./path/to/file.c
+0.1.1: hackable. quakeable. -O1able.
+0.1.2: jitable. ldable. -O2able.
