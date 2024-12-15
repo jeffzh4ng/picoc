@@ -5,7 +5,7 @@ pub fn translate(src_tree: &SPrg) -> IPrg {
         .iter()
         .map(|def| match def {
             SDef::FuncDef(func_def) => translate_func_def(func_def),
-            SDef::VarDef(var_def) => todo!(),
+            SDef::VarDef(_var_def) => todo!(),
         })
         .collect::<Vec<_>>();
 
@@ -26,8 +26,12 @@ fn translate_func_def(fd: &SFuncDef) -> IStmt {
                 IStmt::Compute(temp, expr)
                 // ************************************* ??????????????zsd
             }
-            SStmt::IfEls { cond, then, els } => todo!(),
-            SStmt::While { cond, body } => todo!(),
+            SStmt::IfEls {
+                cond: _,
+                then: _,
+                els: _,
+            } => todo!(),
+            SStmt::While { cond: _, body: _ } => todo!(),
             SStmt::Return(expr) => IStmt::Return(translate_expr(expr)),
         })
         .map(|i_stmt| Box::new(i_stmt))
@@ -41,7 +45,7 @@ fn translate_expr(e: &SExpr) -> IExpr {
     match e {
         SExpr::Int(n) => IExpr::Const(*n),
         SExpr::Bool(b) => IExpr::Const(*b as i32),
-        SExpr::UnaryE { op, l } => todo!(),
+        SExpr::UnaryE { op: _, l: _ } => todo!(),
         SExpr::BinE { op, l, r } => match op {
             // C language designed as portable assembly makes tree rewrites straightforward
             SBinOp::Add => IExpr::BinOp(
@@ -70,9 +74,9 @@ fn translate_expr(e: &SExpr) -> IExpr {
                 Box::new(translate_expr(r)),
             ),
         },
-        SExpr::LogE { op, l, r } => todo!(),
-        SExpr::BitE { op, l, r } => todo!(),
-        SExpr::RelE { op, l, r } => todo!(),
+        SExpr::LogE { op: _, l: _, r: _ } => todo!(),
+        SExpr::BitE { op: _, l: _, r: _ } => todo!(),
+        SExpr::RelE { op: _, l: _, r: _ } => todo!(),
         SExpr::VarApp(alias) => IExpr::TempUse(Temp::UserTemp(alias.clone())),
         SExpr::FuncApp { alias, aps: ap } => {
             let aps = ap.iter().map(|e| translate_expr(e)).collect::<Vec<_>>();

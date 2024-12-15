@@ -13,7 +13,6 @@ pub mod translator;
 pub mod typer;
 pub mod visualizer;
 
-#[macro_use]
 macro_rules! common_struct {
 
     ($(#[$meta:meta])* $vis:vis struct $name:ident $body:tt) => {
@@ -23,7 +22,6 @@ macro_rules! common_struct {
     }
 }
 
-#[macro_use]
 macro_rules! common_enum {
     ($(#[$meta:meta])* $vis:vis enum $name:ident { $($variants:tt)* }) => {
         $(#[$meta])*
@@ -131,9 +129,9 @@ impl Debug for dyn Node {
 }
 
 pub struct StartNode {
-    id: i128,
+    _id: i128,
     use_defs: Vec<Rc<dyn Node>>,
-    def_uses: Vec<Rc<dyn Node>>,
+    _def_uses: Vec<Rc<dyn Node>>,
 }
 
 impl Node for StartNode {
@@ -149,17 +147,17 @@ impl Node for StartNode {
 impl StartNode {
     pub fn new() -> Self {
         Self {
-            id: fresh_id(),
+            _id: fresh_id(),
             use_defs: vec![],
-            def_uses: vec![],
+            _def_uses: vec![],
         }
     }
 }
 
 pub struct ReturnNode {
-    id: i128,
+    _id: i128,
     use_def: Vec<Rc<dyn Node>>,
-    def_use: Vec<Rc<dyn Node>>,
+    _def_use: Vec<Rc<dyn Node>>,
 }
 
 impl Node for ReturnNode {
@@ -177,26 +175,26 @@ impl ReturnNode {
     // todo: type ctrlnode and datanode?
     pub fn new(ctrl: Rc<dyn Node>, expr: Rc<dyn Node>) -> Self {
         Self {
-            id: fresh_id(),
+            _id: fresh_id(),
             use_def: vec![ctrl, expr],
-            def_use: vec![],
+            _def_use: vec![],
         }
     }
 
-    fn ctrl(&self) -> &Rc<dyn Node> {
+    fn _ctrl(&self) -> &Rc<dyn Node> {
         self.use_def.get(0).unwrap() // todo: change vec to array?
     }
 
-    fn expr(&self) -> &Rc<dyn Node> {
+    fn _expr(&self) -> &Rc<dyn Node> {
         self.use_def.get(1).unwrap() // todo: change vec to array?
     }
 }
 
 pub struct ConstantNode {
-    id: i128,
+    _id: i128,
     value: i32,
     use_def: Vec<Rc<dyn Node>>,
-    def_use: Vec<Rc<dyn Node>>,
+    _def_use: Vec<Rc<dyn Node>>,
 }
 
 impl Node for ConstantNode {
@@ -212,16 +210,16 @@ impl Node for ConstantNode {
 impl ConstantNode {
     pub fn new(start: Rc<dyn Node>, value: i32) -> Self {
         Self {
-            id: fresh_id(),
+            _id: fresh_id(),
             value,
             use_def: vec![start], // edge is not semantic. needed to enable graph walk.
-            def_use: vec![],
+            _def_use: vec![],
         }
     }
 }
 
 // TODO: for loops, etc.
-type SugaredPrg = Vec<()>;
+type _SugaredPrg = Vec<()>;
 
 // ==============================================
 // TREE
@@ -324,7 +322,7 @@ impl ToString for Label {
     fn to_string(&self) -> String {
         match self {
             Label::UserLabel(l) => l.clone(),
-            Label::MachineLabel(l) => todo!(),
+            Label::MachineLabel(_l) => todo!(),
         }
     }
 }

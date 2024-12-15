@@ -17,7 +17,7 @@ fn allocate_1ac(abs_as: &[TQuad]) -> Vec<String> {
     let instrs = abs_as
         .iter()
         .flat_map(|quad| match quad {
-            TQuad::Reg(treg_op, dt, lt, rt) => {
+            TQuad::Reg(treg_op, _dt, _lt, _rt) => {
                 vec![
                     POP_RIGHT_T0.to_owned(),
                     POP_LEFT_T1.to_owned(),
@@ -28,7 +28,7 @@ fn allocate_1ac(abs_as: &[TQuad]) -> Vec<String> {
             TQuad::Imm(timm_op, dt, lt, imm) => match (dt, lt) {
                 (Temp::UserTemp(_), Temp::UserTemp(_)) => todo!(),
                 (Temp::UserTemp(_), Temp::MachineTemp(_)) => todo!(),
-                (Temp::UserTemp(_), Temp::PointerReg(pr)) => todo!(),
+                (Temp::UserTemp(_), Temp::PointerReg(_pr)) => todo!(),
                 (Temp::MachineTemp(_), Temp::UserTemp(_)) => todo!(),
                 (Temp::MachineTemp(_), Temp::MachineTemp(_)) => todo!(),
                 (Temp::MachineTemp(_), Temp::PointerReg(pr)) => {
@@ -37,7 +37,7 @@ fn allocate_1ac(abs_as: &[TQuad]) -> Vec<String> {
                         PUSH_T2.to_owned(), // push b/c we're using t0
                     ]
                 }
-                (Temp::PointerReg(pr), Temp::UserTemp(_)) => todo!(),
+                (Temp::PointerReg(_pr), Temp::UserTemp(_)) => todo!(),
                 (Temp::PointerReg(pr), Temp::MachineTemp(_)) => {
                     vec![
                         POP_IMM_T0.to_owned(),

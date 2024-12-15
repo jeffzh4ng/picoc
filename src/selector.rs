@@ -11,8 +11,8 @@ pub fn select(prg: &IPrg) -> Vec<TQuad> {
 fn select_stmt(s: &IStmt) -> Vec<TQuad> {
     match s {
         IStmt::Jump(_) => todo!(),
-        IStmt::CJump(sexpr, _, _) => todo!(),
-        IStmt::Compute(temp, iexpr) => todo!(),
+        IStmt::CJump(_sexpr, _, _) => todo!(),
+        IStmt::Compute(_temp, _iexpr) => todo!(),
         IStmt::Load(_, _) => todo!(),
         IStmt::Store(_, _) => todo!(),
         IStmt::Seq(l, stmts) => {
@@ -48,7 +48,7 @@ fn select_stmt(s: &IStmt) -> Vec<TQuad> {
                 ),
             ];
 
-            let fps: Vec<TQuad> = vec![];
+            let _fps: Vec<TQuad> = vec![];
 
             let body = stmts
                 .iter()

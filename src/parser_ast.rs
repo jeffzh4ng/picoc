@@ -92,7 +92,7 @@ fn parse_vardef(tokens: &[Token]) -> Result<(SVarDef, &[Token]), io::Error> {
             }
             TT::Alias => match r {
                 [] => todo!(),
-                [s, t, r @ ..] => match (s.typ, t.typ) {
+                [s, t, _r @ ..] => match (s.typ, t.typ) {
                     // (TT::Plus, TT::Equals) => {
                     //     let (expr, r) = parse_rel_expr(r)?;
                     //     Ok((
@@ -156,11 +156,11 @@ fn parse_vardef(tokens: &[Token]) -> Result<(SVarDef, &[Token]), io::Error> {
                     //         r,
                     //     ))
                     // }
-                    t => {
+                    _t => {
                         todo!()
                     }
                 },
-                t => todo!(),
+                _t => todo!(),
             },
             t => Err(io::Error::new(
                 io::ErrorKind::Other,

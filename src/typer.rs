@@ -25,7 +25,7 @@ pub fn type_prg(prg: &SPrg) -> Result<Type, io::Error> {
                 });
                 type_check
             }
-            SDef::VarDef(vd) => todo!(),
+            SDef::VarDef(_vd) => todo!(),
         })
         .collect::<Result<Vec<_>, _>>()?;
 
@@ -108,7 +108,7 @@ pub fn type_stmt(
                 None => Ok(tt.clone()),
             }
         }
-        SStmt::While { cond, body } => todo!(),
+        SStmt::While { cond: _, body: _ } => todo!(),
         SStmt::Asnmt(vd) => {
             let et = type_expr(&vd.expr, gnv, &ltnv)?;
             ltnv.insert(vd.alias.clone(), et.clone()); // Γ [x <- T]
@@ -127,7 +127,7 @@ pub fn type_expr(e: &SExpr, gtnv: &Tnv, ltnv: &HashMap<String, Type>) -> Result<
         SExpr::Int(_) => Ok(Type::Int),   // ⊢ n : Int
         SExpr::Bool(_) => Ok(Type::Bool), // ⊢ b : Bool
         // ---------------------elims (rules)--------------------------
-        SExpr::UnaryE { op, l } => type_expr(l, gtnv, ltnv),
+        SExpr::UnaryE { op: _, l } => type_expr(l, gtnv, ltnv),
         SExpr::BinE { op, l, r } => match op {
             // ignoring distinctions within types
             SBinOp::Add | SBinOp::Sub | SBinOp::Mult | SBinOp::Div | SBinOp::Mod => {

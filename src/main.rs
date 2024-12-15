@@ -1,4 +1,4 @@
-use picoc089::{allocator, lexer, parser_ast, parser, selector, translator, typer, OptLevel};
+use picoc089::{allocator, lexer, parser, parser_ast, selector, translator, typer};
 use std::env;
 use std::fs;
 use std::io::Write;
@@ -50,7 +50,7 @@ fn main() {
     println!("picoc-info: parsed son");
     println!("son graph: {:?}", src_graph);
 
-    let typ = typer::type_prg(&src_tree).unwrap();
+    let _typ = typer::type_prg(&src_tree).unwrap();
     println!("picoc-info: typed");
 
     match strat.as_str() {

@@ -15,9 +15,9 @@ pub fn gen_dot(start: Rc<dyn Node>) -> String {
     dot
 }
 
-fn gen_nodes(d: &mut String) {}
-fn gen_edges(d: &mut String) {}
+fn gen_nodes(_d: &mut String) {}
+fn gen_edges(_d: &mut String) {}
 
-fn graph_vertices(start: Rc<dyn Node>) -> Vec<Rc<dyn Node>> {
+fn _graph_vertices(_start: Rc<dyn Node>) -> Vec<Rc<dyn Node>> {
     todo!()
 }
