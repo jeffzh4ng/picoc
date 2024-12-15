@@ -34,11 +34,10 @@ fn translate_func_def(fd: &SFuncDef) -> IStmt {
             SStmt::While { cond: _, body: _ } => todo!(),
             SStmt::Return(expr) => IStmt::Return(translate_expr(expr)),
         })
-        .map(|i_stmt| Box::new(i_stmt))
+        .map(Box::new)
         .collect::<Vec<_>>();
 
-    let fd = IStmt::Seq(label, body);
-    fd
+    IStmt::Seq(label, body)
 }
 
 fn translate_expr(e: &SExpr) -> IExpr {
@@ -79,7 +78,7 @@ fn translate_expr(e: &SExpr) -> IExpr {
         SExpr::RelE { op: _, l: _, r: _ } => todo!(),
         SExpr::VarApp(alias) => IExpr::TempUse(Temp::UserTemp(alias.clone())),
         SExpr::FuncApp { alias, aps: ap } => {
-            let aps = ap.iter().map(|e| translate_expr(e)).collect::<Vec<_>>();
+            let aps = ap.iter().map(translate_expr).collect::<Vec<_>>();
             IExpr::Call(Label::UserLabel(alias.clone()), aps)
         }
     }

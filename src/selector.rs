@@ -4,7 +4,7 @@ use crate::{
 };
 
 pub fn select(prg: &IPrg) -> Vec<TQuad> {
-    let trgt_prg = prg.iter().flat_map(|stmt| select_stmt(stmt)).collect();
+    let trgt_prg = prg.iter().flat_map(select_stmt).collect();
     trgt_prg
 }
 

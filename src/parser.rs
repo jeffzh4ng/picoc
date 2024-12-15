@@ -36,7 +36,7 @@ pub fn parse_prg(tokens: &[Token]) -> Result<Rc<dyn Node>, io::Error> {
     let (stmt, r) = parse_stmt(start.clone(), r)?;
     let (_, r) = mtch(r, TT::PuncRightBrace)?;
 
-    if r.len() == 0 {
+    if r.is_empty() {
         Ok(stmt.clone())
     } else {
         Err(io::Error::new(

@@ -35,7 +35,7 @@ pub fn parse_prg(tokens: &[Token]) -> Result<SPrg, io::Error> {
 }
 
 fn parse_funcdef(tokens: &[Token]) -> Result<(SFuncDef, &[Token]), io::Error> {
-    let (_, r) = eat(&tokens, TT::KeywordInt)?;
+    let (_, r) = eat(tokens, TT::KeywordInt)?;
     let (alias, r) = eat(r, TT::Alias)?;
     let (_, r) = eat(r, TT::PuncLeftParen)?;
 

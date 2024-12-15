@@ -182,7 +182,7 @@ impl ReturnNode {
     }
 
     fn _ctrl(&self) -> &Rc<dyn Node> {
-        self.use_def.get(0).unwrap() // todo: change vec to array?
+        self.use_def.first().unwrap() // todo: change vec to array?
     }
 
     fn _expr(&self) -> &Rc<dyn Node> {

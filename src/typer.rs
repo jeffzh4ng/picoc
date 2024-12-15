@@ -13,7 +13,7 @@ pub fn type_prg(prg: &SPrg) -> Result<Type, io::Error> {
         .map(|def| match def {
             SDef::FuncDef(fd) => {
                 let ltnv = HashMap::new();
-                let type_check = type_func(fd, &tnv, ltnv).and_then(|t| {
+                let type_check = type_func(fd, &tnv, ltnv).map(|t| {
                     tnv.fnv.insert(
                         fd.alias.clone(),
                         LambdaType {
@@ -21,7 +21,6 @@ pub fn type_prg(prg: &SPrg) -> Result<Type, io::Error> {
                             body: t,
                         },
                     );
-                    Ok(())
                 });
                 type_check
             }
@@ -49,7 +48,7 @@ pub fn type_func(
     // -------------------------------------------------------
     //    Γ ⊢ (lambda e1:T1 ... en:Tn B) : (T1 * ... * Tn -> T2)
 
-    let _ = fd.fps.iter().for_each(|(a, t)| {
+    fd.fps.iter().for_each(|(a, t)| {
         ltnv.insert(a.clone(), t.clone()); // Γ [e1 <- T1], ... [en <- Tn]
     });
 
@@ -86,7 +85,7 @@ pub fn type_stmt(
 ) -> Result<Type, io::Error> {
     match stmt {
         SStmt::IfEls { cond, then, els } => {
-            let ct = type_expr(cond, gnv, &ltnv)?;
+            let ct = type_expr(cond, gnv, ltnv)?;
             let tt = type_stmt(then, gnv, ltnv)?;
             let et = els
                 .as_ref()
@@ -110,13 +109,13 @@ pub fn type_stmt(
         }
         SStmt::While { cond: _, body: _ } => todo!(),
         SStmt::Asnmt(vd) => {
-            let et = type_expr(&vd.expr, gnv, &ltnv)?;
+            let et = type_expr(&vd.expr, gnv, ltnv)?;
             ltnv.insert(vd.alias.clone(), et.clone()); // Γ [x <- T]
             Ok(et)
         }
         SStmt::Return(expr) => {
-            let foo = type_expr(expr, gnv, &ltnv)?;
-            Ok(foo)
+            let rt = type_expr(expr, gnv, ltnv)?;
+            Ok(rt)
         }
     }
 }
@@ -169,7 +168,7 @@ pub fn type_expr(e: &SExpr, gtnv: &Tnv, ltnv: &HashMap<String, Type>) -> Result<
                     })
                 })
                 .collect::<Result<Vec<_>, _>>()
-                .and_then(|_| Ok(f.body)) // Γ ⊢ f(e) : T2
+                .map(|_| f.body) // Γ ⊢ f(e) : T2
         }
         _ => Err(io::Error::new(io::ErrorKind::Other, "type error")),
     }
